@@ -1,0 +1,25 @@
+.git
+.github
+.venv
+.mypy_cache
+.pytest_cache
+.ruff_cache
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+dist
+build
+tests
+docs
+.DS_Store
+.idea
+.vscode
+
+# Keep the wheel build deterministic — exclude editable installs and CI files
+CHANGELOG.md
+CONTRIBUTING.md
+PYPI_SETUP.md
+DOCKER_SETUP.md
+NPM_SETUP.md
+README.md.bak

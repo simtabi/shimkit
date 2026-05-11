@@ -1,0 +1,52 @@
+name: Feature request
+description: Suggest a new tool or behavior for shimkit
+labels: [enhancement, triage]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: |
+        Describe the workflow or pain point. Focus on the problem,
+        not the proposed implementation — there may be a better path.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How would you like shimkit to behave?
+      placeholder: |
+        New subcommand `shimkit <tool> <verb>` that ...
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+      description: Workarounds, existing tools you've tried, why they fell short.
+
+  - type: dropdown
+    id: tool-fit
+    attributes:
+      label: Is this a new tool or an extension of an existing one?
+      options:
+        - Extension of `shimkit java`
+        - Extension of `shimkit shell`
+        - Extension of `shimkit config`
+        - Extension of `shimkit doctor`
+        - Extension of `shimkit self-update`
+        - A new tool (e.g. `shimkit node`, `shimkit ruby`)
+        - Something else
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Are you interested in implementing this?
+      options:
+        - label: I'd like to send a PR for this
+        - label: I'm flagging it for discussion only
