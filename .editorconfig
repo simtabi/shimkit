@@ -1,0 +1,48 @@
+# EditorConfig — https://editorconfig.org
+#
+# Unifies line endings, encoding, and indentation across editors so PRs
+# don't get noisy diffs from whitespace normalisation. Cross-references
+# the org-wide convention at /opensource/CLAUDE.md (`Required files`).
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Python — 4-space indent, no trailing whitespace
+[*.{py,pyi}]
+indent_size = 4
+max_line_length = 100
+
+# YAML — 2-space indent (workflows, dependabot, issue templates)
+[*.{yml,yaml}]
+indent_size = 2
+
+# JSON — 2-space indent (config files, JSON Schema)
+[*.json]
+indent_size = 2
+
+# TOML — 2-space indent (pyproject.toml)
+[*.toml]
+indent_size = 2
+
+# Markdown — preserve trailing whitespace (used for line breaks)
+[*.md]
+indent_size = 2
+trim_trailing_whitespace = false
+
+# Shell — 2-space indent (POSIX install.sh)
+[*.{sh,bash}]
+indent_size = 2
+
+# Dockerfile — 2-space indent
+[{Dockerfile,Dockerfile.*}]
+indent_size = 2
+
+# Makefile — tabs are required by the syntax
+[{Makefile,makefile,*.mk}]
+indent_style = tab

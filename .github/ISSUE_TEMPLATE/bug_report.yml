@@ -1,0 +1,73 @@
+name: Bug report
+description: Report a defect in shimkit
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please paste the
+        full output of `shimkit doctor` in the diagnostics section
+        below — it covers platform, shell, package manager, and install
+        method in one go.
+
+        **Security issue?** Please report privately at
+        <https://github.com/simtabi/shimkit/security/advisories/new>
+        rather than filing a public issue.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug. Include the exact command you ran.
+      placeholder: |
+        $ shimkit java install 21
+        ...unexpected failure or wrong behavior...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: doctor
+    attributes:
+      label: shimkit doctor
+      description: Paste the full output of `shimkit doctor` (or note which fields are empty).
+      render: shell
+      placeholder: |
+        shimkit  0.1.0
+        python   3.12.4 (/Users/me/.local/bin/python3)
+        system   Darwin 25.4.0 arm64
+        platform macOS (Apple Silicon)
+        shell    zsh  →  /Users/me/.zshrc
+        pm       brew
+        brew     /opt/homebrew/bin/brew
+        defaults /opt/homebrew/.../shimkit/config/defaults.json
+        user cfg /Users/me/.config/shimkit/shimkit.json  (exists)
+        config   valid
+        installed via  uv
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Minimal sequence of commands to trigger the bug.
+      placeholder: |
+        1. shimkit java install 21
+        2. shimkit java switch 17
+        3. ...
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or stack traces
+      description: Any error output, stack traces, or unexpected log lines.
+      render: shell

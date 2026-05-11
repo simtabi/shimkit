@@ -1,0 +1,335 @@
+{
+  "$defs": {
+    "BrewConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "install_url": {
+          "default": "https://raw.githubusercontent.com/Homebrew/install/97a0b89e0cfce05ce1806c8f9ebc7b3f1813589e/install.sh",
+          "title": "Install Url",
+          "type": "string"
+        }
+      },
+      "title": "BrewConfig",
+      "type": "object"
+    },
+    "JavaConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "default_version": {
+          "default": 21,
+          "title": "Default Version",
+          "type": "integer"
+        },
+        "supported_versions": {
+          "items": {
+            "$ref": "#/$defs/JavaVersionEntry"
+          },
+          "title": "Supported Versions",
+          "type": "array"
+        },
+        "scan_paths": {
+          "$ref": "#/$defs/JavaScanPaths"
+        },
+        "oracle_glob_patterns": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Oracle Glob Patterns",
+          "type": "array"
+        },
+        "oracle_safe_roots": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Oracle Safe Roots",
+          "type": "array"
+        }
+      },
+      "required": [
+        "supported_versions"
+      ],
+      "title": "JavaConfig",
+      "type": "object"
+    },
+    "JavaScanPaths": {
+      "additionalProperties": false,
+      "properties": {
+        "macos": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Macos",
+          "type": "array"
+        },
+        "linux": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Linux",
+          "type": "array"
+        },
+        "container": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Container",
+          "type": "array"
+        }
+      },
+      "title": "JavaScanPaths",
+      "type": "object"
+    },
+    "JavaVersionEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "major": {
+          "description": "Major Java version, e.g. 21",
+          "maximum": 99,
+          "minimum": 1,
+          "title": "Major",
+          "type": "integer"
+        },
+        "label": {
+          "description": "Short label shown next to the version",
+          "title": "Label",
+          "type": "string"
+        },
+        "brew_formula": {
+          "description": "Homebrew formula, e.g. openjdk@21",
+          "title": "Brew Formula",
+          "type": "string"
+        },
+        "lts": {
+          "default": false,
+          "title": "Lts",
+          "type": "boolean"
+        },
+        "recommended": {
+          "default": false,
+          "title": "Recommended",
+          "type": "boolean"
+        },
+        "deprecated": {
+          "default": false,
+          "title": "Deprecated",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "major",
+        "label",
+        "brew_formula"
+      ],
+      "title": "JavaVersionEntry",
+      "type": "object"
+    },
+    "PackageManagerEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "install_cmd": {
+          "title": "Install Cmd",
+          "type": "string"
+        },
+        "update_cmd": {
+          "title": "Update Cmd",
+          "type": "string"
+        },
+        "upgrade_cmd": {
+          "title": "Upgrade Cmd",
+          "type": "string"
+        },
+        "platforms": {
+          "items": {
+            "enum": [
+              "macos",
+              "linux"
+            ],
+            "type": "string"
+          },
+          "title": "Platforms",
+          "type": "array"
+        }
+      },
+      "required": [
+        "install_cmd",
+        "update_cmd",
+        "upgrade_cmd",
+        "platforms"
+      ],
+      "title": "PackageManagerEntry",
+      "type": "object"
+    },
+    "PackageManagersConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "preference_order": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Preference Order",
+          "type": "array"
+        },
+        "definitions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/PackageManagerEntry"
+          },
+          "title": "Definitions",
+          "type": "object"
+        }
+      },
+      "required": [
+        "preference_order",
+        "definitions"
+      ],
+      "title": "PackageManagersConfig",
+      "type": "object"
+    },
+    "SelfUpdateConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "check_on_startup": {
+          "default": true,
+          "title": "Check On Startup",
+          "type": "boolean"
+        },
+        "github_repo": {
+          "default": "simtabi/shimkit",
+          "title": "Github Repo",
+          "type": "string"
+        }
+      },
+      "title": "SelfUpdateConfig",
+      "type": "object"
+    },
+    "ShellConfigEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "rc_file": {
+          "description": "Primary rc file relative to $HOME",
+          "title": "Rc File",
+          "type": "string"
+        },
+        "fallback_rc": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Fallback rc file when primary is absent",
+          "title": "Fallback Rc"
+        }
+      },
+      "required": [
+        "rc_file"
+      ],
+      "title": "ShellConfigEntry",
+      "type": "object"
+    },
+    "ShellToolConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "supported_shells": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supported Shells",
+          "type": "array"
+        },
+        "config_map": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ShellConfigEntry"
+          },
+          "title": "Config Map",
+          "type": "object"
+        }
+      },
+      "required": [
+        "supported_shells",
+        "config_map"
+      ],
+      "title": "ShellToolConfig",
+      "type": "object"
+    },
+    "ToolsConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "java": {
+          "$ref": "#/$defs/JavaConfig"
+        },
+        "shell": {
+          "$ref": "#/$defs/ShellToolConfig"
+        }
+      },
+      "required": [
+        "java",
+        "shell"
+      ],
+      "title": "ToolsConfig",
+      "type": "object"
+    },
+    "UIConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "default": "auto",
+          "enum": [
+            "auto",
+            "always",
+            "never"
+          ],
+          "title": "Color",
+          "type": "string"
+        },
+        "back_label": {
+          "default": "← Back",
+          "title": "Back Label",
+          "type": "string"
+        }
+      },
+      "title": "UIConfig",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Root configuration model.",
+  "properties": {
+    "schema_version": {
+      "default": 1,
+      "description": "Bump when defaults.json shape changes; gated by a migration",
+      "minimum": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "ui": {
+      "$ref": "#/$defs/UIConfig"
+    },
+    "self_update": {
+      "$ref": "#/$defs/SelfUpdateConfig"
+    },
+    "brew": {
+      "$ref": "#/$defs/BrewConfig"
+    },
+    "tools": {
+      "$ref": "#/$defs/ToolsConfig"
+    },
+    "package_managers": {
+      "$ref": "#/$defs/PackageManagersConfig"
+    }
+  },
+  "required": [
+    "tools",
+    "package_managers"
+  ],
+  "title": "shimkit configuration",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

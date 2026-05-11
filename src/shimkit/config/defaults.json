@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "ui": {
+    "color": "auto",
+    "back_label": "← Back"
+  },
+  "self_update": {
+    "enabled": true,
+    "check_on_startup": true,
+    "github_repo": "simtabi/shimkit"
+  },
+  "brew": {
+    "install_url": "https://raw.githubusercontent.com/Homebrew/install/97a0b89e0cfce05ce1806c8f9ebc7b3f1813589e/install.sh"
+  },
+  "tools": {
+    "java": {
+      "default_version": 21,
+      "supported_versions": [
+        { "major": 8,  "label": "Legacy",            "brew_formula": "openjdk@8",  "deprecated": true },
+        { "major": 11, "label": "LTS",               "brew_formula": "openjdk@11", "lts": true },
+        { "major": 17, "label": "LTS",               "brew_formula": "openjdk@17", "lts": true },
+        { "major": 21, "label": "LTS — Recommended", "brew_formula": "openjdk@21", "lts": true, "recommended": true },
+        { "major": 24, "label": "Current",           "brew_formula": "openjdk@24" }
+      ],
+      "scan_paths": {
+        "macos": [
+          "/Library/Java/JavaVirtualMachines",
+          "/opt/homebrew/opt",
+          "/usr/local/opt"
+        ],
+        "linux": [
+          "/usr/lib/jvm",
+          "/usr/local/lib/jvm",
+          "/usr/lib/jdk",
+          "/home/linuxbrew/.linuxbrew/opt",
+          "~/.linuxbrew/opt"
+        ],
+        "container": [
+          "/opt/java",
+          "/opt/jdk",
+          "/opt/openjdk"
+        ]
+      },
+      "oracle_glob_patterns": [
+        "/Library/Java/JavaVirtualMachines/jdk*",
+        "/Library/PreferencePanes/JavaControlPanel.prefPane",
+        "/Library/Internet Plug-Ins/JavaAppletPlugin.plugin",
+        "~/Library/Application Support/Oracle/Java",
+        "/var/db/receipts/com.oracle.jdk*"
+      ],
+      "oracle_safe_roots": [
+        "/Library/Java/JavaVirtualMachines",
+        "/Library/PreferencePanes",
+        "/Library/Internet Plug-Ins",
+        "/var/db/receipts",
+        "~/Library"
+      ]
+    },
+    "shell": {
+      "supported_shells": ["bash", "zsh", "fish", "ksh"],
+      "config_map": {
+        "bash": { "rc_file": ".bash_profile", "fallback_rc": ".bashrc" },
+        "zsh":  { "rc_file": ".zshrc" },
+        "sh":   { "rc_file": ".profile" },
+        "fish": { "rc_file": ".config/fish/config.fish" },
+        "ksh":  { "rc_file": ".kshrc" }
+      }
+    }
+  },
+  "package_managers": {
+    "preference_order": ["brew", "apt", "dnf", "yum", "pacman", "apk", "zypper"],
+    "definitions": {
+      "brew":   { "install_cmd": "brew install ${pkg}",            "update_cmd": "brew update",                 "upgrade_cmd": "brew upgrade ${pkg}",            "platforms": ["macos", "linux"] },
+      "apt":    { "install_cmd": "apt-get install -y ${pkg}",      "update_cmd": "apt-get update",              "upgrade_cmd": "apt-get install --only-upgrade -y ${pkg}", "platforms": ["linux"] },
+      "dnf":    { "install_cmd": "dnf install -y ${pkg}",          "update_cmd": "dnf check-update || true",    "upgrade_cmd": "dnf upgrade -y ${pkg}",          "platforms": ["linux"] },
+      "yum":    { "install_cmd": "yum install -y ${pkg}",          "update_cmd": "yum check-update || true",    "upgrade_cmd": "yum update -y ${pkg}",           "platforms": ["linux"] },
+      "pacman": { "install_cmd": "pacman -S --noconfirm ${pkg}",   "update_cmd": "pacman -Sy",                  "upgrade_cmd": "pacman -Su --noconfirm ${pkg}",  "platforms": ["linux"] },
+      "apk":    { "install_cmd": "apk add ${pkg}",                 "update_cmd": "apk update",                  "upgrade_cmd": "apk upgrade ${pkg}",             "platforms": ["linux"] },
+      "zypper": { "install_cmd": "zypper install -y ${pkg}",       "update_cmd": "zypper refresh",              "upgrade_cmd": "zypper update -y ${pkg}",        "platforms": ["linux"] }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+.git
+.github
+.venv
+.mypy_cache
+.pytest_cache
+.ruff_cache
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+dist
+build
+tests
+docs
+.DS_Store
+.idea
+.vscode
+
+# Keep the wheel build deterministic — exclude project docs the image doesn't need.
+CHANGELOG.md
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+SECURITY.md
+installer

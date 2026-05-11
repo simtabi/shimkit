@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/simtabi/shimkit/main/config/shimkit.schema.json",
+  "schema_version": 1,
+
+  "ui": {
+    "color": "auto"
+  },
+
+  "self_update": {
+    "check_on_startup": true
+  },
+
+  "tools": {
+    "java": {
+      "default_version": 21
+    }
+  }
+}
