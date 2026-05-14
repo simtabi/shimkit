@@ -3,6 +3,9 @@ name: Release
 on:
   push:
     tags: ['v*']
+  # Manual re-runs against an existing tag without force-pushing. Set
+  # `ref` to the tag (e.g. `v0.2.0`) when dispatching.
+  workflow_dispatch:
 
 permissions:
   contents: write    # upload release assets
