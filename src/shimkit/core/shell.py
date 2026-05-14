@@ -72,9 +72,12 @@ class Shell:
         if not self.config_file.exists():
             return {}
         quoted = shlex.quote(str(self.config_file))
+        # shell=True needed: `source` is a shell builtin, not a binary.
+        # The rc-file path is shlex.quote-escaped above so user input
+        # cannot inject metacharacters.
         r = CommandRunner.run(
             f"source {quoted} && env",
-            shell=True,
+            shell=True,  # nosec B604
             executable=self.binary,
         )
         env: dict[str, str] = {}

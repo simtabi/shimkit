@@ -55,12 +55,15 @@ class CommandRunner:
         if isinstance(cmd, str) and not shell:
             cmd = cmd.split()
         try:
+            # nosec B602 - this is the chokepoint: callers opt into shell=True
+            # explicitly via the `shell` parameter; the security audit lives at
+            # each caller site, not here.
             r = subprocess.run(
                 cmd,
                 capture_output=capture_output,
                 text=True,
                 check=check,
-                shell=shell,
+                shell=shell,  # nosec B602
                 env=dict(env) if env is not None else None,
                 executable=executable,
             )
@@ -84,3 +87,34 @@ def sudo_prefix() -> list[str]:
         # Windows — callers guard before reaching this
         pass
     return ["sudo"] if shutil.which("sudo") else []
+
+
+def is_root() -> bool:
+    """True when the current process is root (UID 0)."""
+    try:
+        return os.geteuid() == 0
+    except AttributeError:
+        return False
+
+
+def has_sudo_cached() -> bool:
+    """True iff ``sudo -n true`` succeeds — the user has a recent sudo timestamp.
+
+    Used by tools that need root for some operations to surface the
+    requirement up-front instead of mid-flight. Tests can monkeypatch
+    this directly.
+    """
+    if is_root():
+        return True
+    if not shutil.which("sudo"):
+        return False
+    try:
+        r = subprocess.run(
+            ["sudo", "-n", "true"],
+            capture_output=True,
+            timeout=2,
+            check=False,
+        )
+        return r.returncode == 0
+    except (subprocess.SubprocessError, OSError):
+        return False

@@ -50,7 +50,8 @@ def _parse(v: str) -> tuple[int, ...]:
 def _latest_pypi_version() -> str | None:
     """Return the latest shimkit version from PyPI, or None on any error."""
     try:
-        with urlopen(PYPI_JSON_URL, timeout=3) as resp:
+        # PYPI_JSON_URL is a hardcoded https:// constant — not user-controlled.
+        with urlopen(PYPI_JSON_URL, timeout=3) as resp:  # nosec B310
             data = json.load(resp)
         version: str = data["info"]["version"]
         return version

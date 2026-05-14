@@ -49,6 +49,43 @@ def test_pkgmgr_render_substitutes_pkg() -> None:
     assert "${unknown}" in pm.render("foo ${unknown} bar")
 
 
+def test_pkgmgr_argv_form_renders_without_shell(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Argv-list templates must reach CommandRunner.run() as a list, not a string.
+
+    This is the Phase 3 security fix: even if a caller passes a package
+    name with shell metacharacters, the argv path keeps it as one argv
+    token and never interpolates it into a shell string.
+    """
+    from shimkit.core import CommandResult
+
+    pm = PackageManager(
+        name="apt",
+        install_cmd=["apt-get", "install", "-y", "${pkg}"],
+        update_cmd=["apt-get", "update"],
+        upgrade_cmd=["apt-get", "install", "--only-upgrade", "-y", "${pkg}"],
+    )
+
+    captured: dict[str, object] = {}
+
+    def fake_run(cmd, **kwargs):  # type: ignore[no-untyped-def]
+        captured["cmd"] = cmd
+        captured["kwargs"] = kwargs
+        return CommandResult(0, "", "")
+
+    monkeypatch.setattr(
+        "shimkit.core.pkgmgr.CommandRunner.run", staticmethod(fake_run)
+    )
+    # A package name with metacharacters; argv path keeps it as one token.
+    pm.install("bash; rm -rf /")
+    cmd = captured["cmd"]
+    assert isinstance(cmd, list)
+    assert "bash; rm -rf /" in cmd
+    # No shell=True kwarg for the argv path.
+    assert not captured["kwargs"].get("shell", False)
+
+
 def test_pkgmgr_skips_pm_not_in_platforms(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
