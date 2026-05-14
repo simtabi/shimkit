@@ -6,7 +6,8 @@ on:
 
 permissions:
   contents: write    # upload release assets
-  id-token: write    # PyPI trusted publishing (OIDC)
+  id-token: write    # PyPI trusted publishing (OIDC) + sigstore attestation
+  attestations: write  # actions/attest-build-provenance
 
 jobs:
   guard:
@@ -17,14 +18,26 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'  # tomllib needs >=3.11
-      - name: Verify tag == pyproject version
+      - name: Verify tag == pyproject.toml == __init__.py
         run: |
           tag="${GITHUB_REF_NAME#v}"
-          ver=$(python -c 'import tomllib;print(tomllib.loads(open("pyproject.toml","rb").read().decode())["project"]["version"])')
-          echo "tag:        $tag"
-          echo "pyproject:  $ver"
-          if [ "$tag" != "$ver" ]; then
-            echo "::error::Tag v${tag} does not match pyproject.toml version ${ver}"
+          py_ver=$(python -c 'import tomllib;print(tomllib.loads(open("pyproject.toml","rb").read().decode())["project"]["version"])')
+          init_ver=$(python -c 'import ast;m=ast.parse(open("src/shimkit/__init__.py").read());\
+          v=[n.value.value for n in m.body if isinstance(n, ast.Assign) and n.targets[0].id=="__version__"][0];print(v)')
+          echo "tag:           $tag"
+          echo "pyproject:     $py_ver"
+          echo "__init__.py:   $init_ver"
+          if [ "$tag" != "$py_ver" ] || [ "$tag" != "$init_ver" ]; then
+            echo "::error::Version drift: tag=$tag, pyproject=$py_ver, __init__=$init_ver"
+            exit 1
+          fi
+      - name: Verify CHANGELOG has an Unreleased section or a matching version heading
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          if grep -qE "^## \[${tag}\]|^## \[Unreleased\]" CHANGELOG.md; then
+            echo "OK: CHANGELOG entry present"
+          else
+            echo "::error::CHANGELOG.md missing entry for [${tag}] or [Unreleased]"
             exit 1
           fi
 
@@ -45,6 +58,19 @@ jobs:
           cd installer
           sha256sum install.sh > install.sh.sha256
           cat install.sh.sha256
+      - name: Generate SBOM for the wheel
+        uses: anchore/sbom-action@v0
+        with:
+          path: ./dist
+          format: spdx-json
+          artifact-name: shimkit-sbom.spdx.json
+          output-file: ./dist/shimkit-sbom.spdx.json
+      - name: Attest build provenance for wheel + sdist
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: |
+            dist/*.whl
+            dist/*.tar.gz
       - uses: actions/upload-artifact@v7
         with:
           name: dist
@@ -88,6 +114,7 @@ jobs:
             installer/install.sh.sha256
             dist/*.whl
             dist/*.tar.gz
+            dist/shimkit-sbom.spdx.json
 
   bump-homebrew-tap:
     needs: publish-pypi
@@ -109,6 +136,8 @@ jobs:
     permissions:
       packages: write
       contents: read
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@v6
       - uses: docker/setup-qemu-action@v4
@@ -127,7 +156,8 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest
-      - uses: docker/build-push-action@v7
+      - id: build-push
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64,linux/arm64
@@ -136,3 +166,16 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: Attest container build provenance
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-name: ghcr.io/${{ github.repository }}
+          subject-digest: ${{ steps.build-push.outputs.digest }}
+          push-to-registry: true
+      - name: Generate container SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: ghcr.io/${{ github.repository }}@${{ steps.build-push.outputs.digest }}
+          format: spdx-json
+          artifact-name: shimkit-container-sbom.spdx.json
+          upload-artifact: true

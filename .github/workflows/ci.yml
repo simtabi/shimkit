@@ -32,7 +32,24 @@ jobs:
       - name: Type-check
         run: mypy src/shimkit
       - name: Tests
-        run: pytest -q
+        run: pytest -q --cov=shimkit --cov-report=term --cov-fail-under=65
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: Install dev dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Bandit (SAST, fail on medium+)
+        run: bandit -r src/shimkit -ll
+      - name: pip-audit (CVE scan, skip editable shimkit)
+        run: pip-audit --strict --skip-editable
 
   installer-shellcheck:
     runs-on: ubuntu-latest
@@ -41,3 +58,226 @@ jobs:
       - name: Install shellcheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
       - run: shellcheck installer/install.sh
+
+  dockerfile-hadolint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          # DL3008 (apt-get install without =version) is intentional for slim images;
+          # security updates come from rebuilds. DL3009 ditto for rm -rf /var/lib/apt/lists.
+          ignore: DL3008
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: Build sdist + wheel
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
+          retention-days: 7
+
+  smoke:
+    name: smoke (install built wheel + run CLI)
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install built wheel into a fresh venv
+        run: |
+          python -m venv .venv-smoke
+          ./.venv-smoke/bin/pip install --upgrade pip
+          ./.venv-smoke/bin/pip install dist/*.whl
+      - name: shimkit --help
+        run: ./.venv-smoke/bin/shimkit --help
+      - name: shimkit version
+        run: ./.venv-smoke/bin/shimkit version
+      - name: shimkit doctor
+        run: ./.venv-smoke/bin/shimkit doctor
+      - name: shimkit --help shows the three new sub-apps
+        run: |
+          out=$(./.venv-smoke/bin/shimkit --help)
+          for tool in dns adguard docker-clean; do
+            if ! echo "$out" | grep -q "$tool"; then
+              echo "::error::missing sub-app: $tool"
+              exit 1
+            fi
+          done
+
+  adguard-integration:
+    name: adguard integration (real AGH on ubuntu)
+    needs: build
+    runs-on: ubuntu-latest
+    # AGH version pinned so a release-side regression doesn't break our CI.
+    # Bump in lockstep with what we declare we support.
+    env:
+      AGH_VERSION: v0.107.74
+      AGH_DNS_PORT: '5300'
+      AGH_HTTP_PORT: '8000'
+      ADGUARD_USER: ci-admin
+      # Plaintext kept here intentionally — it's a throwaway test credential
+      # that never leaves the runner. Used to verify the API auth path.
+      ADGUARD_PASS: ci-test-pass
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install shimkit (built wheel) with the adguard extra
+        run: |
+          python -m venv .venv-agh
+          ./.venv-agh/bin/pip install --upgrade pip bcrypt
+          ./.venv-agh/bin/pip install "$(ls dist/*.whl)[adguard]"
+      - name: Download AdGuard Home binary
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/AdGuardHome"
+          curl -fsSL --proto '=https' --tlsv1.2 \
+            -o /tmp/agh.tar.gz \
+            "https://github.com/AdguardTeam/AdGuardHome/releases/download/${AGH_VERSION}/AdGuardHome_linux_amd64.tar.gz"
+          tar -xzf /tmp/agh.tar.gz -C /tmp
+          install -m 0755 /tmp/AdGuardHome/AdGuardHome "$RUNNER_TEMP/AdGuardHome/AdGuardHome"
+          "$RUNNER_TEMP/AdGuardHome/AdGuardHome" --version
+      - name: Pre-bake AdGuardHome.yaml (skip wizard, non-default ports)
+        run: |
+          HASH=$(./.venv-agh/bin/python -c "import bcrypt; print(bcrypt.hashpw(b'${ADGUARD_PASS}', bcrypt.gensalt(10)).decode())")
+          cat > "$RUNNER_TEMP/AdGuardHome/AdGuardHome.yaml" <<EOF
+          schema_version: 28
+          users:
+            - name: ${ADGUARD_USER}
+              password: ${HASH}
+          dns:
+            port: ${AGH_DNS_PORT}
+            bind_hosts:
+              - 127.0.0.1
+            bootstrap_dns:
+              - 127.0.0.1
+            upstream_dns:
+              - 127.0.0.1
+          http:
+            address: 127.0.0.1:${AGH_HTTP_PORT}
+            port: ${AGH_HTTP_PORT}
+          EOF
+          cat "$RUNNER_TEMP/AdGuardHome/AdGuardHome.yaml"
+      - name: Start AdGuard Home in the background
+        run: |
+          cd "$RUNNER_TEMP/AdGuardHome"
+          ./AdGuardHome -c AdGuardHome.yaml -w . --no-check-update -l agh.log > /dev/null 2>&1 &
+          echo $! > agh.pid
+          # Wait up to 30s for the control API.
+          for i in $(seq 1 30); do
+            if curl -fsS "http://127.0.0.1:${AGH_HTTP_PORT}/control/status" >/dev/null 2>&1; then
+              echo "AGH up after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::AdGuard Home did not come up within 30s"
+          tail -n 80 agh.log || true
+          exit 1
+      - name: shimkit adguard scan (read-only, expects no conflicts on our chosen ports)
+        run: |
+          ./.venv-agh/bin/shimkit adguard scan --install "$RUNNER_TEMP/AdGuardHome" --json | tee scan.json
+          python <<'PY'
+          import json, sys
+          d = json.load(open("scan.json"))
+          assert d["tool"] == "adguard", d
+          assert d["data"]["dns_port"] == 5300, d
+          assert d["data"]["http_port"] == 8000, d
+          # AGH is bound on 5300/8000; no non-AGH process should be holding those.
+          non_agh = [c for c in d["data"]["conflicts"] if c["port"] in (5300, 8000)]
+          assert not non_agh, f"unexpected conflicts: {non_agh}"
+          print("scan OK")
+          PY
+      - name: shimkit adguard ports show
+        run: |
+          ./.venv-agh/bin/shimkit adguard ports show --install "$RUNNER_TEMP/AdGuardHome" --json | tee ports.json
+          python <<'PY'
+          import json
+          d = json.load(open("ports.json"))
+          assert d["data"]["dns_port"] == 5300, d
+          assert d["data"]["http_port"] == 8000, d
+          print("ports show OK")
+          PY
+      - name: shimkit adguard verify (uses HTTP control API with env auth)
+        run: |
+          # Override api_base_url to our non-default port via SHIMKIT_CONFIG.
+          cat > "$RUNNER_TEMP/shimkit.json" <<JSON
+          {
+            "tools": {
+              "adguard": {
+                "api_base_url": "http://127.0.0.1:${AGH_HTTP_PORT}"
+              }
+            }
+          }
+          JSON
+          SHIMKIT_CONFIG="$RUNNER_TEMP/shimkit.json" \
+            ./.venv-agh/bin/shimkit adguard verify --install "$RUNNER_TEMP/AdGuardHome" --json | tee verify.json
+          python <<'PY'
+          import json
+          d = json.load(open("verify.json"))
+          assert d["tool"] == "adguard" and d["step"] == "verify", d
+          assert d["data"]["api"] is True, d
+          print("verify OK")
+          PY
+      - name: shimkit adguard fix --dry-run (plan only, no mutation)
+        run: |
+          ./.venv-agh/bin/shimkit adguard fix --install "$RUNNER_TEMP/AdGuardHome" --dry-run --json | tee fix.json
+          python <<'PY'
+          import json
+          d = json.load(open("fix.json"))
+          assert isinstance(d, list), d
+          # A list of step events; none should have `applied=True` in dry-run.
+          assert all(not e["data"]["applied"] for e in d), d
+          print("fix --dry-run OK")
+          PY
+      - name: shimkit adguard ports set --dry-run (verify dry-run gates writes)
+        run: |
+          ./.venv-agh/bin/shimkit adguard ports set --install "$RUNNER_TEMP/AdGuardHome" --dns 5300 --http 8000 --dry-run
+          # YAML must not have changed.
+          grep -q 'port: 5300' "$RUNNER_TEMP/AdGuardHome/AdGuardHome.yaml"
+      - name: Stop AdGuard Home
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/AdGuardHome/agh.pid" ]; then
+            kill "$(cat "$RUNNER_TEMP/AdGuardHome/agh.pid")" 2>/dev/null || true
+          fi
+      - name: Upload AGH log + JSON outputs on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: agh-integration-debug
+          path: |
+            ${{ runner.temp }}/AdGuardHome/agh.log
+            ${{ runner.temp }}/AdGuardHome/AdGuardHome.yaml
+            scan.json
+            ports.json
+            verify.json
+            fix.json
+          retention-days: 7
+          if-no-files-found: ignore
