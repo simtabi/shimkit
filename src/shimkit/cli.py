@@ -186,26 +186,25 @@ def doctor() -> None:
         except Exception as exc:
             UI.line(f"adguard        ERROR — {exc}")
 
+    # docker probe — shell out via CommandRunner instead of docker-py.
+    # The subprocess approach avoids docker-py's urllib3 connection-pool
+    # fds lingering past close() and triggering pytest's unraisable-
+    # exception warnings on Python 3.12+. Also means the probe works
+    # without the `[docker-clean]` extra installed.
     try:
-        import contextlib
+        from shimkit.core import CommandRunner
 
-        from shimkit.tools.docker_clean import client as _dc_client
-
-        c = _dc_client.get_client()
-        if c is None:
-            UI.line("docker         <not running>")
+        if _shutil.which("docker") is None:
+            UI.line("docker         <not installed>")
         else:
-            ver = "unknown"
-            try:
-                with contextlib.suppress(Exception):
-                    ver = c.version().get("Version", "unknown")
+            r = CommandRunner.run(
+                ["docker", "version", "--format", "{{.Server.Version}}"]
+            )
+            ver = r.stdout.strip()
+            if r.ok and ver:
                 UI.line(f"docker         {ver}")
-            finally:
-                # Close the docker-py client so the daemon socket is not
-                # left dangling. Without this, GC of the lingering fd on
-                # Python 3.12+ trips pytest's UnraisableException warning.
-                with contextlib.suppress(Exception):
-                    c.close()
+            else:
+                UI.line("docker         <not running>")
     except Exception as exc:
         UI.line(f"docker         ERROR — {exc}")
 
