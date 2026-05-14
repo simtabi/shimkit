@@ -3,6 +3,13 @@
 Releases are **tag-driven**. Push a `vX.Y.Z` tag, GitHub Actions does
 the rest.
 
+> **Current channels (as of v0.2.2):** GHCR container + GitHub
+> Release wheel. PyPI publishing is **deferred** — the
+> `publish-pypi` and `bump-homebrew-tap` jobs are removed from
+> `release.yml`. The "Phase 4 · PyPI" section of
+> [`shipping-checklist.md`](shipping-checklist.md) documents how to
+> re-enable them.
+
 For the one-time PyPI / npm / Docker setup (trusted publishers,
 environments, tokens), this repo follows the standard
 [PyPI Trusted Publishers](https://docs.pypi.org/trusted-publishers/)

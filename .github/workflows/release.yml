@@ -74,16 +74,13 @@ jobs:
           name: dist
           path: dist/
 
-  publish-pypi:
-    needs: build
-    runs-on: ubuntu-latest
-    environment: pypi    # tie OIDC trust to this environment
-    steps:
-      - uses: actions/download-artifact@v8
-        with:
-          name: dist
-          path: dist/
-      - uses: pypa/gh-action-pypi-publish@release/v1
+  # PyPI publishing is deliberately disabled. Distribution for v0.2.x
+  # is via the container at ghcr.io/simtabi/shimkit and the GitHub
+  # Release page's wheel + sdist. To re-enable, restore the
+  # publish-pypi + bump-homebrew-tap jobs from git history and
+  # configure trusted publishing at https://pypi.org/manage/account/publishing/
+  # (Owner=simtabi, Repository=shimkit, Workflow=release.yml,
+  # Environment=pypi, PyPI Project Name=shimkit).
 
   github-release:
     needs: build
@@ -101,19 +98,6 @@ jobs:
             dist/*.whl
             dist/*.tar.gz
             dist/shimkit-sbom.spdx.json
-
-  bump-homebrew-tap:
-    needs: publish-pypi
-    runs-on: ubuntu-latest
-    if: github.repository == 'simtabi/shimkit'
-    steps:
-      - name: Bump formula in homebrew-tap
-        uses: dawidd6/action-homebrew-bump-formula@v7
-        with:
-          token: ${{ secrets.TAP_GITHUB_TOKEN }}
-          tap: simtabi/homebrew-tap
-          formula: shimkit
-        continue-on-error: true   # tap may not exist yet on first release
 
   publish-ghcr:
     name: Publish container to GHCR

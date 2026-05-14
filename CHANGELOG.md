@@ -6,6 +6,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- Release pipeline: `publish-pypi` and `bump-homebrew-tap` jobs
+  removed from `release.yml`. Distribution channels for v0.2.x are
+  the GHCR container (`ghcr.io/simtabi/shimkit`) and the GitHub
+  Release wheel + sdist. v0.2.2's `publish-pypi` job repeatedly
+  failed with `invalid-publisher` even with trusted-publishing
+  configured on pypi.org; rather than chase the OIDC-claim mismatch
+  further this cycle, the project ships without PyPI for now.
+  [`docs/shipping-checklist.md`](docs/shipping-checklist.md) Phase
+  4 documents how to re-enable.
+- Docs: `docs/installation.md` now leads with the container and
+  GitHub-Release wheel; PyPI-style install commands are marked
+  pending. `docs/release.md` carries a banner noting the deferred
+  PyPI channel.
+
 ## [0.2.2] — 2026-05-14
 
 ### Fixed

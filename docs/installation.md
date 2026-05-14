@@ -1,22 +1,47 @@
 # Installation
 
-shimkit installs through whichever Python package manager you already
-use. There is no curl-pipe-sh installer; use the channel that fits
-your environment.
+> **As of v0.2.2:** shimkit is distributed via the container at
+> `ghcr.io/simtabi/shimkit` and the wheel attached to each
+> [GitHub Release](https://github.com/simtabi/shimkit/releases).
+> Publishing to PyPI is deferred — the trusted-publisher setup is in
+> place on the GitHub side (`release.yml` + `pypi` environment) but
+> the matching publisher on pypi.org is not configured yet, so
+> `pip install shimkit` does not work. Use one of the channels
+> below.
 
-## Direct install methods
+## Recommended channels
 
 ```bash
-uv tool install shimkit               # fastest; per-tool isolated venv
-pipx install shimkit                  # same isolation as uv
-pip install --user shimkit            # Python ≥ 3.10
-brew install simtabi/tap/shimkit      # once the tap is published
+# 1. Container (fully attested, multi-arch, no Python toolchain needed on host).
+docker pull ghcr.io/simtabi/shimkit:0.2.2
+docker run --rm ghcr.io/simtabi/shimkit:0.2.2 --help
+
+# 2. Wheel from the GitHub Release page (works with any Python ≥ 3.10).
+pip install --user \
+  https://github.com/simtabi/shimkit/releases/download/v0.2.2/shimkit-0.2.2-py3-none-any.whl
+
+# 3. Direct from a tag (no release-page step).
+pip install --user git+https://github.com/simtabi/shimkit@v0.2.2
+uv tool install   git+https://github.com/simtabi/shimkit@v0.2.2
+pipx install      git+https://github.com/simtabi/shimkit@v0.2.2
 ```
 
-`uv tool install` is the recommended path. `pipx` is the close
-second. `pip --user` works on any system with Python ≥ 3.10 but is
-the most fragile because it shares your user-site with everything
-else.
+The container is the most reproducible — pin to a digest
+(`ghcr.io/simtabi/shimkit@sha256:…`) for fully deterministic
+deploys. The wheel works on any system that already has a Python
+≥ 3.10 toolchain.
+
+## PyPI-style channels (pending)
+
+These will become the primary install once PyPI trusted-publishing
+is wired up:
+
+```bash
+uv tool install shimkit               # not yet — PyPI publishing pending
+pipx install shimkit                  # not yet — PyPI publishing pending
+pip install --user shimkit            # not yet — PyPI publishing pending
+brew install simtabi/tap/shimkit      # not yet — tap depends on PyPI
+```
 
 ## Optional dependency extras
 

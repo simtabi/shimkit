@@ -62,18 +62,24 @@ intentionally don't validate), see
 
 ## Phase 4 · PyPI
 
+> **Deferred as of 2026-05-14.** The `publish-pypi` and
+> `bump-homebrew-tap` jobs were removed from `release.yml` because
+> PyPI's trusted-publisher configuration could not be made to match
+> the GitHub OIDC claims for this repo (see `invalid-publisher` log
+> in the v0.2.2 release run). Container + GitHub Release wheel are
+> the distribution channels today. To re-enable, restore the jobs
+> from git history and complete the items below.
+
 | # | Status | Owner | Item |
 |---|--------|-------|------|
-| 4.1 | ⏳ **pending** | **user** | **Register / sign in to PyPI** and enable 2FA. ⚠ blocker for 4.2. |
-|  |  |  | <https://pypi.org/account/register/> (skip if you have an account). Account settings → 2FA → TOTP or WebAuthn. |
-| 4.2 | ⏳ **pending** | **user** | **Configure the trusted publisher** for `shimkit`. ⚠ blocker for `publish-pypi`. |
-|  |  |  | <https://pypi.org/manage/account/publishing/> → Add a new pending publisher → GitHub. Fill in EXACTLY: |
+| 4.1 | ⏸ deferred | user | **Register / sign in to PyPI** and enable 2FA. <https://pypi.org/account/register/>. |
+| 4.2 | ⏸ deferred | user | **Configure the trusted publisher** for `shimkit`. <https://pypi.org/manage/account/publishing/> → Add a new pending publisher → GitHub. Fill in EXACTLY: |
 |  |  |  | • PyPI Project Name: `shimkit` |
 |  |  |  | • Owner: `simtabi` |
 |  |  |  | • Repository name: `shimkit` |
 |  |  |  | • Workflow name: `release.yml` |
 |  |  |  | • Environment name: `pypi` |
-| 4.3 | ⏸ optional | user | (Dry-run only) Configure a `testpypi` trusted publisher at <https://test.pypi.org/manage/account/publishing/> and a `testpypi` GitHub environment if you want to rehearse a release on TestPyPI before hitting real PyPI. See [`docs/release.md`](release.md) for the staging-tag pattern. |
+| 4.3 | ⏸ optional | user | (Dry-run only) Configure a `testpypi` trusted publisher at <https://test.pypi.org/manage/account/publishing/> and a `testpypi` GitHub environment if you want to rehearse a release on TestPyPI before hitting real PyPI. |
 
 ## Phase 5 · First release
 
