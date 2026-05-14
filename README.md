@@ -40,6 +40,15 @@ self-update behaviour: [`docs/installation.md`](docs/installation.md).
   and Linux (incl. WSL, Docker).
 - **[`shimkit shell`](docs/tools/shell.md)** — Upgrade `bash` / `zsh` /
   `fish` / `ksh` via brew, apt, dnf, yum, pacman, apk, or zypper.
+- **[`shimkit dns`](docs/tools/dns.md)** — macOS DNS resolver recovery.
+  Diagnose, flush, fix (6-step escalation), test, rollback, and dump
+  diagnostic bundles.
+- **[`shimkit adguard`](docs/tools/adguard.md)** — AdGuard Home
+  port-conflict fixer (Linux). API-first, yaml fallback, with
+  systemd-resolved / NetworkManager handling.
+- **[`shimkit docker-clean`](docs/tools/docker-clean.md)** — Docker
+  resource cleanup (Linux + macOS + WSL). Status, quick, prune-*, nuke,
+  schedule-snippet emit.
 
 Plus three utilities:
 

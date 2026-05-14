@@ -13,10 +13,40 @@ pip install -e ".[dev]"
 pytest -q
 ruff check src tests
 mypy src/shimkit
+bandit -r src/shimkit -ll
+pip-audit --skip-editable
 ```
 
-CI runs the same four commands on macOS + Ubuntu × Python 3.10/3.11/3.12/3.13.
-All four must be green on every PR.
+CI runs the same gates on macOS + Ubuntu × Python 3.10/3.11/3.12/3.13.
+All must be green on every PR.
+
+### Pre-commit hooks (recommended)
+
+The same gates run pre-commit so PRs land without surprises:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+The default hooks run `ruff`, `ruff-format`, `shellcheck`, file-format
+checks, and trailing-whitespace cleanup. `mypy` is gated to the
+``manual`` stage (it's too slow for every commit); run it explicitly:
+
+```bash
+pre-commit run --hook-stage manual mypy
+```
+
+### Optional tool extras
+
+Each new tool has an optional dependency extra so the base install
+stays lean. To work on a specific tool, install its extra:
+
+```bash
+pip install -e ".[dev,adguard]"        # ruamel.yaml + requests + psutil
+pip install -e ".[dev,docker-clean]"   # docker SDK
+pip install -e ".[dev,extra-tools]"    # everything
+```
 
 ## Architecture rules
 

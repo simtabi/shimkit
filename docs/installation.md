@@ -35,6 +35,41 @@ pip install --user shimkit            # Python ≥ 3.10
 brew install simtabi/tap/shimkit      # once the tap is published
 ```
 
+## Optional dependency extras
+
+The base `shimkit` install is lean. The `java` and `shell` tools work
+out of the box; the three newer tools each have an optional extra so
+their dependencies (yaml, HTTP, psutil, docker-py, dnspython) only
+land when you actually use them.
+
+| Extra              | Pulls in                                  | Used by                |
+|--------------------|-------------------------------------------|------------------------|
+| `[dns]`            | `dnspython`                               | `shimkit dns verify` (optional precision) |
+| `[adguard]`        | `ruamel.yaml`, `requests`, `psutil`       | `shimkit adguard` (Linux) |
+| `[docker-clean]`   | `docker`                                  | `shimkit docker-clean` |
+| `[extra-tools]`    | All of the above                          | Everything new         |
+
+Install with an extra:
+
+```bash
+uv tool install 'shimkit[extra-tools]'
+# or
+pipx install 'shimkit[extra-tools]'
+# or
+pip install --user 'shimkit[extra-tools]'
+```
+
+Already installed and want to add an extra later:
+
+```bash
+uv tool install --upgrade 'shimkit[adguard]'
+# or
+pipx inject shimkit ruamel.yaml requests psutil
+```
+
+If you run a tool whose extra isn't installed, `shimkit` exits 69
+with a message naming the exact install command for your platform.
+
 ## Verifying the install
 
 ```bash

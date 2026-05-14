@@ -16,6 +16,10 @@ Three columns:
 Inputs that block downstream items are marked **⚠ blocker** in the
 notes column.
 
+For what each automated and manual gate validates (and what we
+intentionally don't validate), see
+[`validation-scope.md`](validation-scope.md).
+
 ---
 
 ## Phase 1 · Code & repo setup
@@ -23,12 +27,13 @@ notes column.
 | # | Status | Owner | Item |
 |---|--------|-------|------|
 | 1.1 | ✅ done | code | shimkit package built: src/ layout, hatchling backend, py.typed, bundled `defaults.json`. Wheel builds cleanly (`python -m build`). |
-| 1.2 | ✅ done | code | Tests pass: 77 pytest cases, ruff strict, mypy strict + pydantic plugin, shellcheck. |
-| 1.3 | ✅ done | code | CI workflow (`.github/workflows/ci.yml`) — macOS + Ubuntu × Python 3.10/3.11/3.12/3.13. |
-| 1.4 | ✅ done | code | Release workflow (`.github/workflows/release.yml`) — `guard` → `build` → `publish-pypi` → `github-release` → `publish-ghcr` → `bump-homebrew-tap`. |
-| 1.5 | ✅ done | code | Container image scaffolding: `Dockerfile` (multi-stage, non-root, slim base) + `.dockerignore`. |
-| 1.6 | ✅ done | code | Org-style docs: `README.md`, `docs/{installation,configuration,architecture,release,tools/java,tools/shell}.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`. |
-| 1.7 | ✅ done | code | Community hygiene: `.github/ISSUE_TEMPLATE/{bug_report,feature_request,config}.yml`, `.github/PULL_REQUEST_TEMPLATE.md`, `.github/dependabot.yml`. |
+| 1.2 | ✅ done | code | Tests pass: 115 pytest cases (was 77; +38 for the new tools and the pkgmgr argv regression). ruff strict, mypy strict + pydantic plugin, shellcheck, bandit (`-ll`, fail on medium+), pip-audit (`--skip-editable`). |
+| 1.3 | ✅ done | code | CI workflow — macOS + Ubuntu × Python 3.10/3.11/3.12/3.13. Jobs: `test`, `security` (bandit + pip-audit), `installer-shellcheck`, `dockerfile-hadolint`, `build` (sdist+wheel artifact), `smoke` (install wheel in clean venv on macOS + Ubuntu and run `shimkit doctor`), `adguard-integration` (runs real AGH v0.107.74 on ubuntu-latest, exercises `scan/verify/ports show/fix --dry-run/ports set --dry-run` against a live daemon on non-default ports 5300/8000). |
+| 1.4 | ✅ done | code | Release workflow — `guard` (validates tag == pyproject == `__version__` + CHANGELOG section present) → `build` (sdist+wheel, install.sh.sha256, SPDX SBOM, `actions/attest-build-provenance` for wheel + sdist) → `publish-pypi` (OIDC) → `github-release` (assets + SBOM) → `publish-ghcr` (multi-arch + attest-build-provenance to GHCR + container SBOM) → `bump-homebrew-tap`. |
+| 1.5 | ✅ done | code | Container image: multi-stage, non-root `shimkit` user, OCI labels, `HEALTHCHECK ["shimkit", "version"]`, base image pinned by manifest digest (`python:3.12-slim@sha256:401f6e1a…`). `.dockerignore` present. Dependabot's `docker` ecosystem keeps the digest current. |
+| 1.6 | ✅ done | code | Org-style docs: `README.md`, `docs/{installation,configuration,architecture,release,tools/{java,shell,dns,adguard,docker-clean}}.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`. |
+| 1.7 | ✅ done | code | Community hygiene: `.github/ISSUE_TEMPLATE/{bug_report,feature_request,config}.yml`, `.github/PULL_REQUEST_TEMPLATE.md`, `.github/dependabot.yml` (pip + github-actions + docker, weekly Monday 06:00 America/New_York), `.pre-commit-config.yaml`. |
+| 1.8 | ⏳ pending | user | Configure branch protection on `main`: require `test`, `security`, `build`, `smoke`, `installer-shellcheck`, `dockerfile-hadolint` checks before merge. Repo Settings → Branches → Add rule. |
 
 ## Phase 2 · GitHub remote
 

@@ -18,6 +18,12 @@ shimkit is a collection. Each tool gets its own page:
   Install / list / switch / upgrade / uninstall / remove-oracle.
 - **[`shimkit shell`](tools/shell.md)** — Cross-PM shell upgrader for
   bash / zsh / fish / ksh.
+- **[`shimkit dns`](tools/dns.md)** — macOS DNS resolver recovery.
+  Diagnose, flush, fix (6-step escalation), test, rollback.
+- **[`shimkit adguard`](tools/adguard.md)** — AdGuard Home port-conflict
+  fixer (Linux). API-first, ruamel.yaml fallback.
+- **[`shimkit docker-clean`](tools/docker-clean.md)** — Docker resource
+  cleanup (Linux + macOS + WSL). docker-py SDK + buildx-aware prune.
 
 Top-level utilities (not tools):
 
@@ -37,6 +43,9 @@ Top-level utilities (not tools):
 - **[Shipping checklist](shipping-checklist.md)** — every step from
   "code ready" to "users can install", in dependency order. Tracks
   what's done vs what still needs your action.
+- **[Validation scope](validation-scope.md)** — what's in scope for
+  automated + manual gates, what's deliberately out of scope, and
+  how to expand the envelope.
 
 External references:
 

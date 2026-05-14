@@ -59,8 +59,21 @@ mutating the user's actual config.
     "install_url": "https://raw.githubusercontent.com/Homebrew/install/<sha>/install.sh"
   },
   "tools": {
-    "java":  { "default_version": 21, "supported_versions": [...] },
-    "shell": { "supported_shells": ["bash", "zsh", "fish", "ksh"] }
+    "java":         { "default_version": 21, "supported_versions": [...] },
+    "shell":        { "supported_shells": ["bash", "zsh", "fish", "ksh"] },
+    "dns":          { "test_domains": [...], "dns_servers": {...},
+                      "nuclear_confirm_token": "REGENERATE",
+                      "reset_confirm_token": "RESET",
+                      "backup_dir": "~/Library/Application Support/shimkit/dns-backups" },
+    "adguard":      { "install_candidates": [...], "target_ports": [...],
+                      "safe_units_to_stop": [...],
+                      "resolv_conf_mode": "symlink",
+                      "prefer_api_over_yaml": true,
+                      "api_base_url": "http://127.0.0.1:80" },
+    "docker_clean": { "nuke_confirm_token": "DELETE",
+                      "kubernetes_image_patterns": [...],
+                      "daemon_verify_timeout_seconds": 30,
+                      "default_buildx_prune_all": true }
   },
   "package_managers": {
     "preference_order": ["brew", "apt", "dnf", "yum", "pacman", "apk", "zypper"],
@@ -100,10 +113,18 @@ other editors will hint and validate fields as you type.
 - Oracle JDK cleanup glob patterns and safe-root validation roots
 - Supported shells and their rc-file mappings
 - Package-manager preference order, install/update/upgrade command
-  templates
+  templates (string form or argv-list form — argv preferred, see
+  [`tools/shell.md`](tools/shell.md))
 - UI colour mode and the back-label string
 - Self-update toggle, github_repo for messaging
 - The Homebrew install-script URL pin
+- DNS recovery: test domains, DNS server profiles, step timeout,
+  confirmation tokens for `reset` and `--nuclear`, backup directory
+- AdGuard Home: install search paths, default remap ports, target
+  ports list, safe-to-stop systemd units, `resolv_conf_mode`
+  (symlink vs static), API-first preference, API base URL
+- docker-clean: nuke-confirmation token, Kubernetes image patterns,
+  daemon-verify timeout, default `buildx prune --all`
 
 **Not configurable** (logic-critical, stay in code):
 
@@ -167,3 +188,59 @@ Note this replaces the whole list — include every version you want.
   }
 }
 ```
+
+### Pin a less aggressive DNS recovery profile
+
+By default `shimkit dns fix` uses the `cloudflare` profile from
+`tools.dns.dns_servers`. Override the available profiles or change
+the test domains used to verify resolution:
+
+```json
+{
+  "tools": {
+    "dns": {
+      "test_domains": ["example.com"],
+      "dns_servers": {
+        "cloudflare": ["1.1.1.1", "1.0.0.1"],
+        "quad9":      ["9.9.9.9", "149.112.112.112"]
+      },
+      "nuclear_confirm_token": "I_REALLY_MEAN_IT"
+    }
+  }
+}
+```
+
+Then: `shimkit dns fix --profile=quad9`.
+
+### Tell `shimkit adguard fix` to keep `/etc/resolv.conf` static
+
+The default is `symlink` (the AGH FAQ recommendation —
+`/etc/resolv.conf -> /run/systemd/resolve/resolv.conf`). For
+appliance-style hosts where the symlink is brittle, switch to a
+static file:
+
+```json
+{
+  "tools": {
+    "adguard": {
+      "resolv_conf_mode": "static",
+      "prefer_api_over_yaml": false,
+      "api_base_url": "http://127.0.0.1:3000"
+    }
+  }
+}
+```
+
+### Strengthen the docker-clean `nuke` confirmation token
+
+```json
+{
+  "tools": {
+    "docker_clean": {
+      "nuke_confirm_token": "DESTROY-DEV-ENV"
+    }
+  }
+}
+```
+
+Then: `shimkit docker-clean nuke --confirm DESTROY-DEV-ENV`.
