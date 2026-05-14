@@ -230,7 +230,8 @@ any future tool — and the help text stays aligned.
 | `--log-file PATH` | JSONL append; secret-looking keys redacted. |
 | `--timeout SECS` | Network / wait timeout (default 30). |
 | `--color={auto,always,never}` | Honours `NO_COLOR` env. |
-| `--no-input`     | Never prompt (also when stdin is not a TTY). |
+| `--no-color`     | Shorthand for `--color=never`. |
+| `--no-input`     | Never prompt (also when stdin is not a TTY). MODERATE-tier `[y/N]` prompts refuse rather than block. |
 
 Exit codes are documented in `shimkit --help`:
 

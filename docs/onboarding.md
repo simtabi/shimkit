@@ -180,8 +180,10 @@ from __future__ import annotations
 import typer
 from shimkit.core import UI, attach_file_handler, set_verbose
 from shimkit.core.cli_flags import (
-    DRY_RUN, JSON_OUT, LOG_FILE, QUIET, VERBOSE,
+    COLOR, DRY_RUN, JSON_OUT, LOG_FILE, NO_COLOR, NO_INPUT,
+    QUIET, VERBOSE, YES, FORCE,
 )
+from shimkit.core.menu import Menu
 
 <name>_app = typer.Typer(
     name="<name>",
@@ -190,14 +192,35 @@ from shimkit.core.cli_flags import (
 )
 
 
-def _bootstrap(log_file: str | None, verbose: bool, quiet: bool = False) -> None:
+def _bootstrap(
+    log_file: str | None,
+    verbose: bool,
+    quiet: bool,
+    no_color: bool,
+    color: str | None,
+    no_input: bool,
+) -> None:
     if verbose: set_verbose(True)
     if quiet:   UI.set_quiet(True)
     if log_file: attach_file_handler(log_file)
+    if no_color: UI.set_color_mode("never")
+    elif color:  UI.set_color_mode(color)
+    if no_input: UI.set_no_input(True)
 
 
+# Universal flags live on the callback so every subcommand inherits them
+# without repeating the wiring on each `do-thing` signature.
 @<name>_app.callback(invoke_without_command=True)
-def _root(ctx: typer.Context) -> None:
+def _root(
+    ctx: typer.Context,
+    quiet: bool = QUIET,
+    verbose: bool = VERBOSE,
+    log_file: str = LOG_FILE,
+    no_color: bool = NO_COLOR,
+    color: str = COLOR,
+    no_input: bool = NO_INPUT,
+) -> None:
+    _bootstrap(log_file, verbose, quiet, no_color, color, no_input)
     if ctx.invoked_subcommand is None:
         from .manager import <Name>Manager
         <Name>Manager.create().boot().run()
@@ -206,14 +229,22 @@ def _root(ctx: typer.Context) -> None:
 @<name>_app.command("do-thing")
 def do_thing(
     json_out: bool = JSON_OUT,
-    log_file: str = LOG_FILE,
-    verbose: bool = VERBOSE,
-    quiet: bool = QUIET,
+    dry_run: bool = DRY_RUN,
+    yes: bool = YES,
+    force: bool = FORCE,
 ) -> None:
     """One-line description (shown in --help)."""
-    _bootstrap(log_file, verbose, quiet)
+    # MODERATE-tier confirmation for non-trivial mutators. Short-circuits
+    # on --yes / --force; refuses (rather than blocks) under --no-input.
+    if not Menu.prompt_for_change(
+        "This will mutate <thing>",
+        yes=yes, force=force, no_input=UI.is_no_input(),
+    ):
+        raise typer.Exit(0)
     from .manager import <Name>Manager
-    code = <Name>Manager.create().boot().do_thing(json_out=json_out)
+    code = <Name>Manager.create().boot().do_thing(
+        json_out=json_out, dry_run=dry_run
+    )
     raise typer.Exit(code)
 ```
 
@@ -299,7 +330,10 @@ def _require_optional_extras() -> bool:
 - CLI `--help` lists every subcommand.
 - `--json` mode emits parseable JSON for at least one command.
 - `--dry-run` makes no destructive calls (assert via monkeypatch).
-- Severe-tier ops abort without `--confirm`.
+- Severe-tier ops abort without `--confirm <token>`.
+- MODERATE-tier ops prompt `[y/N]` by default, skip on `--yes` /
+  `--force`, and refuse (exit 0 without mutating) under `--no-input`
+  or non-TTY stdin.
 
 Mock at `shimkit.core.CommandRunner.run`, `Platform(...)`, and the
 tool-specific external libraries (`docker.from_env`, `requests`,

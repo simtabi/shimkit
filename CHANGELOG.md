@@ -42,11 +42,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - CI: new `security` job (bandit + pip-audit), `dockerfile-hadolint`,
   `build` (sdist+wheel artifact), `smoke` (install built wheel on
   macOS + Ubuntu and run the CLI). Pytest now runs with `--cov` and
-  a **65%** coverage floor — **222 tests** at HEAD (the original 77
+  a **65%** coverage floor — **233 tests** at HEAD (the original 77
   plus 38 for the three new tools plus 101 follow-up tests targeting
   manager methods, fixer steps, pruner error paths, resolv mutators,
   api set_ports payload, desktop fallback, and the parsers in
-  scutil/networksetup/client/yaml_editor/cgroup-v2). Per-tool
+  scutil/networksetup/client/yaml_editor/cgroup-v2, plus 11 from the
+  cleanup-2026-05-14 pass covering CLI-flag wiring, MODERATE prompts,
+  extras-missing exit 69, and EX_CONFIG exit 78). Per-tool
   coverage: dns 76% (scutil 96%, commands 93%), adguard 64%
   (yaml_editor 97%, finder 88%), docker_clean 73% (models 97%,
   schedule 86%). Raising toward 85% as additional tests land —
