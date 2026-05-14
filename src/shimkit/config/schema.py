@@ -78,15 +78,103 @@ class ShellToolConfig(_StrictModel):
     config_map: dict[str, ShellConfigEntry]
 
 
+class DnsConfig(_StrictModel):
+    """macOS DNS recovery tool — `shimkit dns`."""
+
+    test_domains: list[str] = Field(
+        default_factory=lambda: ["google.com", "cloudflare.com"]
+    )
+    dns_servers: dict[str, list[str]] = Field(
+        default_factory=lambda: {
+            "cloudflare": ["1.1.1.1", "1.0.0.1"],
+            "google": ["8.8.8.8", "8.8.4.4"],
+        }
+    )
+    step_timeout_seconds: int = Field(default=5, ge=1, le=60)
+    nuclear_confirm_token: str = "REGENERATE"
+    reset_confirm_token: str = "RESET"
+    backup_dir: str = "~/Library/Application Support/shimkit/dns-backups"
+
+
+class AdGuardTargetPort(_StrictModel):
+    """One row in `tools.adguard.target_ports`."""
+
+    port: int = Field(..., ge=1, le=65535)
+    proto: Literal["tcp", "udp"]
+    role: str = Field(..., description="Human-readable role label, e.g. 'DNS'")
+
+
+class AdGuardConfig(_StrictModel):
+    """AdGuard Home port-conflict fixer — `shimkit adguard`."""
+
+    install_candidates: list[str] = Field(
+        default_factory=lambda: [
+            "/opt/AdGuardHome",
+            "/usr/local/AdGuardHome",
+            "/var/lib/AdGuardHome",
+            "/etc/AdGuardHome",
+        ]
+    )
+    default_remap_dns_port: int = Field(default=5353, ge=1, le=65535)
+    default_remap_http_port: int = Field(default=8080, ge=1, le=65535)
+    target_ports: list[AdGuardTargetPort] = Field(
+        default_factory=lambda: [
+            AdGuardTargetPort(port=53, proto="tcp", role="DNS"),
+            AdGuardTargetPort(port=53, proto="udp", role="DNS"),
+            AdGuardTargetPort(port=80, proto="tcp", role="WebUI"),
+            AdGuardTargetPort(port=443, proto="tcp", role="WebUI-TLS"),
+            AdGuardTargetPort(port=3000, proto="tcp", role="Setup"),
+        ]
+    )
+    safe_units_to_stop: list[str] = Field(
+        default_factory=lambda: [
+            "dnsmasq.service",
+            "bind9.service",
+            "named.service",
+            "unbound.service",
+        ]
+    )
+    pihole_unit: str = "pihole-FTL.service"
+    resolv_conf_mode: Literal["symlink", "static"] = "symlink"
+    prefer_api_over_yaml: bool = True
+    api_base_url: str = "http://127.0.0.1:80"
+
+
+class DockerCleanConfig(_StrictModel):
+    """Docker resource cleanup — `shimkit docker-clean`."""
+
+    nuke_confirm_token: str = "DELETE"
+    kubernetes_image_patterns: list[str] = Field(
+        default_factory=lambda: [
+            "registry.k8s.io",
+            "kube-",
+            "kubernetes",
+            "desktop-",
+        ]
+    )
+    daemon_verify_timeout_seconds: int = Field(default=30, ge=1, le=300)
+    default_buildx_prune_all: bool = True
+
+
 class ToolsConfig(_StrictModel):
     java: JavaConfig
     shell: ShellToolConfig
+    dns: DnsConfig = Field(default_factory=DnsConfig)
+    adguard: AdGuardConfig = Field(default_factory=AdGuardConfig)
+    docker_clean: DockerCleanConfig = Field(default_factory=DockerCleanConfig)
 
 
 class PackageManagerEntry(_StrictModel):
-    install_cmd: str
-    update_cmd: str
-    upgrade_cmd: str
+    # Each *_cmd may be either:
+    #   - a string template (legacy form; rendered with shell=True). Kept
+    #     for backward compatibility with existing user configs.
+    #   - a list of argv tokens with literal ``${pkg}`` placeholders
+    #     (preferred form; rendered with shell=False, no interpolation).
+    # New defaults.json entries use the argv-list form. See
+    # PackageManager._run for the dispatch rule.
+    install_cmd: str | list[str]
+    update_cmd: str | list[str]
+    upgrade_cmd: str | list[str]
     platforms: list[Literal["macos", "linux"]]
 
 

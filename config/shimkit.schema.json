@@ -1,5 +1,104 @@
 {
   "$defs": {
+    "AdGuardConfig": {
+      "additionalProperties": false,
+      "description": "AdGuard Home port-conflict fixer — `shimkit adguard`.",
+      "properties": {
+        "install_candidates": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Install Candidates",
+          "type": "array"
+        },
+        "default_remap_dns_port": {
+          "default": 5353,
+          "maximum": 65535,
+          "minimum": 1,
+          "title": "Default Remap Dns Port",
+          "type": "integer"
+        },
+        "default_remap_http_port": {
+          "default": 8080,
+          "maximum": 65535,
+          "minimum": 1,
+          "title": "Default Remap Http Port",
+          "type": "integer"
+        },
+        "target_ports": {
+          "items": {
+            "$ref": "#/$defs/AdGuardTargetPort"
+          },
+          "title": "Target Ports",
+          "type": "array"
+        },
+        "safe_units_to_stop": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Safe Units To Stop",
+          "type": "array"
+        },
+        "pihole_unit": {
+          "default": "pihole-FTL.service",
+          "title": "Pihole Unit",
+          "type": "string"
+        },
+        "resolv_conf_mode": {
+          "default": "symlink",
+          "enum": [
+            "symlink",
+            "static"
+          ],
+          "title": "Resolv Conf Mode",
+          "type": "string"
+        },
+        "prefer_api_over_yaml": {
+          "default": true,
+          "title": "Prefer Api Over Yaml",
+          "type": "boolean"
+        },
+        "api_base_url": {
+          "default": "http://127.0.0.1:80",
+          "title": "Api Base Url",
+          "type": "string"
+        }
+      },
+      "title": "AdGuardConfig",
+      "type": "object"
+    },
+    "AdGuardTargetPort": {
+      "additionalProperties": false,
+      "description": "One row in `tools.adguard.target_ports`.",
+      "properties": {
+        "port": {
+          "maximum": 65535,
+          "minimum": 1,
+          "title": "Port",
+          "type": "integer"
+        },
+        "proto": {
+          "enum": [
+            "tcp",
+            "udp"
+          ],
+          "title": "Proto",
+          "type": "string"
+        },
+        "role": {
+          "description": "Human-readable role label, e.g. 'DNS'",
+          "title": "Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "port",
+        "proto",
+        "role"
+      ],
+      "title": "AdGuardTargetPort",
+      "type": "object"
+    },
     "BrewConfig": {
       "additionalProperties": false,
       "properties": {
@@ -10,6 +109,85 @@
         }
       },
       "title": "BrewConfig",
+      "type": "object"
+    },
+    "DnsConfig": {
+      "additionalProperties": false,
+      "description": "macOS DNS recovery tool — `shimkit dns`.",
+      "properties": {
+        "test_domains": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Test Domains",
+          "type": "array"
+        },
+        "dns_servers": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": "Dns Servers",
+          "type": "object"
+        },
+        "step_timeout_seconds": {
+          "default": 5,
+          "maximum": 60,
+          "minimum": 1,
+          "title": "Step Timeout Seconds",
+          "type": "integer"
+        },
+        "nuclear_confirm_token": {
+          "default": "REGENERATE",
+          "title": "Nuclear Confirm Token",
+          "type": "string"
+        },
+        "reset_confirm_token": {
+          "default": "RESET",
+          "title": "Reset Confirm Token",
+          "type": "string"
+        },
+        "backup_dir": {
+          "default": "~/Library/Application Support/shimkit/dns-backups",
+          "title": "Backup Dir",
+          "type": "string"
+        }
+      },
+      "title": "DnsConfig",
+      "type": "object"
+    },
+    "DockerCleanConfig": {
+      "additionalProperties": false,
+      "description": "Docker resource cleanup — `shimkit docker-clean`.",
+      "properties": {
+        "nuke_confirm_token": {
+          "default": "DELETE",
+          "title": "Nuke Confirm Token",
+          "type": "string"
+        },
+        "kubernetes_image_patterns": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Kubernetes Image Patterns",
+          "type": "array"
+        },
+        "daemon_verify_timeout_seconds": {
+          "default": 30,
+          "maximum": 300,
+          "minimum": 1,
+          "title": "Daemon Verify Timeout Seconds",
+          "type": "integer"
+        },
+        "default_buildx_prune_all": {
+          "default": true,
+          "title": "Default Buildx Prune All",
+          "type": "boolean"
+        }
+      },
+      "title": "DockerCleanConfig",
       "type": "object"
     },
     "JavaConfig": {
@@ -127,16 +305,46 @@
       "additionalProperties": false,
       "properties": {
         "install_cmd": {
-          "title": "Install Cmd",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ],
+          "title": "Install Cmd"
         },
         "update_cmd": {
-          "title": "Update Cmd",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ],
+          "title": "Update Cmd"
         },
         "upgrade_cmd": {
-          "title": "Upgrade Cmd",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ],
+          "title": "Upgrade Cmd"
         },
         "platforms": {
           "items": {
@@ -267,6 +475,15 @@
         },
         "shell": {
           "$ref": "#/$defs/ShellToolConfig"
+        },
+        "dns": {
+          "$ref": "#/$defs/DnsConfig"
+        },
+        "adguard": {
+          "$ref": "#/$defs/AdGuardConfig"
+        },
+        "docker_clean": {
+          "$ref": "#/$defs/DockerCleanConfig"
         }
       },
       "required": [

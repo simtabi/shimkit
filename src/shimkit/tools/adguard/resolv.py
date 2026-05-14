@@ -1,0 +1,144 @@
+"""systemd-resolved + /etc/resolv.conf + NetworkManager remediation.
+
+The bash version had three gaps:
+
+1. The systemd-resolved drop-in path was correct but the rewrite of
+   ``/etc/resolv.conf`` used the **static** form unconditionally. The
+   AGH FAQ recommends the **symlink** form by default; we make it
+   configurable via ``config.tools.adguard.resolv_conf_mode``.
+2. NetworkManager would silently re-clobber ``/etc/resolv.conf`` on
+   the next interface event. The script only warned. We write the
+   canonical ``dns=none`` drop-in and reload NM.
+3. The static file would orphan the user's existing nameservers. We
+   back up the prior file first (atomic-rename style).
+"""
+
+from __future__ import annotations
+
+import os
+from datetime import datetime
+from pathlib import Path
+
+from shimkit.core import CommandRunner, Systemd, sudo_prefix
+
+_DROP_IN_UNIT = "systemd-resolved.service"
+_DROP_IN_NAME = "90-shimkit-adguardhome.conf"
+_DROP_IN_BODY = """[Resolve]
+# Managed by shimkit adguard fix — frees port 53 for AdGuard Home.
+DNS=127.0.0.1
+DNSStubListener=no
+"""
+
+_RESOLV = Path("/etc/resolv.conf")
+_RESOLV_STATIC = """# Managed by shimkit adguard fix.
+# Routes all glibc resolver lookups through AdGuard Home on 127.0.0.1.
+nameserver 127.0.0.1
+options edns0 trust-ad
+"""
+
+_NM_DROP_IN = Path("/etc/NetworkManager/conf.d/90-shimkit-adguardhome.conf")
+_NM_BODY = """[main]
+# Managed by shimkit adguard fix — keep NetworkManager from rewriting
+# /etc/resolv.conf so AdGuard Home stays in charge of DNS.
+dns=none
+"""
+
+
+def is_resolved_active() -> bool:
+    return Systemd.is_active("systemd-resolved")
+
+
+def is_nm_active() -> bool:
+    return Systemd.is_active("NetworkManager")
+
+
+def disable_resolved_stub() -> None:
+    """Drop-in that disables the stub listener; reload-or-restart resolved."""
+    Systemd.write_drop_in(_DROP_IN_UNIT, _DROP_IN_NAME, _DROP_IN_BODY)
+    Systemd.daemon_reload()
+    Systemd.reload_or_restart("systemd-resolved")
+
+
+def write_resolv_symlink() -> Path:
+    """The AGH FAQ-recommended path: symlink to /run/systemd/resolve/resolv.conf.
+
+    Falls back to the static form if /run path doesn't exist.
+    """
+    target = Path("/run/systemd/resolve/resolv.conf")
+    if not target.exists():
+        return write_resolv_static()
+    _back_up_resolv()
+    CommandRunner.run([*sudo_prefix(), "rm", "-f", str(_RESOLV)], capture_output=False)
+    CommandRunner.run(
+        [*sudo_prefix(), "ln", "-sf", str(target), str(_RESOLV)],
+        capture_output=False,
+    )
+    return _RESOLV
+
+
+def write_resolv_static() -> Path:
+    """Static /etc/resolv.conf pointing at 127.0.0.1 (AGH)."""
+    _back_up_resolv()
+    import tempfile
+
+    fd, tmp = tempfile.mkstemp(prefix="shimkit-resolv-", suffix=".conf")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(_RESOLV_STATIC)
+        CommandRunner.run(
+            [
+                *sudo_prefix(),
+                "install",
+                "-m", "0644",
+                "-o", "root",
+                tmp,
+                str(_RESOLV),
+            ],
+            capture_output=False,
+        )
+    finally:
+        Path(tmp).unlink(missing_ok=True)
+    return _RESOLV
+
+
+def _back_up_resolv() -> Path | None:
+    if not (_RESOLV.exists() or _RESOLV.is_symlink()):
+        return None
+    ts = datetime.now().strftime("%Y%m%d%H%M%S")
+    bak = Path(f"/etc/resolv.conf.bak-{ts}")
+    CommandRunner.run(
+        [*sudo_prefix(), "cp", "-aL", str(_RESOLV), str(bak)],
+        capture_output=False,
+    )
+    return bak
+
+
+def configure_network_manager() -> None:
+    """Tell NM to stop managing /etc/resolv.conf. Idempotent."""
+    if not is_nm_active():
+        return
+    import tempfile
+
+    fd, tmp = tempfile.mkstemp(prefix="shimkit-nm-", suffix=".conf")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(_NM_BODY)
+        CommandRunner.run(
+            [
+                *sudo_prefix(),
+                "install",
+                "-m", "0644",
+                "-o", "root",
+                tmp,
+                str(_NM_DROP_IN),
+            ],
+            capture_output=False,
+        )
+    finally:
+        Path(tmp).unlink(missing_ok=True)
+    CommandRunner.run([*sudo_prefix(), "nmcli", "general", "reload"], capture_output=False)
+
+
+def latest_resolv_backup() -> Path | None:
+    candidates = sorted(Path("/etc").glob("resolv.conf.bak-*"))
+    return candidates[-1] if candidates else None

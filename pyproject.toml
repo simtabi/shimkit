@@ -43,6 +43,20 @@ dev = [
   "pytest-cov>=6.0",
   "ruff>=0.9",
   "mypy>=1.13",
+  "bandit>=1.7",
+  "pip-audit>=2.7",
+]
+# Per-tool optional extras. The base `shimkit` install is intentionally
+# lean; users add the extras they need. `extra-tools` is the umbrella.
+dns          = ["dnspython>=2.7"]
+adguard      = ["ruamel.yaml>=0.18", "requests>=2.32", "psutil>=6.0"]
+docker-clean = ["docker>=7.1"]
+extra-tools  = [
+  "dnspython>=2.7",
+  "ruamel.yaml>=0.18",
+  "requests>=2.32",
+  "psutil>=6.0",
+  "docker>=7.1",
 ]
 
 [project.scripts]
@@ -85,6 +99,11 @@ src = ["src", "tests"]
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF"]
 ignore = ["E501"]
+
+[tool.ruff.lint.flake8-bugbear]
+# Typer uses callable defaults in function signatures as its public API.
+# B008 would otherwise flag every command we declare.
+extend-immutable-calls = ["typer.Argument", "typer.Option"]
 
 [tool.mypy]
 python_version = "3.10"

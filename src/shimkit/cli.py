@@ -13,6 +13,10 @@ import sys
 import typer
 
 from shimkit import __version__
+from shimkit.core import UI
+from shimkit.tools.adguard.commands import adguard_app
+from shimkit.tools.dns.commands import dns_app
+from shimkit.tools.docker_clean.commands import docker_clean_app
 from shimkit.tools.java.commands import java_app
 from shimkit.tools.shell.commands import shell_app
 
@@ -27,6 +31,9 @@ app = typer.Typer(
 
 app.add_typer(java_app)
 app.add_typer(shell_app)
+app.add_typer(dns_app)
+app.add_typer(adguard_app)
+app.add_typer(docker_clean_app)
 
 
 # --- config -----------------------------------------------------------------
@@ -49,19 +56,17 @@ def config_show(
     try:
         cfg = load()
     except ConfigError as exc:
-        typer.secho(str(exc), fg=typer.colors.RED, err=True)
+        UI.error(str(exc))
         raise typer.Exit(1) from exc
 
     data: object = cfg.model_dump(mode="json")
     if section:
         for part in section.split("."):
             if not isinstance(data, dict) or part not in data:
-                typer.secho(
-                    f"No such config key: {section}", fg=typer.colors.RED, err=True
-                )
+                UI.error(f"No such config key: {section}")
                 raise typer.Exit(1)
             data = data[part]
-    typer.echo(_json.dumps(data, indent=2, ensure_ascii=False))
+    UI.line(_json.dumps(data, indent=2, ensure_ascii=False))
 
 
 @config_app.command("path")
@@ -70,25 +75,27 @@ def config_path() -> None:
     from shimkit.config import bundled_defaults_path, user_config_path
 
     user = user_config_path()
-    typer.echo(f"defaults: {bundled_defaults_path()}")
-    typer.echo(f"user:     {user}  ({'exists' if user.exists() else 'missing'})")
+    UI.line(f"defaults: {bundled_defaults_path()}")
+    UI.line(f"user:     {user}  ({'exists' if user.exists() else 'missing'})")
 
 
 @config_app.command("edit")
 def config_edit() -> None:
     """Open the user override config in $EDITOR (creates from template if missing)."""
     import os as _os
-    import subprocess
 
     from shimkit.config import user_config_path
+    from shimkit.core import CommandRunner
 
     path = user_config_path()
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(_user_config_template(), encoding="utf-8")
-        typer.echo(f"Created template at {path}")
+        UI.line(f"Created template at {path}")
     editor = _os.environ.get("EDITOR") or _os.environ.get("VISUAL") or "vi"
-    raise typer.Exit(subprocess.call([editor, str(path)]))
+    # capture_output=False so the editor inherits the parent's stdin/stdout/stderr.
+    result = CommandRunner.run([editor, str(path)], capture_output=False)
+    raise typer.Exit(result.returncode)
 
 
 @config_app.command("validate")
@@ -99,9 +106,9 @@ def config_validate() -> None:
     try:
         load()
     except ConfigError as exc:
-        typer.secho(str(exc), fg=typer.colors.RED, err=True)
+        UI.error(str(exc))
         raise typer.Exit(1) from exc
-    typer.secho("Configuration is valid.", fg=typer.colors.GREEN)
+    UI.success("Configuration is valid.")
 
 
 def _user_config_template() -> str:
@@ -132,30 +139,68 @@ def doctor() -> None:
     )
     from shimkit.core import PackageManager, Platform, Shell
 
-    typer.echo(f"shimkit  {__version__}")
-    typer.echo(f"python   {sys.version.split()[0]} ({sys.executable})")
-    typer.echo(f"system   {_plat.system()} {_plat.release()} {_plat.machine()}")
+    UI.line(f"shimkit  {__version__}")
+    UI.line(f"python   {sys.version.split()[0]} ({sys.executable})")
+    UI.line(f"system   {_plat.system()} {_plat.release()} {_plat.machine()}")
 
     plat = Platform.detect()
     sh = Shell.detect(plat)
-    typer.echo(f"platform {plat.description}")
-    typer.echo(f"shell    {sh.description}")
+    UI.line(f"platform {plat.description}")
+    UI.line(f"shell    {sh.description}")
 
     pm = PackageManager.detect(plat)
-    typer.echo(f"pm       {pm.name if pm else '<none detected>'}")
-    typer.echo(f"brew     {_shutil.which('brew') or '<not found>'}")
+    UI.line(f"pm       {pm.name if pm else '<none detected>'}")
+    UI.line(f"brew     {_shutil.which('brew') or '<not found>'}")
 
-    typer.echo(f"defaults {bundled_defaults_path()}")
+    UI.line(f"defaults {bundled_defaults_path()}")
     user = user_config_path()
-    typer.echo(f"user cfg {user}  ({'exists' if user.exists() else 'missing'})")
+    UI.line(f"user cfg {user}  ({'exists' if user.exists() else 'missing'})")
     try:
         load()
-        typer.echo("config   valid")
+        UI.line("config   valid")
     except ConfigError as exc:
-        typer.echo(f"config   INVALID — {str(exc).splitlines()[0]}")
+        UI.line(f"config   INVALID — {str(exc).splitlines()[0]}")
 
     method = _detect_shimkit_install_method()
-    typer.echo(f"installed via  {method or '<unknown>'}")
+    UI.line(f"installed via  {method or '<unknown>'}")
+
+    # --- per-tool probes for the three new tools --------------------
+    if plat.is_macos:
+        try:
+            from shimkit.tools.dns import scutil
+
+            chain = scutil.query()
+            top = ",".join(chain.primary_nameservers) or "(none)"
+            UI.line(f"dns probe      {len(chain.resolvers)} resolver(s); top: {top}")
+        except Exception as exc:
+            UI.line(f"dns probe      ERROR — {exc}")
+
+    if plat.is_linux:
+        try:
+            from shimkit.tools.adguard import finder
+
+            install = finder.detect()
+            UI.line(
+                f"adguard        {install.binary if install else '<absent>'}"
+            )
+        except Exception as exc:
+            UI.line(f"adguard        ERROR — {exc}")
+
+    try:
+        import contextlib
+
+        from shimkit.tools.docker_clean import client as _dc_client
+
+        c = _dc_client.get_client()
+        if c is None:
+            UI.line("docker         <not running>")
+        else:
+            ver = "unknown"
+            with contextlib.suppress(Exception):
+                ver = c.version().get("Version", "unknown")
+            UI.line(f"docker         {ver}")
+    except Exception as exc:
+        UI.line(f"docker         ERROR — {exc}")
 
 
 def _detect_shimkit_install_method() -> str | None:
@@ -180,14 +225,14 @@ def self_update(
 @app.command("version")
 def version() -> None:
     """Print the shimkit version."""
-    typer.echo(__version__)
+    UI.line(__version__)
 
 
 @app.callback(invoke_without_command=True)
 def _root(ctx: typer.Context) -> None:
     """Print help when called bare. Per-tool menus live under each subcommand."""
     if ctx.invoked_subcommand is None:
-        typer.echo(ctx.get_help())
+        UI.line(ctx.get_help())
 
 
 if __name__ == "__main__":

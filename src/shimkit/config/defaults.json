@@ -65,18 +65,62 @@
         "fish": { "rc_file": ".config/fish/config.fish" },
         "ksh":  { "rc_file": ".kshrc" }
       }
+    },
+    "dns": {
+      "test_domains": ["google.com", "cloudflare.com"],
+      "dns_servers": {
+        "cloudflare": ["1.1.1.1", "1.0.0.1"],
+        "google":     ["8.8.8.8", "8.8.4.4"]
+      },
+      "step_timeout_seconds": 5,
+      "nuclear_confirm_token": "REGENERATE",
+      "reset_confirm_token": "RESET",
+      "backup_dir": "~/Library/Application Support/shimkit/dns-backups"
+    },
+    "adguard": {
+      "install_candidates": [
+        "/opt/AdGuardHome",
+        "/usr/local/AdGuardHome",
+        "/var/lib/AdGuardHome",
+        "/etc/AdGuardHome"
+      ],
+      "default_remap_dns_port": 5353,
+      "default_remap_http_port": 8080,
+      "target_ports": [
+        { "port": 53,   "proto": "tcp", "role": "DNS"        },
+        { "port": 53,   "proto": "udp", "role": "DNS"        },
+        { "port": 80,   "proto": "tcp", "role": "WebUI"      },
+        { "port": 443,  "proto": "tcp", "role": "WebUI-TLS"  },
+        { "port": 3000, "proto": "tcp", "role": "Setup"      }
+      ],
+      "safe_units_to_stop": [
+        "dnsmasq.service",
+        "bind9.service",
+        "named.service",
+        "unbound.service"
+      ],
+      "pihole_unit": "pihole-FTL.service",
+      "resolv_conf_mode": "symlink",
+      "prefer_api_over_yaml": true,
+      "api_base_url": "http://127.0.0.1:80"
+    },
+    "docker_clean": {
+      "nuke_confirm_token": "DELETE",
+      "kubernetes_image_patterns": ["registry.k8s.io", "kube-", "kubernetes", "desktop-"],
+      "daemon_verify_timeout_seconds": 30,
+      "default_buildx_prune_all": true
     }
   },
   "package_managers": {
     "preference_order": ["brew", "apt", "dnf", "yum", "pacman", "apk", "zypper"],
     "definitions": {
-      "brew":   { "install_cmd": "brew install ${pkg}",            "update_cmd": "brew update",                 "upgrade_cmd": "brew upgrade ${pkg}",            "platforms": ["macos", "linux"] },
-      "apt":    { "install_cmd": "apt-get install -y ${pkg}",      "update_cmd": "apt-get update",              "upgrade_cmd": "apt-get install --only-upgrade -y ${pkg}", "platforms": ["linux"] },
-      "dnf":    { "install_cmd": "dnf install -y ${pkg}",          "update_cmd": "dnf check-update || true",    "upgrade_cmd": "dnf upgrade -y ${pkg}",          "platforms": ["linux"] },
-      "yum":    { "install_cmd": "yum install -y ${pkg}",          "update_cmd": "yum check-update || true",    "upgrade_cmd": "yum update -y ${pkg}",           "platforms": ["linux"] },
-      "pacman": { "install_cmd": "pacman -S --noconfirm ${pkg}",   "update_cmd": "pacman -Sy",                  "upgrade_cmd": "pacman -Su --noconfirm ${pkg}",  "platforms": ["linux"] },
-      "apk":    { "install_cmd": "apk add ${pkg}",                 "update_cmd": "apk update",                  "upgrade_cmd": "apk upgrade ${pkg}",             "platforms": ["linux"] },
-      "zypper": { "install_cmd": "zypper install -y ${pkg}",       "update_cmd": "zypper refresh",              "upgrade_cmd": "zypper update -y ${pkg}",        "platforms": ["linux"] }
+      "brew":   { "install_cmd": ["brew", "install", "${pkg}"],                          "update_cmd": ["brew", "update"],                "upgrade_cmd": ["brew", "upgrade", "${pkg}"],                          "platforms": ["macos", "linux"] },
+      "apt":    { "install_cmd": ["apt-get", "install", "-y", "${pkg}"],                 "update_cmd": ["apt-get", "update"],             "upgrade_cmd": ["apt-get", "install", "--only-upgrade", "-y", "${pkg}"], "platforms": ["linux"] },
+      "dnf":    { "install_cmd": ["dnf", "install", "-y", "${pkg}"],                     "update_cmd": "dnf check-update || true",        "upgrade_cmd": ["dnf", "upgrade", "-y", "${pkg}"],                     "platforms": ["linux"] },
+      "yum":    { "install_cmd": ["yum", "install", "-y", "${pkg}"],                     "update_cmd": "yum check-update || true",        "upgrade_cmd": ["yum", "update", "-y", "${pkg}"],                      "platforms": ["linux"] },
+      "pacman": { "install_cmd": ["pacman", "-S", "--noconfirm", "${pkg}"],              "update_cmd": ["pacman", "-Sy"],                 "upgrade_cmd": ["pacman", "-Su", "--noconfirm", "${pkg}"],             "platforms": ["linux"] },
+      "apk":    { "install_cmd": ["apk", "add", "${pkg}"],                               "update_cmd": ["apk", "update"],                 "upgrade_cmd": ["apk", "upgrade", "${pkg}"],                           "platforms": ["linux"] },
+      "zypper": { "install_cmd": ["zypper", "install", "-y", "${pkg}"],                  "update_cmd": ["zypper", "refresh"],             "upgrade_cmd": ["zypper", "update", "-y", "${pkg}"],                   "platforms": ["linux"] }
     }
   }
 }

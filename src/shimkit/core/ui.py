@@ -27,6 +27,9 @@ class UI:
     Every method is a classmethod that prints and returns ``cls`` so chains
     like ``UI.header("Title").success("Done")`` work. ANSI codes are
     stripped automatically when colour is disabled.
+
+    ``set_quiet(True)`` suppresses non-error output. ``error()`` always
+    prints regardless so failures aren't silenced.
     """
 
     _H = "\033[95m"
@@ -39,6 +42,13 @@ class UI:
     _BOLD = "\033[1m"
     _DIM = "\033[2m"
 
+    _quiet: bool = False
+
+    @classmethod
+    def set_quiet(cls, quiet: bool) -> None:
+        """Suppress all non-error output until called again with False."""
+        cls._quiet = quiet
+
     @classmethod
     def _color_enabled(cls) -> bool:
         mode = get_config().ui.color
@@ -49,7 +59,9 @@ class UI:
         return sys.stdout.isatty()
 
     @classmethod
-    def _emit(cls, text: str) -> None:
+    def _emit(cls, text: str, *, force: bool = False) -> None:
+        if cls._quiet and not force:
+            return
         print(text if cls._color_enabled() else _ANSI_RE.sub("", text))
 
     @classmethod
@@ -64,7 +76,8 @@ class UI:
 
     @classmethod
     def error(cls, msg: str) -> type[UI]:
-        cls._emit(f"{cls._R}✗ {msg}{cls._RST}")
+        # Errors always print, even in quiet mode.
+        cls._emit(f"{cls._R}✗ {msg}{cls._RST}", force=True)
         return cls
 
     @classmethod
@@ -80,6 +93,17 @@ class UI:
     @classmethod
     def dim(cls, msg: str) -> type[UI]:
         cls._emit(f"{cls._DIM}{msg}{cls._RST}")
+        return cls
+
+    @classmethod
+    def line(cls, msg: str = "") -> type[UI]:
+        """Emit a plain line with no glyph, indent, or colour.
+
+        Use for factual output (``doctor``, ``config show``, ``version``)
+        where the caller wants the string verbatim. The single UI chokepoint
+        for what would otherwise be ``print()`` or ``typer.echo()``.
+        """
+        cls._emit(msg)
         return cls
 
     @classmethod
