@@ -64,7 +64,7 @@ jobs:
           artifact-name: shimkit-sbom.spdx.json
           output-file: ./dist/shimkit-sbom.spdx.json
       - name: Attest build provenance for wheel + sdist
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             dist/*.whl
