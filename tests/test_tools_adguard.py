@@ -147,6 +147,57 @@ def test_yaml_editor_preserves_unrelated_keys(tmp_path: Path) -> None:
     assert "users:" in body and "bootstrap_dns" in body
 
 
+def test_yaml_editor_reads_http_port_from_address(tmp_path: Path) -> None:
+    """AGH 0.107.x writes `http.address: 'host:port'`, not `http.port`.
+
+    Regression for the v0.2.0 adguard-integration CI failure where
+    AGH migrated the pre-baked yaml and dropped the legacy `http.port`
+    key, leaving only `http.address`. read_ports must handle both
+    forms.
+    """
+    from shimkit.tools.adguard import yaml_editor
+
+    yaml_path = tmp_path / "AdGuardHome.yaml"
+    yaml_path.write_text(
+        "dns:\n  port: 5300\nhttp:\n  address: 127.0.0.1:8000\n"
+    )
+    dns_port, http_port = yaml_editor.read_ports(yaml_path)
+    assert dns_port == 5300
+    assert http_port == 8000
+
+
+def test_yaml_editor_set_ports_writes_canonical_http_address(
+    tmp_path: Path,
+) -> None:
+    """set_ports must write http.address (canonical AGH form) so that
+    AGH's next rewrite preserves it."""
+    from shimkit.tools.adguard import yaml_editor
+
+    yaml_path = tmp_path / "AdGuardHome.yaml"
+    yaml_path.write_text(
+        "dns:\n  port: 53\nhttp:\n  address: 127.0.0.1:80\n"
+    )
+    yaml_editor.set_ports(yaml_path, dns=5353, http=8080)
+    body = yaml_path.read_text()
+    assert "address: 127.0.0.1:8080" in body
+    # Round-trip preserves the host component.
+    dns_port, http_port = yaml_editor.read_ports(yaml_path)
+    assert (dns_port, http_port) == (5353, 8080)
+
+
+def test_yaml_editor_set_ports_address_default_host_when_absent(
+    tmp_path: Path,
+) -> None:
+    """When there's no existing http.address, default to 0.0.0.0:<port>."""
+    from shimkit.tools.adguard import yaml_editor
+
+    yaml_path = tmp_path / "AdGuardHome.yaml"
+    yaml_path.write_text("dns:\n  port: 53\nhttp: {}\n")
+    yaml_editor.set_ports(yaml_path, dns=None, http=8080)
+    body = yaml_path.read_text()
+    assert "address: 0.0.0.0:8080" in body
+
+
 # --- fix --dry-run --------------------------------------------------------
 
 
