@@ -1,11 +1,15 @@
 # shimkit — senior engineering brief
 
 > **Reader's note (2026-05-14):** This file is the brief that drove
-> the v0.2.0 work and remains intact as project history. It promised
-> a larger CLI surface than ultimately shipped — see
+> the v0.2.0 work and remains intact as project history. The
+> end-of-cycle audit at
 > [`docs/plans/cleanup-2026-05-14.md`](docs/plans/cleanup-2026-05-14.md)
-> for the honest accounting of what landed vs. what the brief
-> specified, plus the cleanup plan for closing the gaps.
+> tracks what landed vs. what the brief specified; the cleanup
+> itself closed in commits `8822b62`, `33f6c18`, `4a51c6e` (CLI
+> flags wired, MODERATE prompts wired, EX_CONFIG plumbed,
+> mandatory-minimum tests added). The only remaining gap is the
+> Phase 7 NM-real-link-event check, documented as manual in
+> [`docs/plans/known-issues.md`](docs/plans/known-issues.md).
 
 ## Role
 
