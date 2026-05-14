@@ -121,7 +121,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: write
-      contents: read
+      # contents: write so anchore/sbom-action can attach the
+      # container SBOM to the GitHub Release page (default
+      # upload-release-assets=true on tag refs). Without write, the
+      # action errors "Resource not accessible by integration".
+      contents: write
       id-token: write
       attestations: write
     steps:
