@@ -36,4 +36,3 @@ Thanks for your contribution! A few notes:
 - [ ] I have not introduced subprocess calls outside `CommandRunner`
 - [ ] I have not put logic-critical strings in config (markers, regexes,
       atomic-replace semantics stay in code)
-- [ ] If I touched `Dockerfile`: image still builds (`docker build .`)

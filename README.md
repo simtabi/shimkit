@@ -22,8 +22,8 @@ brew install simtabi/tap/shimkit
 pip install --user shimkit
 ```
 
-Full install matrix, container image, optional dependency extras, and
-self-update behaviour: [`docs/installation.md`](docs/installation.md).
+Full install matrix, optional dependency extras, and self-update
+behaviour: [`docs/installation.md`](docs/installation.md).
 
 ## Tools
 

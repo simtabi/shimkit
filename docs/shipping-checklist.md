@@ -28,12 +28,12 @@ intentionally don't validate), see
 |---|--------|-------|------|
 | 1.1 | ✅ done | code | shimkit package built: src/ layout, hatchling backend, py.typed, bundled `defaults.json`. Wheel builds cleanly (`python -m build`). |
 | 1.2 | ✅ done | code | Tests pass: 115 pytest cases (was 77; +38 for the new tools and the pkgmgr argv regression). ruff strict, mypy strict + pydantic plugin, shellcheck, bandit (`-ll`, fail on medium+), pip-audit (`--skip-editable`). |
-| 1.3 | ✅ done | code | CI workflow — macOS + Ubuntu × Python 3.10/3.11/3.12/3.13. Jobs: `test`, `security` (bandit + pip-audit), `dockerfile-hadolint`, `build` (sdist+wheel artifact), `smoke` (install wheel in clean venv on macOS + Ubuntu and run `shimkit doctor`), `adguard-integration` (runs real AGH v0.107.74 on ubuntu-latest, exercises `scan/verify/ports show/fix --dry-run/ports set --dry-run` against a live daemon on non-default ports 5300/8000). |
-| 1.4 | ✅ done | code | Release workflow — `guard` (validates tag == pyproject == `__version__` + CHANGELOG section present) → `build` (sdist+wheel, install.sh.sha256, SPDX SBOM, `actions/attest-build-provenance` for wheel + sdist) → `publish-pypi` (OIDC) → `github-release` (assets + SBOM) → `publish-ghcr` (multi-arch + attest-build-provenance to GHCR + container SBOM) → `bump-homebrew-tap`. |
-| 1.5 | ✅ done | code | Container image: multi-stage, non-root `shimkit` user, OCI labels, `HEALTHCHECK ["shimkit", "version"]`, base image pinned by manifest digest (`python:3.12-slim@sha256:401f6e1a…`). `.dockerignore` present. Dependabot's `docker` ecosystem keeps the digest current. |
+| 1.3 | ✅ done | code | CI workflow — macOS + Ubuntu × Python 3.10/3.11/3.12/3.13. Jobs: `test`, `security` (bandit + pip-audit), `build` (sdist+wheel artifact), `smoke` (install wheel in clean venv on macOS + Ubuntu and run `shimkit doctor`), `adguard-integration` (runs real AGH v0.107.74 on ubuntu-latest, exercises `scan/verify/ports show/fix --dry-run/ports set --dry-run` against a live daemon on non-default ports 5300/8000). |
+| 1.4 | ✅ done | code | Release workflow — `guard` (validates tag == pyproject == `__version__` + CHANGELOG section present) → `build` (sdist+wheel, SPDX SBOM, `actions/attest-build-provenance` for wheel + sdist) → `github-release` (assets + SBOM). PyPI publishing + Homebrew tap bump are deferred (see Phase 4). |
+| 1.5 | ➖ n/a | code | (Reserved.) Earlier the project shipped a container image; that path was removed in v0.2.2 because Docker was a testing artifact, not a documented install method. Re-add only if container distribution becomes a goal. |
 | 1.6 | ✅ done | code | Org-style docs: `README.md`, `docs/{installation,configuration,architecture,release,tools/{java,shell,dns,adguard,docker-clean}}.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`. |
-| 1.7 | ✅ done | code | Community hygiene: `.github/ISSUE_TEMPLATE/{bug_report,feature_request,config}.yml`, `.github/PULL_REQUEST_TEMPLATE.md`, `.github/dependabot.yml` (pip + github-actions + docker, weekly Monday 06:00 America/New_York), `.pre-commit-config.yaml`. |
-| 1.8 | ⏳ pending | user | Configure branch protection on `main`: require `test`, `security`, `build`, `smoke`, `dockerfile-hadolint` checks before merge. Repo Settings → Branches → Add rule. |
+| 1.7 | ✅ done | code | Community hygiene: `.github/ISSUE_TEMPLATE/{bug_report,feature_request,config}.yml`, `.github/PULL_REQUEST_TEMPLATE.md`, `.github/dependabot.yml` (pip + github-actions, weekly Monday 06:00 America/New_York), `.pre-commit-config.yaml`. |
+| 1.8 | ⏳ pending | user | Configure branch protection on `main`: require `test`, `security`, `build`, `smoke` checks before merge. Repo Settings → Branches → Add rule. |
 
 ## Phase 2 · GitHub remote
 
@@ -66,7 +66,7 @@ intentionally don't validate), see
 > `bump-homebrew-tap` jobs were removed from `release.yml` because
 > PyPI's trusted-publisher configuration could not be made to match
 > the GitHub OIDC claims for this repo (see `invalid-publisher` log
-> in the v0.2.2 release run). Container + GitHub Release wheel are
+> in the v0.2.2 release run). The GitHub Release wheel + sdist are
 > the distribution channels today. To re-enable, restore the jobs
 > from git history and complete the items below.
 
@@ -90,14 +90,14 @@ Prerequisites: 2.5 (public), 3.2 (tap token), 4.2 (PyPI publisher) all done.
 | 5.1 | ⏳ pending | user | Confirm `pyproject.toml::project.version` and `src/shimkit/__init__.py::__version__` are the version you intend to ship. Currently both `0.1.0`. |
 | 5.2 | ⏳ pending | user | Move `[Unreleased]` section in `CHANGELOG.md` to `[X.Y.Z] — YYYY-MM-DD`. (For 0.1.0, the section is already named `[0.1.0] — Initial release` — just add the date if you want.) |
 | 5.3 | ⏳ pending | user | Cut the tag: `git tag v0.1.0 && git push origin v0.1.0` |
-| 5.4 | ▶︎ auto | ci | `release.yml` runs: `guard` (tag-vs-version check) → `build` (sdist + wheel) → in parallel: `publish-pypi` (OIDC), `github-release` (assets), `publish-ghcr` (multi-arch container), `bump-homebrew-tap` (formula bump). |
+| 5.4 | ▶︎ auto | ci | `release.yml` runs: `guard` (tag-vs-version check) → `build` (sdist + wheel) → `github-release` (assets + SBOM). PyPI publishing + Homebrew tap bump are deferred (Phase 4). |
 | 5.5 | ⏳ pending | user | Verify the release (commands in [`docs/release.md`](release.md#verifying-a-release)). |
 
 ## Phase 6 · Post-release / ongoing
 
 | # | Status | Owner | Item |
 |---|--------|-------|------|
-| 6.1 | ▶︎ auto | ci | **Dependabot** opens weekly PRs for pip / GitHub Actions / Docker base-image updates. Configured in [`.github/dependabot.yml`](../.github/dependabot.yml). |
+| 6.1 | ▶︎ auto | ci | **Dependabot** opens weekly PRs for pip + GitHub Actions updates. Configured in [`.github/dependabot.yml`](../.github/dependabot.yml). |
 | 6.2 | ⏳ pending | user | Rotate `TAP_GITHUB_TOKEN` before its 90-day expiry (set a reminder at the time of creation). |
 | 6.3 | ▶︎ auto | ci | Subsequent releases are tag-driven and need no manual setup — just bump versions, commit, tag, push. |
 
@@ -107,12 +107,10 @@ These are nice-to-haves, not blockers.
 
 | # | Status | Owner | Item |
 |---|--------|-------|------|
-| 7.1 | ⏸ optional | user | Publish to Docker Hub in addition to GHCR. See [`docs/release.md`](release.md) and extend the `publish-ghcr` job to log into Docker Hub too. Needs `DOCKERHUB_USERNAME` + `DOCKERHUB_TOKEN` secrets. |
-| 7.2 | ⏸ optional | user | Code coverage upload (codecov.io or coveralls). Add `pytest --cov` to CI and a coverage-upload step. |
-| 7.3 | ⏸ optional | user | Set up sigstore/Cosign signing for the container images. The `gh attestation` flow already covers GHCR; explicit signing helps Docker Hub consumers. |
-| 7.4 | ⏸ optional | user | Add `docs/tools/<name>.md` for each new tool added to `shimkit/tools/`. See [`CONTRIBUTING.md`](../CONTRIBUTING.md#adding-a-new-tool). |
-| 7.5 | ⏸ optional | user | Move docs to a published site (mkdocs-material or GitHub Pages) if SEO / discoverability matters more than raw GitHub rendering. |
-| 7.6 | ⏸ optional | user | Add a `CITATION.cff` if the tool gets cited academically. |
+| 7.1 | ⏸ optional | user | Code coverage upload (codecov.io or coveralls). Add `pytest --cov` to CI and a coverage-upload step. |
+| 7.2 | ⏸ optional | user | Add `docs/tools/<name>.md` for each new tool added to `shimkit/tools/`. See [`CONTRIBUTING.md`](../CONTRIBUTING.md#adding-a-new-tool). |
+| 7.3 | ⏸ optional | user | Move docs to a published site (mkdocs-material or GitHub Pages) if SEO / discoverability matters more than raw GitHub rendering. |
+| 7.4 | ⏸ optional | user | Add a `CITATION.cff` if the tool gets cited academically. |
 
 ---
 

@@ -463,7 +463,7 @@ security           ← bandit -ll + pip-audit. Fails on medium+.
 build              ← sdist + wheel. Artifact uploaded.
 smoke              ← install built wheel on macOS + Ubuntu, run CLI.
 adguard-integration ← real AGH on ubuntu-latest. JSON-asserted output.
-dockerfile-hadolint  ← hadolint on Dockerfile.
+adguard-mutating-integration ← real `shimkit adguard fix` inside a privileged systemd container.
 ```
 
 All must pass before merge to `main` (once branch protection is

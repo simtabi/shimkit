@@ -6,21 +6,32 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Removed
+
+- Container image as a release channel. Docker was a testing
+  artifact during development (used by the `adguard-mutating-
+  integration` CI job, which pulls a third-party systemd-capable
+  image, not ours). The brief's documented install methods are uv /
+  pipx / brew / pip — Docker was never one of them. Removed:
+  `Dockerfile`, `publish-ghcr` workflow job, `dockerfile-hadolint`
+  CI job, Dependabot's `docker` ecosystem entry, the Dockerfile
+  checklist row in the PR template. The existing
+  `ghcr.io/simtabi/shimkit:0.2.x` image is left in place but won't
+  be updated by future tags.
+- `publish-pypi` and `bump-homebrew-tap` jobs (deferred). v0.2.2's
+  `publish-pypi` repeatedly failed with `invalid-publisher` even
+  with trusted-publishing configured on pypi.org. Restoration
+  path: [`docs/shipping-checklist.md`](docs/shipping-checklist.md)
+  Phase 4.
+
 ### Changed
 
-- Release pipeline: `publish-pypi` and `bump-homebrew-tap` jobs
-  removed from `release.yml`. Distribution channels for v0.2.x are
-  the GHCR container (`ghcr.io/simtabi/shimkit`) and the GitHub
-  Release wheel + sdist. v0.2.2's `publish-pypi` job repeatedly
-  failed with `invalid-publisher` even with trusted-publishing
-  configured on pypi.org; rather than chase the OIDC-claim mismatch
-  further this cycle, the project ships without PyPI for now.
-  [`docs/shipping-checklist.md`](docs/shipping-checklist.md) Phase
-  4 documents how to re-enable.
-- Docs: `docs/installation.md` now leads with the container and
-  GitHub-Release wheel; PyPI-style install commands are marked
-  pending. `docs/release.md` carries a banner noting the deferred
-  PyPI channel.
+- `docs/installation.md` leads with the GitHub-Release wheel +
+  `pip install git+...@tag`; PyPI-style commands are marked
+  pending. `docs/release.md`, `docs/shipping-checklist.md`,
+  `docs/validation-scope.md`, `docs/onboarding.md`,
+  `docs/plans/known-issues.md`, and `prompt.md` updated to drop
+  `publish-ghcr` / `dockerfile-hadolint` / Dockerfile references.
 
 ## [0.2.2] — 2026-05-14
 

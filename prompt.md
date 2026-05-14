@@ -122,9 +122,10 @@ Before any edit:
   (`CommandRunner.run`), the autouse hermetic fixture in
   `tests/conftest.py`, and the `runner: CliRunner` fixture.
 - Read `.github/workflows/ci.yml` and `release.yml` in full. Note
-  the job DAG: `guard → build → publish-pypi → github-release →
-  publish-ghcr → bump-homebrew-tap`.
-- Read `Dockerfile`.
+  the job DAG: `guard → build → github-release`. (Earlier the DAG
+  also included `publish-pypi`, `publish-ghcr`, and
+  `bump-homebrew-tap`; PyPI is deferred and the container path was
+  removed as a release channel in v0.2.2.)
 
 When done, write a single internal note (not committed) listing:
 

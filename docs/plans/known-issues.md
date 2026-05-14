@@ -134,20 +134,18 @@ new logic in the affected paths.
 
 ## Optional: `gh attestation verify` smoke test
 
-The release workflow signs the wheel and the container image with
+The release workflow signs the wheel and sdist with
 `actions/attest-build-provenance@v3`. We don't currently have a CI
 job that **verifies** those attestations after publish (the action
 publishes them; nothing reads them back).
 
 Low priority — Sigstore's transparency log is the authoritative
 record. A post-publish verify job would catch a misconfiguration of
-the publish flow, but the bug shape is rare and would be
-release-blocking by other means (PyPI upload failures, GHCR push
-failures, etc.) before the signature step.
+the publish flow, but the bug shape is rare.
 
-If added: a `verify-release` job that runs after `publish-pypi` and
-`publish-ghcr`, fetching the published artifacts and running
-`gh attestation verify` against them.
+If added: a `verify-release` job that runs after `github-release`,
+fetching the published artifacts and running `gh attestation verify`
+against them.
 
 ---
 

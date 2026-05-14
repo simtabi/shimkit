@@ -1,9 +1,8 @@
 version: 2
 
-# Dependabot watches three ecosystems for shimkit:
+# Dependabot watches two ecosystems for shimkit:
 #   1. Python package dependencies (pyproject.toml)
 #   2. GitHub Actions used by .github/workflows/
-#   3. The Dockerfile's base image
 #
 # Weekly is enough for a maintenance project; daily is noise. Security
 # updates fire immediately regardless of schedule.
@@ -41,13 +40,3 @@ updates:
       timezone: "America/New_York"
     open-pull-requests-limit: 5
     labels: ["dependencies", "ci"]
-
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-      timezone: "America/New_York"
-    open-pull-requests-limit: 3
-    labels: ["dependencies", "docker"]

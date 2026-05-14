@@ -54,19 +54,6 @@ jobs:
         # invocation still exits non-zero on real vulnerabilities.
         run: pip-audit --skip-editable
 
-  dockerfile-hadolint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: Dockerfile
-          # DL3008 (apt-get install without =version) is intentional for slim images;
-          # security updates come from rebuilds.
-          # DL3013 (pin pip versions) fires on `pip install --upgrade pip
-          # build` in the builder stage — we want the latest pip there.
-          ignore: DL3008,DL3013
-
   build:
     needs: test
     runs-on: ubuntu-latest

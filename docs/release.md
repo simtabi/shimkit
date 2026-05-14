@@ -66,45 +66,30 @@ push tag v*
 │  upload artifact: dist/                                      │
 └───────────────────────────────────────────────────────────────┘
     │
-    ├──► publish-pypi ───── OIDC publish; waits on `pypi` env
-    │                       protection rules if configured.
-    │
-    ├──► github-release ─── creates the GH Release with wheel +
-    │                       sdist + SBOM attached.
-    │
-    ├──► publish-ghcr ───── multi-arch (amd64+arm64) container image
-    │                       to ghcr.io/simtabi/shimkit:{tag,version,major.minor,latest}
-    │
-    └──► bump-homebrew-tap  pushes a formula update to
-                            simtabi/homebrew-tap if the tap exists.
-                            soft-fails otherwise.
+    └──► github-release ─── creates the GH Release with wheel +
+                            sdist + SBOM attached.
 ```
 
-`publish-pypi` is the gating step for downstream effects — it must
-succeed before `bump-homebrew-tap` runs. `publish-ghcr` and
-`github-release` are independent and run in parallel.
+As of v0.2.2 the release pipeline ships **only** the GitHub Release
+artifact set. The `publish-pypi`, `publish-ghcr`, and
+`bump-homebrew-tap` jobs that previously fanned out from `build`
+were removed: PyPI publishing is deferred ([Phase 4 of
+shipping-checklist.md](shipping-checklist.md)), and the GHCR /
+Dockerfile path was always meant as a testing artifact rather than
+a distribution channel (see `prompt.md`'s install-method list).
 
 ## Verifying a release
 
 ```bash
-release=v0.1.0
+release=v0.2.2
 
-# PyPI
-pip install shimkit==${release#v}
+# Wheel from the GitHub Release page
+pip install --user "https://github.com/simtabi/shimkit/releases/download/${release}/shimkit-${release#v}-py3-none-any.whl"
 shimkit version
 
 # GitHub Release SBOM
 curl -fsSL "https://github.com/simtabi/shimkit/releases/download/${release}/shimkit-sbom.spdx.json" -o /tmp/sbom.json
 jq .name /tmp/sbom.json   # should print "shimkit"
-
-# GHCR
-docker run --rm --pull=always ghcr.io/simtabi/shimkit:${release} version
-# Verify the image's signed provenance (Sigstore/GHCR):
-gh attestation verify oci://ghcr.io/simtabi/shimkit:${release} -o simtabi
-
-# Homebrew tap (once the tap is configured)
-brew install simtabi/tap/shimkit
-shimkit version
 ```
 
 ## Cancelling / yanking

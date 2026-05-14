@@ -21,7 +21,6 @@ which tracks **release-blocking** items in dependency order.
 |------|-------------------|
 | `test` (macOS + Ubuntu × Python 3.10/3.11/3.12/3.13) | Unit + CLI integration tests with mocked `CommandRunner`, `Platform`, `requests`, `psutil`, `Systemd`. Coverage floor enforced. |
 | `security` | `bandit -ll` (SAST, fail on medium+) and `pip-audit --skip-editable` (CVE scan of resolved deps). |
-| `dockerfile-hadolint` | `Dockerfile` is hadolint-clean. |
 | `build` | `python -m build` produces a clean sdist + wheel. |
 | `smoke` (macOS + Ubuntu) | Built wheel installs into a fresh venv. `shimkit --help`, `shimkit version`, `shimkit doctor` all exit 0; the three new sub-apps (`dns`, `adguard`, `docker-clean`) appear in root `--help`. |
 | `adguard-integration` (Ubuntu) | Real AdGuard Home (version pinned in workflow) downloaded, run on non-default ports 5300/8000, then `shimkit adguard scan / verify / ports show / fix --dry-run / ports set --dry-run` invoked with JSON-asserted output. |

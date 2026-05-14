@@ -75,12 +75,12 @@ jobs:
           path: dist/
 
   # PyPI publishing is deliberately disabled. Distribution for v0.2.x
-  # is via the container at ghcr.io/simtabi/shimkit and the GitHub
-  # Release page's wheel + sdist. To re-enable, restore the
-  # publish-pypi + bump-homebrew-tap jobs from git history and
-  # configure trusted publishing at https://pypi.org/manage/account/publishing/
-  # (Owner=simtabi, Repository=shimkit, Workflow=release.yml,
-  # Environment=pypi, PyPI Project Name=shimkit).
+  # is via the GitHub Release page's wheel + sdist. To re-enable PyPI,
+  # restore the publish-pypi + bump-homebrew-tap jobs from git history
+  # and configure trusted publishing at
+  # https://pypi.org/manage/account/publishing/ (Owner=simtabi,
+  # Repository=shimkit, Workflow=release.yml, Environment=pypi,
+  # PyPI Project Name=shimkit).
 
   github-release:
     needs: build
@@ -98,58 +98,4 @@ jobs:
             dist/*.whl
             dist/*.tar.gz
             dist/shimkit-sbom.spdx.json
-
-  publish-ghcr:
-    name: Publish container to GHCR
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      # contents: write so anchore/sbom-action can attach the
-      # container SBOM to the GitHub Release page (default
-      # upload-release-assets=true on tag refs). Without write, the
-      # action errors "Resource not accessible by integration".
-      contents: write
-      id-token: write
-      attestations: write
-    steps:
-      - uses: actions/checkout@v6
-      - uses: docker/setup-qemu-action@v4
-      - uses: docker/setup-buildx-action@v4
-      - uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - id: meta
-        uses: docker/metadata-action@v6
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=ref,event=tag
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest
-      - id: build-push
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-      - name: Attest container build provenance
-        uses: actions/attest-build-provenance@v3
-        with:
-          subject-name: ghcr.io/${{ github.repository }}
-          subject-digest: ${{ steps.build-push.outputs.digest }}
-          push-to-registry: true
-      - name: Generate container SBOM
-        uses: anchore/sbom-action@v0
-        with:
-          image: ghcr.io/${{ github.repository }}@${{ steps.build-push.outputs.digest }}
-          format: spdx-json
-          artifact-name: shimkit-container-sbom.spdx.json
           upload-artifact: true
