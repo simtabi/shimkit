@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "shimkit"
-version = "0.1.0"
+version = "0.2.0"
 description = "A toolkit of developer utilities — Java version manager, shell upgrader, and more. Python tools, shimmed by bash."
 readme = "README.md"
 license = { file = "LICENSE" }
