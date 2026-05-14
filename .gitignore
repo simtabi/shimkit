@@ -35,3 +35,6 @@ htmlcov/
 # Local notes — never committed
 TODO.local.md
 NOTES.local.md
+
+# Claude Code harness state
+.claude/
