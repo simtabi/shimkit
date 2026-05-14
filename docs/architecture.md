@@ -16,15 +16,30 @@ src/shimkit/
     loader.py         Layered load + deep-merge + env overrides
     errors.py         ConfigError
   core/               Shared primitives — every tool depends on these
-    command.py        CommandResult, CommandRunner, sudo_prefix
+    command.py        CommandResult, CommandRunner, sudo_prefix,
+                      is_root, has_sudo_cached
     platform.py       Platform — OS/arch/WSL/container detection
     shell.py          Shell, ShellConfigWriter, java_home_for
-    pkgmgr.py         PackageManager (brew/apt/dnf/yum/pacman/apk/zypper)
-    ui.py             Colour-aware terminal output + boxed banner
+    pkgmgr.py         PackageManager (brew/apt/dnf/yum/pacman/apk/zypper).
+                      Accepts argv-list templates (preferred, no shell)
+                      and legacy string templates (back-compat)
+    ui.py             Colour-aware terminal output + boxed banner.
+                      UI.line() for plain output, UI.set_quiet() for
+                      the shared --quiet flag
     menu.py           questionary wrapper with stdin fallback
+    log.py            Stdlib logging adapter; JSONL FileHandler with
+                      secret-key redaction (opt-in via --log-file)
+    json_event.py     Typed Event for --json output mode
+    systemd.py        Linux systemctl wrapper; drop-in writer
+    cli_flags.py      Shared Typer Option defaults so every tool's
+                      subcommands have identical --dry-run/--json/
+                      --quiet/--verbose/--log-file/--timeout semantics
   tools/
-    java/             OpenJDK manager
-    shell/            Shell upgrader
+    java/             OpenJDK manager (macOS + Linux)
+    shell/            Shell upgrader (bash/zsh/fish/ksh)
+    dns/              macOS DNS resolver recovery (port of fixdns.sh)
+    adguard/          AdGuard Home port-conflict fixer (Linux)
+    docker_clean/     Docker resource cleanup (Linux + macOS + WSL)
 ```
 
 ## The five load-bearing rules
@@ -37,7 +52,9 @@ These come straight from [CONTRIBUTING.md](../CONTRIBUTING.md#architecture-rules
    dispatch, shell detection, rc-file writing, terminal output, or
    interactive prompts.
 2. **`CommandRunner` is the only place that calls `subprocess`.**
-   Single audit chokepoint. Tests mock at this layer.
+   Single audit chokepoint. Tests mock at this layer. The
+   `subprocess` import does not appear anywhere else under
+   `src/shimkit/`.
 3. **Config values come from `shimkit.config.get_config()`.**
    Class-level constants for user-facing data belong in the schema +
    defaults.json. Logic-critical strings (idempotency markers, regex
@@ -48,6 +65,25 @@ These come straight from [CONTRIBUTING.md](../CONTRIBUTING.md#architecture-rules
    `install(version)`, `list_things()`.
 5. **Fluent contracts return `self`.** Chainable APIs where idiomatic
    (Shell, ShellConfigWriter, UI).
+
+### Two cross-cutting patterns added with the new tools
+
+Not new rules — patterns that emerged from porting the three shell
+scripts and are now load-bearing for any future tool that touches
+the same surfaces.
+
+- **Argv-list package-manager templates.** `PackageManager` accepts
+  command templates as either strings (legacy, rendered with
+  `shell=True`) or argv lists (preferred, rendered with
+  `shell=False`). New tools and new `defaults.json` rows use the
+  argv form so a malicious or fat-fingered package name cannot
+  inject shell metacharacters. See
+  [`src/shimkit/core/pkgmgr.py`](../src/shimkit/core/pkgmgr.py).
+- **Severe-tier confirmation tokens.** Destructive subcommands
+  refuse to proceed without `--confirm <token>`, where the token
+  comes from config. `--yes` alone does not bypass. Example:
+  `shimkit docker-clean nuke --confirm DELETE`. The token is
+  configurable per-environment.
 
 ## Per-tool structure
 
@@ -175,6 +211,74 @@ ShimkitConfig instance (frozen pydantic v2)
 
 A tool joins shimkit only if it shares ≥ 2 of `Platform` / `Shell` /
 `PackageManager` / `UI` / `Menu`. Otherwise it's a separate package.
+
+## Shared subcommand surface
+
+Every new tool's non-interactive subcommand accepts the same set of
+flags, imported from `core/cli_flags.py`. Defining them once means
+the surface is uniform across `dns`, `adguard`, `docker-clean`, and
+any future tool — and the help text stays aligned.
+
+| Flag             | Behaviour |
+|------------------|-----------|
+| `--dry-run, -n`  | Plan only; no mutation. Mandatory on every mutator. |
+| `--json`         | Emit a single JSON document on stdout; chatter to stderr. |
+| `--quiet, -q`    | Suppress non-error UI via `UI.set_quiet(True)`. Errors still print. |
+| `--verbose, -v`  | Raise root shimkit logger to DEBUG. |
+| `--yes, -y`      | Skip `[y/N]` prompts. Does NOT bypass severe-tier tokens. |
+| `--force, -f`    | Bypass safety checks; logged loudly. |
+| `--log-file PATH` | JSONL append; secret-looking keys redacted. |
+| `--timeout SECS` | Network / wait timeout (default 30). |
+| `--color={auto,always,never}` | Honours `NO_COLOR` env. |
+| `--no-input`     | Never prompt (also when stdin is not a TTY). |
+
+Exit codes are documented in `shimkit --help`:
+
+| Code | Meaning |
+|-----:|---------|
+| 0   | ok / no-op |
+| 1   | generic failure |
+| 2   | Typer usage error |
+| 64  | EX_USAGE (sysexits) |
+| 69  | EX_UNAVAILABLE — service down, wrong platform, extra missing |
+| 77  | EX_NOPERM — needs root / docker group |
+| 78  | EX_CONFIG — invalid configuration |
+| 130 | SIGINT |
+
+## Optional dependency extras
+
+The base `shimkit` install is intentionally lean. Each new tool ships
+behind an optional extra so its dependencies (yaml, HTTP, psutil,
+docker-py, dnspython) only land when used.
+
+```toml
+[project.optional-dependencies]
+dns          = ["dnspython>=2.7"]
+adguard      = ["ruamel.yaml>=0.18", "requests>=2.32", "psutil>=6.0"]
+docker-clean = ["docker>=7.1"]
+extra-tools  = ["dnspython>=2.7", "ruamel.yaml>=0.18",
+                "requests>=2.32", "psutil>=6.0", "docker>=7.1"]
+```
+
+Each tool's `boot()` checks for its extra and exits **69** with a
+message naming the exact install command if the extra is missing.
+
+## Logging
+
+`core/log.py` exposes `get_logger(name)` returning a logger
+namespaced under `shimkit.<name>`. The root `shimkit` logger has a
+`NullHandler` by default so importing the package emits nothing.
+
+When the user passes `--log-file PATH`, `attach_file_handler(path)`
+adds a JSONL `FileHandler` with a formatter that:
+
+- Writes one JSON object per line.
+- UTC ISO-8601 timestamp.
+- Recursively redacts any dict key matching
+  `password|passwd|pwd|secret|token|api[_-]?key|authorization`
+  (case-insensitive) in the `extra={...}` payload.
+
+No external telemetry. Local files only.
 
 ## Why this layout
 

@@ -38,6 +38,9 @@ Top-level utilities (not tools):
 
 - **[Architecture](architecture.md)** — how the core/tools split
   works, the load-bearing rules, how to add a new tool.
+- **[Onboarding](onboarding.md)** — practical walkthrough for getting
+  productive: setup, the 5 rules with grep recipes, the canonical
+  recipe for adding a new tool, common dev tasks, debugging guide.
 - **[Release process](release.md)** — cutting a new version, the CI
   pipeline, what each release job does.
 - **[Shipping checklist](shipping-checklist.md)** — every step from
@@ -46,6 +49,15 @@ Top-level utilities (not tools):
 - **[Validation scope](validation-scope.md)** — what's in scope for
   automated + manual gates, what's deliberately out of scope, and
   how to expand the envelope.
+
+## Release notes
+
+Per-version, user-facing summaries:
+
+- **[`v0.2.0`](release-notes/v0.2.0.md)** — three new tools (`dns`,
+  `adguard`, `docker-clean`); uniform CLI surface across all new
+  subcommands; argv-list PM templates; container hardening + SBOM
+  + attestation.
 
 External references:
 
