@@ -49,7 +49,10 @@ jobs:
       - name: Bandit (SAST, fail on medium+)
         run: bandit -r src/shimkit -ll
       - name: pip-audit (CVE scan, skip editable shimkit)
-        run: pip-audit --strict --skip-editable
+        # --strict treats the "skipped editable" notice as an error,
+        # which is the opposite of what --skip-editable is for. Plain
+        # invocation still exits non-zero on real vulnerabilities.
+        run: pip-audit --skip-editable
 
   installer-shellcheck:
     runs-on: ubuntu-latest
@@ -67,8 +70,10 @@ jobs:
         with:
           dockerfile: Dockerfile
           # DL3008 (apt-get install without =version) is intentional for slim images;
-          # security updates come from rebuilds. DL3009 ditto for rm -rf /var/lib/apt/lists.
-          ignore: DL3008
+          # security updates come from rebuilds.
+          # DL3013 (pin pip versions) fires on `pip install --upgrade pip
+          # build` in the builder stage — we want the latest pip there.
+          ignore: DL3008,DL3013
 
   build:
     needs: test
