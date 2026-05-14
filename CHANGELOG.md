@@ -42,7 +42,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - CI: new `security` job (bandit + pip-audit), `dockerfile-hadolint`,
   `build` (sdist+wheel artifact), `smoke` (install built wheel on
   macOS + Ubuntu and run the CLI). Pytest now runs with `--cov` and
-  a **65%** coverage floor — **216 tests** total (the original 77
+  a **65%** coverage floor — **222 tests** at HEAD (the original 77
   plus 38 for the three new tools plus 101 follow-up tests targeting
   manager methods, fixer steps, pruner error paths, resolv mutators,
   api set_ports payload, desktop fallback, and the parsers in
@@ -119,6 +119,93 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
     `docs/release-notes/v0.2.0.md`, `docs/validation-scope.md`,
     `prompt.md`, `SECURITY.md`, and the PR template scrubbed of
     install.sh references.
+
+### Added (post the initial Unreleased section, in commit order)
+
+- `scripts/test_adguard_mutating.sh` and the
+  `adguard-mutating-integration` CI job: run the real
+  `shimkit adguard fix` (and `ports set` yaml fallback) inside a
+  privileged systemd container with `systemd-resolved` AND
+  NetworkManager active. Asserts the drop-in path, the
+  resolv.conf rewrite, the NM `dns=none` drop-in, and the
+  AGH-stop-edit-start dance. Covers six of the seven Phase 7
+  manual items; only the real-link-event check remains manual.
+- `docs/plans/known-issues.md`: documents the one Phase 7 check
+  that cannot be automated (real NetworkManager link-event
+  survival on a real desktop), why containers can't validate it,
+  and the manual procedure for release-time verification.
+- `docs/plans/cleanup-2026-05-14.md`: end-of-session audit of
+  gaps between shipped docs and shipped code (notably:
+  partially-wired CLI flags, missing MODERATE-tier prompts, test
+  coverage of CLI plumbing). Cleanup plan included.
+
+### Fixed (post the initial Unreleased section)
+
+- `Systemd.write_drop_in` accepts an optional `target_dir=` kwarg;
+  `adguard.disable_resolved_stub()` now writes to
+  `/etc/systemd/resolved.conf.d/` (the `[Resolve]` config dir),
+  not `/etc/systemd/systemd-resolved.service.d/` (service-unit
+  override dir, which systemd-resolved silently ignores for
+  `[Resolve]`-section directives). **This bug silently disabled
+  the entire "disable stub listener" feature on every real run
+  prior to v0.2.0** — the drop-in landed in the wrong directory
+  and systemd-resolved kept holding port 53.
+- `adguard.write_resolv_symlink()`, `write_resolv_static()`,
+  `configure_network_manager()` now return `bool` indicating
+  whether the operation actually succeeded. `manager.fix()`
+  aggregates these honestly: `outcome.applied = True` only when
+  every sub-step succeeded; `outcome.error` is set on failure.
+  Previously the orchestrator unconditionally claimed success
+  even when sub-steps silently failed.
+- `manager.fix()` notes now reflect what actually happened per
+  step. Previously the "NetworkManager dns=none drop-in written"
+  note was emitted regardless of whether NM was active —
+  misleading users on headless servers without NM installed.
+- `write_resolv_static()` falls back to a Python direct-write
+  through the existing inode when `sudo install` fails. Handles
+  the Docker bind-mounted `/etc/resolv.conf` case without
+  breaking the atomic-replace path on real hosts.
+- `adguard yaml_editor.read_ports()` now reads `http.address`
+  ("host:port") as the canonical AGH 0.107.x form for the web UI
+  port; falls back to legacy `http.port`. `set_ports()` writes
+  `http.address` and updates `http.port` if present in the file
+  for consistency. AGH's schema-version-34 migration drops
+  `http.port` and keeps `http.address`; the previous read path
+  reported the wrong port after AGH's first config rewrite.
+- `cli.py::doctor()` docker probe shells out to `docker version
+  --format '{{.Server.Version}}'` via `CommandRunner` instead of
+  going through the docker-py SDK. Avoids a lingering Unix-socket
+  fd that triggered pytest's UnraisableException warning on
+  Python 3.12+ and failed the next-running test.
+- `cli.py::config edit` no longer imports `subprocess` directly;
+  the `$EDITOR` launch goes through `CommandRunner.run(...,
+  capture_output=False)` (Rule 2 compliance).
+- `tools/adguard/ports._pid_to_unit()` accepts an injectable
+  `proc_root=` parameter; the test no longer subclasses `Path`
+  (which broke on Python 3.12+ when pathlib internals changed
+  `_parts` → `_raw_paths`).
+- `shimkit adguard rollback` now accepts `--install PATH` for
+  consistency with the other `adguard` subcommands.
+- `mypy strict` no longer false-positives on optional-extra
+  modules (`ruamel.yaml`, `requests`, `psutil`, `docker`,
+  `dnspython`) via `[[tool.mypy.overrides]]` in `pyproject.toml`.
+  CI installs `[dev]` only by default; without the override,
+  every type-check matrix cell failed with `import-not-found`.
+- `pip-audit` in CI now runs without `--strict`. The combination
+  of `--strict` and `--skip-editable` was a footgun: the latter
+  was meant to silently skip the editable shimkit install, but
+  the former promoted the skip notice to a hard error.
+- `hadolint` in CI now ignores `DL3013` (pin pip versions) in
+  addition to `DL3008`. We deliberately want the latest pip in
+  the build stage.
+- `[dev]` extras now include `ruamel.yaml`, `requests`, `psutil`,
+  `docker`, and `dnspython` so the test matrix doesn't fail with
+  `ModuleNotFoundError` when running the new tool tests.
+- `adguard-integration` CI job's wait-loop curl now passes Basic
+  auth (`ADGUARD_USER` / `ADGUARD_PASS`). With `users:` populated
+  in the pre-baked yaml, AGH gates `/control/status` behind
+  auth — an unauthenticated curl gets 401 and `-f` makes the loop
+  time out even when AGH is healthy.
 
 ## [0.1.0] — Initial release
 

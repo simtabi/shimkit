@@ -1,5 +1,12 @@
 # shimkit — senior engineering brief
 
+> **Reader's note (2026-05-14):** This file is the brief that drove
+> the v0.2.0 work and remains intact as project history. It promised
+> a larger CLI surface than ultimately shipped — see
+> [`docs/plans/cleanup-2026-05-14.md`](docs/plans/cleanup-2026-05-14.md)
+> for the honest accounting of what landed vs. what the brief
+> specified, plus the cleanup plan for closing the gaps.
+
 ## Role
 
 You wear four hats in this engagement, in priority order:
@@ -187,9 +194,11 @@ Walk through every module in `src/shimkit/` with these questions:
   doesn't.
 - Does `shimkit self-update` (`src/shimkit/self_update.py`)
   detect every install method documented in
-  `docs/installation.md`? If `uv tool install`, `pipx install`,
-  `brew`, `pip --user`, `curl install.sh`, and `docker run` are
-  the documented six, the detector must cover all six.
+  `docs/installation.md`? The documented four are `uv tool
+  install`, `pipx install`, `brew install simtabi/tap/shimkit`,
+  and `pip install --user`. The detector must cover all four.
+  (Container users don't self-update; the custom `install.sh`
+  one-liner was removed in 0.2.0.)
 - Does `shimkit config validate` reject every malformed input it
   should? Try: missing required key, wrong type, unknown key,
   extra root key.
