@@ -42,7 +42,7 @@ def _pid_to_unit(pid: int) -> str | None:
 def owners_of(port: int, proto: str) -> list[PortOwner]:
     """Return processes listening on ``port`` over ``proto`` (tcp/udp)."""
     try:
-        import psutil  # type: ignore[import-untyped]
+        import psutil
     except ImportError:
         return []
 

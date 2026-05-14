@@ -33,7 +33,7 @@ EX_NOPERM = 77
 
 def _require_optional_extras() -> bool:
     try:
-        import docker  # type: ignore[import-untyped]  # noqa: F401
+        import docker  # noqa: F401
     except ImportError:
         UI.error(
             "shimkit docker-clean needs the docker SDK.\n"

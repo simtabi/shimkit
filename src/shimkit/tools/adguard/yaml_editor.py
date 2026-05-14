@@ -12,6 +12,8 @@ from typing import Any
 
 def _yaml() -> Any:
     """Lazy-load ruamel.yaml so the import only happens when the extra is present."""
+    # `ruamel.yaml` is in the [adguard] extra; pyproject.toml
+    # ignore_missing_imports handles CI where the extra isn't installed.
     from ruamel.yaml import YAML
 
     y = YAML(typ="rt")

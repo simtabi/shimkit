@@ -19,7 +19,7 @@ from .models import BuildxBuilder, DockerDisk
 def get_client() -> Any | None:
     """Return a docker-py client, or None when the extra/daemon is unavailable."""
     try:
-        import docker  # type: ignore[import-untyped]
+        import docker
     except ImportError:
         return None
     try:

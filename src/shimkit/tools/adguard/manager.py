@@ -211,7 +211,7 @@ class AdGuardManager:
         TCP connect on the port (less precise but always available).
         """
         try:
-            import dns.resolver  # type: ignore[import-not-found]
+            import dns.resolver
 
             r = dns.resolver.Resolver(configure=False)
             r.nameservers = ["127.0.0.1"]

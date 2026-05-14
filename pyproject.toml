@@ -111,6 +111,22 @@ strict = true
 files = ["src/shimkit"]
 plugins = ["pydantic.mypy"]
 
+# Modules pulled in by per-tool optional extras. mypy strict otherwise
+# refuses to type-check a tree where the extras aren't installed (which
+# is the default CI situation — CI installs `[dev]`, not `[extra-tools]`).
+[[tool.mypy.overrides]]
+module = [
+    "docker",
+    "docker.*",
+    "dns",
+    "dns.*",
+    "psutil",
+    "requests",
+    "ruamel",
+    "ruamel.*",
+]
+ignore_missing_imports = true
+
 [tool.pydantic-mypy]
 init_forbid_extra = true
 init_typed = true
