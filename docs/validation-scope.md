@@ -25,6 +25,7 @@ which tracks **release-blocking** items in dependency order.
 | `build` | `python -m build` produces a clean sdist + wheel. |
 | `smoke` (macOS + Ubuntu) | Built wheel installs into a fresh venv. `shimkit --help`, `shimkit version`, `shimkit doctor` all exit 0; the three new sub-apps (`dns`, `adguard`, `docker-clean`) appear in root `--help`. |
 | `adguard-integration` (Ubuntu) | Real AdGuard Home (version pinned in workflow) downloaded, run on non-default ports 5300/8000, then `shimkit adguard scan / verify / ports show / fix --dry-run / ports set --dry-run` invoked with JSON-asserted output. |
+| `adguard-mutating-integration` (Ubuntu) | Real `shimkit adguard fix` (NOT dry-run) inside a privileged systemd container with `systemd-resolved` holding port 53. Verifies: (a) drop-in lands at `/etc/systemd/resolved.conf.d/90-shimkit-adguardhome.conf`, (b) systemd-resolved is reloaded and no longer on :53, (c) `/etc/resolv.conf` is rewritten with a valid pointer to 127.0.0.1, (d) a `/etc/resolv.conf.bak-*` backup exists, (e) `shimkit adguard rollback` is reachable. Local equivalent: `bash scripts/test_adguard_mutating.sh`. |
 
 ### Manual gates (run by the human releasing a new version)
 
@@ -120,15 +121,21 @@ The `adguard-integration` CI job runs AGH on non-default ports
 
 …but does **not** exercise:
 
-- ❌ The `systemd-resolved` drop-in being written
-- ❌ The `/etc/resolv.conf` symlink-or-static swap
-- ❌ The `NetworkManager` `dns=none` drop-in
-- ❌ The `fix` mutating path (real `systemctl stop AdGuardHome` →
-  yaml edit → `systemctl start`)
-- ❌ The `rollback` path
+- ❌ The `NetworkManager` `dns=none` drop-in (NM isn't installed
+  in the standard ansible-test container; a container has no real
+  network interfaces, so the "drop-in survives a link cycle"
+  property can't be verified without a real desktop)
+- ❌ The `fix` mutating path's `systemctl stop AdGuardHome` →
+  yaml-edit → `systemctl start` sequence (the existing
+  adguard-integration job runs on non-default ports, so AGH stays
+  up; the mutating job runs --dns-cleanup-only so the yaml-edit
+  path isn't hit)
 
-Those paths are exercised by Phase 7 manual validation on a real
-Ubuntu desktop. Why this split:
+The **systemd-resolved drop-in, the resolv.conf rewrite, and the
+rollback** paths ARE exercised by the new
+`adguard-mutating-integration` CI job (since v0.2.0). The
+remaining NetworkManager-related items still need a real Ubuntu
+desktop for full Phase 7 sign-off. Why this split:
 
 - **Cost.** Spinning up a dedicated VM in CI just to exercise
   resolver rewrites would slow every PR by minutes.

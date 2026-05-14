@@ -753,7 +753,7 @@ def test_resolv_disable_stub_writes_drop_in_and_reloads(
     monkeypatch.setattr(
         "shimkit.core.Systemd.write_drop_in",
         staticmethod(
-            lambda unit, name, body: captured.append(("dropin", unit, name)) or Path("/x")
+            lambda unit, name, body, **_kw: captured.append(("dropin", unit, name)) or Path("/x")
         ),
     )
     monkeypatch.setattr(
@@ -768,6 +768,46 @@ def test_resolv_disable_stub_writes_drop_in_and_reloads(
     resolv.disable_resolved_stub()
     kinds = [c[0] for c in captured]
     assert "dropin" in kinds and "reload" in kinds and "ror" in kinds
+
+
+def test_resolv_disable_stub_writes_to_resolved_conf_d(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression for the v0.2.0 integration-test finding: the drop-in
+    must land in /etc/systemd/resolved.conf.d/ (the [Resolve] config
+    dir), not /etc/systemd/systemd-resolved.service.d/ (the service-
+    unit override dir). systemd-resolved silently ignores a [Resolve]
+    section in the latter location."""
+    from shimkit.tools.adguard import resolv
+
+    seen: dict[str, object] = {}
+    monkeypatch.setattr(
+        "shimkit.core.Systemd.write_drop_in",
+        staticmethod(
+            lambda unit, name, body, *, target_dir=None: seen.update(
+                unit=unit, name=name, target_dir=target_dir
+            ) or Path("/x")
+        ),
+    )
+    monkeypatch.setattr("shimkit.core.Systemd.daemon_reload", staticmethod(lambda: None))
+    monkeypatch.setattr(
+        "shimkit.core.Systemd.reload_or_restart", staticmethod(lambda _u: None)
+    )
+    resolv.disable_resolved_stub()
+    assert seen["target_dir"] == "/etc/systemd/resolved.conf.d"
+
+
+def test_configure_network_manager_returns_false_when_inactive(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression: when NM isn't active, configure_network_manager
+    returns False (not None) so the caller can report accurately."""
+    from shimkit.tools.adguard import resolv
+
+    monkeypatch.setattr(
+        "shimkit.core.Systemd.is_active", staticmethod(lambda _unit: False)
+    )
+    assert resolv.configure_network_manager() is False
 
 
 def test_resolv_write_resolv_symlink_falls_back_when_run_path_missing(
@@ -795,9 +835,10 @@ def test_resolv_write_resolv_symlink_falls_back_when_run_path_missing(
         staticmethod(lambda _cmd, **_: CommandResult(0, "", "")),
     )
 
-    # write_resolv_symlink should fall through to write_resolv_static.
-    result_path = resolv.write_resolv_symlink()
-    assert result_path == resolv._RESOLV
+    # write_resolv_symlink should fall through to write_resolv_static
+    # and report success.
+    ok = resolv.write_resolv_symlink()
+    assert ok is True
 
 
 def test_resolv_write_resolv_static_creates_file(

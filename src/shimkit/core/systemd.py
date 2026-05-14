@@ -79,8 +79,25 @@ class Systemd:
         )
 
     @staticmethod
-    def write_drop_in(unit: str, name: str, body: str) -> Path:
-        """Write a systemd drop-in at ``/etc/systemd/<unit>.d/<name>.conf``.
+    def write_drop_in(
+        unit: str,
+        name: str,
+        body: str,
+        *,
+        target_dir: str | Path | None = None,
+    ) -> Path:
+        """Write a systemd drop-in.
+
+        By default the file lands at ``/etc/systemd/<unit>.d/<name>.conf``,
+        which is correct for service-unit overrides (``[Service]``,
+        ``[Unit]``).
+
+        Some daemons read their configuration from a separate dedicated
+        directory rather than from a service-unit drop-in. The canonical
+        case is ``systemd-resolved``, whose ``[Resolve]`` section lives
+        in ``/etc/systemd/resolved.conf.d/``, not in
+        ``/etc/systemd/systemd-resolved.service.d/``. Pass ``target_dir``
+        to override the default.
 
         The drop-in is owned by root, mode 0o644. Caller should call
         :meth:`daemon_reload` and then restart/reload the unit.
@@ -92,7 +109,10 @@ class Systemd:
         """
         if not name.endswith(".conf"):
             name = f"{name}.conf"
-        target = Path(f"/etc/systemd/{unit}.d") / name
+        target_parent = (
+            Path(target_dir) if target_dir is not None else Path(f"/etc/systemd/{unit}.d")
+        )
+        target = target_parent / name
 
         CommandRunner.run(
             [*sudo_prefix(), "mkdir", "-p", str(target.parent)],

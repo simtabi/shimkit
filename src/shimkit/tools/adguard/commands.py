@@ -204,9 +204,11 @@ def logs(
 
 
 @adguard_app.command("rollback")
-def rollback() -> None:
+def rollback(
+    install: Path = typer.Option(None, "--install"),
+) -> None:
     """Restore the latest shimkit-managed yaml and /etc/resolv.conf backups."""
     from .manager import AdGuardManager
 
-    code = AdGuardManager.create().boot().rollback()
+    code = AdGuardManager.create().boot(install_override=install).rollback()
     raise typer.Exit(code)

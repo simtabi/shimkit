@@ -283,3 +283,16 @@ jobs:
             fix.json
           retention-days: 7
           if-no-files-found: ignore
+
+  adguard-mutating-integration:
+    name: adguard mutating integration (systemd-resolved in privileged container)
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
+      - name: Run scripts/test_adguard_mutating.sh
+        run: bash scripts/test_adguard_mutating.sh

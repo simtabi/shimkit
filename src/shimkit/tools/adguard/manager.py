@@ -363,16 +363,39 @@ class AdGuardManager:
         if not remap_only and resolv.is_resolved_active():
             o = FixOutcome(step="resolved")
             if dry_run:
-                o.notes.append("Would write DNSStubListener=no drop-in + resolv.conf rewrite.")
+                o.notes.append("Would write DNSStubListener=no drop-in.")
+                o.notes.append("Would rewrite /etc/resolv.conf.")
+                if resolv.is_nm_active():
+                    o.notes.append("Would write NetworkManager dns=none drop-in.")
             else:
                 resolv.disable_resolved_stub()
-                if cfg.resolv_conf_mode == "static":
+                o.notes.append("systemd-resolved stub disabled.")
+
+                resolv_ok = (
                     resolv.write_resolv_static()
+                    if cfg.resolv_conf_mode == "static"
+                    else resolv.write_resolv_symlink()
+                )
+                if resolv_ok:
+                    o.notes.append(
+                        f"/etc/resolv.conf rewritten ({cfg.resolv_conf_mode})."
+                    )
                 else:
-                    resolv.write_resolv_symlink()
-                resolv.configure_network_manager()
-                o.applied = True
-                o.notes.append("systemd-resolved stub disabled; NM dns=none drop-in written.")
+                    o.error = (
+                        "Could not rewrite /etc/resolv.conf "
+                        "(bind-mounted or insufficient privilege?)."
+                    )
+
+                nm_applied = resolv.configure_network_manager()
+                if nm_applied:
+                    o.notes.append("NetworkManager dns=none drop-in written.")
+                elif resolv.is_nm_active():
+                    o.notes.append(
+                        "NetworkManager is active but the drop-in write failed."
+                    )
+                # else: NM inactive, nothing to do — no note.
+
+                o.applied = (o.error is None)
             outcomes.append(o)
 
         # Phase: known-safe units. dnsmasq/bind9/named/unbound get stopped.
