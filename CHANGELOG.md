@@ -6,7 +6,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-## [0.2.0] — 2026-05-14
+## [0.2.1] — 2026-05-14
+
+### Fixed
+
+- Release pipeline: `actions/attest-build-provenance` requires
+  either a public repo or a paid org plan; the v0.2.0 build job
+  failed at the attestation step so nothing reached PyPI. Repo
+  flipped to `public` (matches the Simtabi OSS default) and
+  `release.yml` gained a `workflow_dispatch` trigger for future
+  retries without force-pushing tags. **Code at v0.2.1 is
+  identical to v0.2.0; the bump is purely a release-infra
+  retry.**
+
+## [0.2.0] — 2026-05-14 (unpublished)
 
 ### Added
 
