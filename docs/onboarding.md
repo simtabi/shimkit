@@ -332,8 +332,9 @@ def _require_optional_extras() -> bool:
 - `--dry-run` makes no destructive calls (assert via monkeypatch).
 - Severe-tier ops abort without `--confirm <token>`.
 - MODERATE-tier ops prompt `[y/N]` by default, skip on `--yes` /
-  `--force`, and refuse (exit 0 without mutating) under `--no-input`
-  or non-TTY stdin.
+  `--force`, and refuse with **exit 1** under `--no-input` or
+  non-TTY stdin so scripts that intended to mutate don't silently
+  succeed without doing anything.
 
 Mock at `shimkit.core.CommandRunner.run`, `Platform(...)`, and the
 tool-specific external libraries (`docker.from_env`, `requests`,

@@ -279,7 +279,7 @@ cat > /tmp/shimkit-yamlpath.json <<JSON
 JSON
 SHIMKIT_CONFIG=/tmp/shimkit-yamlpath.json \
     /opt/venv/bin/shimkit adguard ports set \
-    --install /opt/AdGuardHome --dns 5400 --http 8100
+    --install /opt/AdGuardHome --dns 5400 --http 8100 --yes
 
 # Verify the new ports landed in the yaml.
 python3 - <<"PY"

@@ -231,7 +231,7 @@ any future tool — and the help text stays aligned.
 | `--timeout SECS` | Network / wait timeout (default 30). |
 | `--color={auto,always,never}` | Honours `NO_COLOR` env. |
 | `--no-color`     | Shorthand for `--color=never`. |
-| `--no-input`     | Never prompt (also when stdin is not a TTY). MODERATE-tier `[y/N]` prompts refuse rather than block. |
+| `--no-input`     | Never prompt (also when stdin is not a TTY). MODERATE-tier `[y/N]` prompts refuse with exit 1 rather than block. |
 
 Exit codes are documented in `shimkit --help`:
 
