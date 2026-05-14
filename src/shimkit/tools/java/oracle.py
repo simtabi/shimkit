@@ -28,17 +28,12 @@ class OracleRemover:
     @property
     def patterns(self) -> list[str]:
         """Resolved glob patterns with ``~`` expanded for the current user."""
-        return [
-            str(Path(p).expanduser())
-            for p in get_config().tools.java.oracle_glob_patterns
-        ]
+        return [str(Path(p).expanduser()) for p in get_config().tools.java.oracle_glob_patterns]
 
     @property
     def safe_roots(self) -> tuple[str, ...]:
         """Resolved safe-root prefixes — paths outside these are never deleted."""
-        return tuple(
-            str(Path(r).expanduser()) for r in get_config().tools.java.oracle_safe_roots
-        )
+        return tuple(str(Path(r).expanduser()) for r in get_config().tools.java.oracle_safe_roots)
 
     def remove(self) -> bool:
         """Delete every matched artifact. Returns True if anything was removed."""

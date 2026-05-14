@@ -63,8 +63,7 @@ def _load_user_overrides(path: Path) -> dict[str, Any]:
         return data
     except json.JSONDecodeError as e:
         raise ConfigError(
-            f"Config file is not valid JSON: {path}\n"
-            f"  line {e.lineno}, column {e.colno}: {e.msg}"
+            f"Config file is not valid JSON: {path}\n  line {e.lineno}, column {e.colno}: {e.msg}"
         ) from e
 
 
@@ -76,10 +75,7 @@ def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any
     """
     out = deepcopy(base)
     for key, value in override.items():
-        if (
-            isinstance(value, dict)
-            and isinstance(out.get(key), dict)
-        ):
+        if isinstance(value, dict) and isinstance(out.get(key), dict):
             out[key] = _deep_merge(out[key], value)
         else:
             out[key] = value

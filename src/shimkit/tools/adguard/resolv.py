@@ -66,9 +66,7 @@ def disable_resolved_stub() -> None:
     service-unit overrides). systemd-resolved reads its config from the
     former; a drop-in in the latter is silently ignored.
     """
-    Systemd.write_drop_in(
-        _DROP_IN_UNIT, _DROP_IN_NAME, _DROP_IN_BODY, target_dir=_DROP_IN_DIR
-    )
+    Systemd.write_drop_in(_DROP_IN_UNIT, _DROP_IN_NAME, _DROP_IN_BODY, target_dir=_DROP_IN_DIR)
     Systemd.daemon_reload()
     Systemd.reload_or_restart("systemd-resolved")
 
@@ -84,9 +82,7 @@ def write_resolv_symlink() -> bool:
     if not target.exists():
         return write_resolv_static()
     _back_up_resolv()
-    rm = CommandRunner.run(
-        [*sudo_prefix(), "rm", "-f", str(_RESOLV)], capture_output=True
-    )
+    rm = CommandRunner.run([*sudo_prefix(), "rm", "-f", str(_RESOLV)], capture_output=True)
     if not rm.ok:
         # `/etc/resolv.conf` is bind-mounted in many container runtimes
         # (Docker, Podman) — rm fails with EBUSY. Fall through to the
@@ -125,8 +121,10 @@ def write_resolv_static() -> bool:
             [
                 *sudo_prefix(),
                 "install",
-                "-m", "0644",
-                "-o", "root",
+                "-m",
+                "0644",
+                "-o",
+                "root",
                 tmp,
                 str(_RESOLV),
             ],
@@ -185,8 +183,10 @@ def configure_network_manager() -> bool:
             [
                 *sudo_prefix(),
                 "install",
-                "-m", "0644",
-                "-o", "root",
+                "-m",
+                "0644",
+                "-o",
+                "root",
                 tmp,
                 str(_NM_DROP_IN),
             ],
@@ -196,9 +196,7 @@ def configure_network_manager() -> bool:
             return False
     finally:
         Path(tmp).unlink(missing_ok=True)
-    reload = CommandRunner.run(
-        [*sudo_prefix(), "nmcli", "general", "reload"], capture_output=True
-    )
+    reload = CommandRunner.run([*sudo_prefix(), "nmcli", "general", "reload"], capture_output=True)
     return reload.ok
 
 

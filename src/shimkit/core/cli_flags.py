@@ -76,6 +76,13 @@ NO_COLOR = typer.Option(
     help="Disable ANSI colour output (also honours NO_COLOR env).",
 )
 
+COLOR = typer.Option(
+    None,
+    "--color",
+    help="Override the colour mode: auto, always, or never.",
+    metavar="auto|always|never",
+)
+
 TIMEOUT = typer.Option(
     30.0,
     "--timeout",

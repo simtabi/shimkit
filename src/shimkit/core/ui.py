@@ -43,6 +43,8 @@ class UI:
     _DIM = "\033[2m"
 
     _quiet: bool = False
+    _color_override: str | None = None
+    _no_input: bool = False
 
     @classmethod
     def set_quiet(cls, quiet: bool) -> None:
@@ -50,8 +52,40 @@ class UI:
         cls._quiet = quiet
 
     @classmethod
+    def set_color_mode(cls, mode: str | None) -> None:
+        """Override the config-driven colour mode.
+
+        ``mode`` is ``"auto"``, ``"always"``, ``"never"``, or ``None``
+        to drop back to whatever ``config.ui.color`` says. Used by the
+        shared ``--color=auto|always|never`` and ``--no-color`` flags.
+        """
+        cls._color_override = mode
+
+    @classmethod
+    def set_no_input(cls, no_input: bool) -> None:
+        """Mark the session as non-interactive.
+
+        Tools that would otherwise prompt should check ``UI.is_no_input()``
+        before calling into ``Menu``. Stays set until cleared by tests
+        via ``set_no_input(False)``.
+        """
+        cls._no_input = no_input
+
+    @classmethod
+    def is_no_input(cls) -> bool:
+        return cls._no_input
+
+    @classmethod
     def _color_enabled(cls) -> bool:
-        mode = get_config().ui.color
+        mode: str | None = cls._color_override
+        if mode is None:
+            # UI must keep working even when the config itself is invalid,
+            # otherwise `shimkit config validate` would crash on the very
+            # error message that explains the problem. Fall back to auto.
+            try:
+                mode = get_config().ui.color
+            except Exception:
+                mode = "auto"
         if mode == "always":
             return True
         if mode == "never":
@@ -125,6 +159,7 @@ class UI:
         ``(label, value)`` tuples. Sections are separated by mid-bars.
         Labels are auto-aligned to the widest label across all sections.
         """
+
         def vlen(s: str) -> int:
             return len(_ANSI_RE.sub("", s))
 

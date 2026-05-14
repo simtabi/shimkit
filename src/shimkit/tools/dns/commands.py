@@ -6,13 +6,18 @@ from pathlib import Path
 
 import typer
 
-from shimkit.core import UI, attach_file_handler, set_verbose
+from shimkit.core import UI, Menu, attach_file_handler, set_verbose
 from shimkit.core.cli_flags import (
+    COLOR,
     DRY_RUN,
+    FORCE,
     JSON_OUT,
     LOG_FILE,
+    NO_COLOR,
+    NO_INPUT,
     QUIET,
     VERBOSE,
+    YES,
 )
 
 dns_app = typer.Typer(
@@ -33,7 +38,33 @@ def _bootstrap(log_file: str | None, verbose: bool, quiet: bool = False) -> None
 
 
 @dns_app.callback(invoke_without_command=True)
-def _root(ctx: typer.Context) -> None:
+def _root(
+    ctx: typer.Context,
+    quiet: bool = QUIET,
+    verbose: bool = VERBOSE,
+    log_file: str = LOG_FILE,
+    no_color: bool = NO_COLOR,
+    color: str = COLOR,
+    no_input: bool = NO_INPUT,
+) -> None:
+    """Apply universal flags before dispatching to a subcommand.
+
+    Place these before the subcommand: ``shimkit dns --no-color flush``.
+    Per-subcommand flags (``--json``, ``--dry-run``, ``--yes``,
+    ``--force``) go after the subcommand.
+    """
+    if verbose:
+        set_verbose(True)
+    if quiet:
+        UI.set_quiet(True)
+    if no_color:
+        UI.set_color_mode("never")
+    elif color:
+        UI.set_color_mode(color)
+    if no_input:
+        UI.set_no_input(True)
+    if log_file:
+        attach_file_handler(log_file)
     if ctx.invoked_subcommand is None:
         from .manager import DnsManager
 
@@ -88,13 +119,22 @@ def set_servers(
     servers: list[str] = typer.Argument(..., help="One or more IP addresses."),
     service: str = typer.Option(None, "--service"),
     dry_run: bool = DRY_RUN,
+    yes: bool = YES,
+    force: bool = FORCE,
 ) -> None:
     """Set DNS servers for the active service. Empty list resets to DHCP."""
     from .manager import DnsManager
 
-    code = DnsManager.create().boot().set_servers(
-        servers, service=service, dry_run=dry_run
-    )
+    if not dry_run and not Menu.prompt_for_change(
+        f"Set DNS for {service or '<active service>'} to {', '.join(servers)}",
+        yes=yes,
+        force=force,
+        no_input=UI.is_no_input(),
+    ):
+        UI.info("Cancelled. Pass --yes to skip the prompt or rerun with --dry-run.")
+        raise typer.Exit(1)
+
+    code = DnsManager.create().boot().set_servers(servers, service=service, dry_run=dry_run)
     raise typer.Exit(code)
 
 

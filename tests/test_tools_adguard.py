@@ -17,7 +17,8 @@ def test_boot_exits_69_on_non_linux(monkeypatch: pytest.MonkeyPatch) -> None:
     from shimkit.tools.adguard.manager import AdGuardManager
 
     monkeypatch.setattr(
-        Platform, "detect",
+        Platform,
+        "detect",
         classmethod(lambda cls: Platform(system="Darwin", machine="arm64")),
     )
     with pytest.raises(SystemExit) as exc:
@@ -33,7 +34,8 @@ def _stub_linux_install(
     from shimkit.tools.adguard import finder
 
     monkeypatch.setattr(
-        Platform, "detect",
+        Platform,
+        "detect",
         classmethod(lambda cls: Platform(system="Linux", machine="x86_64")),
     )
     bin_path = tmp_path / "AdGuardHome"
@@ -43,25 +45,49 @@ def _stub_linux_install(
     if yaml_body:
         yaml_path = tmp_path / "AdGuardHome.yaml"
         yaml_path.write_text(yaml_body)
-    install = AdGuardInstall(
-        binary=bin_path, yaml_path=yaml_path, install_root=tmp_path
-    )
+    install = AdGuardInstall(binary=bin_path, yaml_path=yaml_path, install_root=tmp_path)
     monkeypatch.setattr(finder, "detect", lambda override=None: install)
     return install
 
 
-def test_boot_exits_69_when_no_install(
-    monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_boot_exits_69_when_no_install(monkeypatch: pytest.MonkeyPatch) -> None:
     from shimkit.core.platform import Platform
     from shimkit.tools.adguard import finder
     from shimkit.tools.adguard.manager import AdGuardManager
 
     monkeypatch.setattr(
-        Platform, "detect",
+        Platform,
+        "detect",
         classmethod(lambda cls: Platform(system="Linux", machine="x86_64")),
     )
     monkeypatch.setattr(finder, "detect", lambda override=None: None)
+    with pytest.raises(SystemExit) as exc:
+        AdGuardManager.create().boot()
+    assert exc.value.code == 69
+
+
+def test_boot_exits_69_when_optional_extra_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The brief's mandatory-minimum test: boot() refuses without extras."""
+    import builtins
+
+    from shimkit.core.platform import Platform
+    from shimkit.tools.adguard.manager import AdGuardManager
+
+    monkeypatch.setattr(
+        Platform,
+        "detect",
+        classmethod(lambda cls: Platform(system="Linux", machine="x86_64")),
+    )
+    # Sabotage psutil import — _require_optional_extras tries to import
+    # it (along with requests and ruamel.yaml) and should fail.
+    real_import = builtins.__import__
+
+    def fake_import(name, *a, **kw):  # type: ignore[no-untyped-def]
+        if name == "psutil":
+            raise ImportError("simulated psutil-missing for test")
+        return real_import(name, *a, **kw)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
     with pytest.raises(SystemExit) as exc:
         AdGuardManager.create().boot()
     assert exc.value.code == 69
@@ -75,9 +101,7 @@ def test_scan_reports_no_conflicts_when_empty(
 ) -> None:
     yaml_body = "dns:\n  port: 53\nhttp:\n  port: 80\n"
     _stub_linux_install(monkeypatch, tmp_path, yaml_body)
-    monkeypatch.setattr(
-        "shimkit.tools.adguard.ports.owners_of", lambda _port, _proto: []
-    )
+    monkeypatch.setattr("shimkit.tools.adguard.ports.owners_of", lambda _port, _proto: [])
     result = runner.invoke(app, ["adguard", "scan", "--json"])
     assert result.exit_code == 0
     doc = json.loads(result.stdout)
@@ -158,9 +182,7 @@ def test_yaml_editor_reads_http_port_from_address(tmp_path: Path) -> None:
     from shimkit.tools.adguard import yaml_editor
 
     yaml_path = tmp_path / "AdGuardHome.yaml"
-    yaml_path.write_text(
-        "dns:\n  port: 5300\nhttp:\n  address: 127.0.0.1:8000\n"
-    )
+    yaml_path.write_text("dns:\n  port: 5300\nhttp:\n  address: 127.0.0.1:8000\n")
     dns_port, http_port = yaml_editor.read_ports(yaml_path)
     assert dns_port == 5300
     assert http_port == 8000
@@ -174,9 +196,7 @@ def test_yaml_editor_set_ports_writes_canonical_http_address(
     from shimkit.tools.adguard import yaml_editor
 
     yaml_path = tmp_path / "AdGuardHome.yaml"
-    yaml_path.write_text(
-        "dns:\n  port: 53\nhttp:\n  address: 127.0.0.1:80\n"
-    )
+    yaml_path.write_text("dns:\n  port: 53\nhttp:\n  address: 127.0.0.1:80\n")
     yaml_editor.set_ports(yaml_path, dns=5353, http=8080)
     body = yaml_path.read_text()
     assert "address: 127.0.0.1:8080" in body
@@ -206,17 +226,11 @@ def test_fix_dry_run_makes_no_systemd_calls(
 ) -> None:
     yaml_body = "dns:\n  port: 53\nhttp:\n  port: 80\n"
     _stub_linux_install(monkeypatch, tmp_path, yaml_body)
-    monkeypatch.setattr(
-        "shimkit.tools.adguard.ports.owners_of", lambda _port, _proto: []
-    )
-    monkeypatch.setattr(
-        "shimkit.tools.adguard.resolv.is_resolved_active", lambda: False
-    )
+    monkeypatch.setattr("shimkit.tools.adguard.ports.owners_of", lambda _port, _proto: [])
+    monkeypatch.setattr("shimkit.tools.adguard.resolv.is_resolved_active", lambda: False)
     # Any Systemd write call in dry-run would fail loudly — none should be made.
     calls: list[str] = []
-    monkeypatch.setattr(
-        "shimkit.core.Systemd.restart", lambda unit: calls.append(unit) or None
-    )
+    monkeypatch.setattr("shimkit.core.Systemd.restart", lambda unit: calls.append(unit) or None)
     result = runner.invoke(app, ["adguard", "fix", "--dry-run"])
     assert result.exit_code == 0
     assert calls == []
@@ -253,7 +267,9 @@ def test_finder_detect_returns_none_when_no_binary(
 
     cfg = tmp_path / "shimkit.json"
     cfg.write_text(
-        '{"tools": {"adguard": {"install_candidates": ["' + str(tmp_path / "nope").replace("\\", "\\\\") + '"]}}}'
+        '{"tools": {"adguard": {"install_candidates": ["'
+        + str(tmp_path / "nope").replace("\\", "\\\\")
+        + '"]}}}'
     )
     monkeypatch.setenv("SHIMKIT_CONFIG", str(cfg))
     reset_cache()
@@ -329,8 +345,7 @@ def test_pid_to_unit_prefers_unified_hierarchy(tmp_path: Path) -> None:
     # and the unified 0:: line second. The parser must prefer 0::.
     (tmp_path / "9999").mkdir()
     (tmp_path / "9999" / "cgroup").write_text(
-        "12:cpu:/system.slice/legacy-wrong.service\n"
-        "0::/system.slice/correct.service\n"
+        "12:cpu:/system.slice/legacy-wrong.service\n0::/system.slice/correct.service\n"
     )
     unit = _pid_to_unit(9999, proc_root=tmp_path)
     assert unit == "correct.service"
@@ -341,9 +356,7 @@ def test_pid_to_unit_falls_back_to_legacy_when_no_unified(tmp_path: Path) -> Non
     from shimkit.tools.adguard.ports import _pid_to_unit
 
     (tmp_path / "8888").mkdir()
-    (tmp_path / "8888" / "cgroup").write_text(
-        "12:cpu:/system.slice/legacy-only.service\n"
-    )
+    (tmp_path / "8888" / "cgroup").write_text("12:cpu:/system.slice/legacy-only.service\n")
     assert _pid_to_unit(8888, proc_root=tmp_path) == "legacy-only.service"
 
 
@@ -472,9 +485,15 @@ def test_adguard_ports_set_dry_run_does_not_mutate(
     result = runner.invoke(
         app,
         [
-            "adguard", "ports", "set",
-            "--install", str(install.install_root),
-            "--dns", "5353", "--http", "8080",
+            "adguard",
+            "ports",
+            "set",
+            "--install",
+            str(install.install_root),
+            "--dns",
+            "5353",
+            "--http",
+            "8080",
             "--dry-run",
         ],
     )
@@ -492,13 +511,13 @@ def test_adguard_ports_set_via_api_when_reachable(
     set_calls: list[dict] = []
     monkeypatch.setattr(
         "shimkit.tools.adguard.api.set_ports",
-        lambda *, dns_port, http_port, timeout=10.0: set_calls.append(
-            {"dns": dns_port, "http": http_port}
-        ) or True,
+        lambda *, dns_port, http_port, timeout=10.0: (
+            set_calls.append({"dns": dns_port, "http": http_port}) or True
+        ),
     )
     result = runner.invoke(
         app,
-        ["adguard", "ports", "set", "--dns", "5353", "--http", "8080"],
+        ["adguard", "ports", "set", "--dns", "5353", "--http", "8080", "--yes"],
     )
     assert result.exit_code == 0
     assert set_calls == [{"dns": 5353, "http": 8080}]
@@ -580,9 +599,7 @@ def test_adguard_rollback_no_backups(
     runner: CliRunner, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     _stub_linux_install(monkeypatch, tmp_path, "dns:\n  port: 53\n")
-    monkeypatch.setattr(
-        "shimkit.tools.adguard.resolv.latest_resolv_backup", lambda: None
-    )
+    monkeypatch.setattr("shimkit.tools.adguard.resolv.latest_resolv_backup", lambda: None)
     result = runner.invoke(app, ["adguard", "rollback"])
     assert result.exit_code == 1
 
@@ -597,9 +614,7 @@ def test_adguard_rollback_restores_yaml(
     # Create a backup pointing at older state.
     backup = install.yaml_path.with_suffix(install.yaml_path.suffix + ".bak-20250101")
     backup.write_text("dns:\n  port: 53\n")
-    monkeypatch.setattr(
-        "shimkit.tools.adguard.resolv.latest_resolv_backup", lambda: None
-    )
+    monkeypatch.setattr("shimkit.tools.adguard.resolv.latest_resolv_backup", lambda: None)
     result = runner.invoke(app, ["adguard", "rollback"])
     assert result.exit_code == 0
     # Yaml restored from backup
@@ -613,12 +628,8 @@ def test_adguard_fix_dry_run_with_resolved_active(
     without actually writing it."""
     yaml_body = "dns:\n  port: 53\nhttp:\n  port: 80\n"
     _stub_linux_install(monkeypatch, tmp_path, yaml_body)
-    monkeypatch.setattr(
-        "shimkit.tools.adguard.ports.owners_of", lambda _port, _proto: []
-    )
-    monkeypatch.setattr(
-        "shimkit.tools.adguard.resolv.is_resolved_active", lambda: True
-    )
+    monkeypatch.setattr("shimkit.tools.adguard.ports.owners_of", lambda _port, _proto: [])
+    monkeypatch.setattr("shimkit.tools.adguard.resolv.is_resolved_active", lambda: True)
     # disable_resolved_stub must not actually fire under --dry-run.
     fired: list[bool] = []
     monkeypatch.setattr(
@@ -784,15 +795,13 @@ def test_resolv_disable_stub_writes_to_resolved_conf_d(
     monkeypatch.setattr(
         "shimkit.core.Systemd.write_drop_in",
         staticmethod(
-            lambda unit, name, body, *, target_dir=None: seen.update(
-                unit=unit, name=name, target_dir=target_dir
-            ) or Path("/x")
+            lambda unit, name, body, *, target_dir=None: (
+                seen.update(unit=unit, name=name, target_dir=target_dir) or Path("/x")
+            )
         ),
     )
     monkeypatch.setattr("shimkit.core.Systemd.daemon_reload", staticmethod(lambda: None))
-    monkeypatch.setattr(
-        "shimkit.core.Systemd.reload_or_restart", staticmethod(lambda _u: None)
-    )
+    monkeypatch.setattr("shimkit.core.Systemd.reload_or_restart", staticmethod(lambda _u: None))
     resolv.disable_resolved_stub()
     assert seen["target_dir"] == "/etc/systemd/resolved.conf.d"
 
@@ -804,9 +813,7 @@ def test_configure_network_manager_returns_false_when_inactive(
     returns False (not None) so the caller can report accurately."""
     from shimkit.tools.adguard import resolv
 
-    monkeypatch.setattr(
-        "shimkit.core.Systemd.is_active", staticmethod(lambda _unit: False)
-    )
+    monkeypatch.setattr("shimkit.core.Systemd.is_active", staticmethod(lambda _unit: False))
     assert resolv.configure_network_manager() is False
 
 
@@ -868,9 +875,7 @@ def test_resolv_configure_network_manager_no_op_when_nm_inactive(
 ) -> None:
     from shimkit.tools.adguard import resolv
 
-    monkeypatch.setattr(
-        "shimkit.core.Systemd.is_active", staticmethod(lambda _unit: False)
-    )
+    monkeypatch.setattr("shimkit.core.Systemd.is_active", staticmethod(lambda _unit: False))
     called: list[list[str]] = []
     monkeypatch.setattr(
         "shimkit.tools.adguard.resolv.CommandRunner.run",
@@ -917,7 +922,9 @@ def test_systemd_install_path_returns_none_when_no_unit(
     assert finder._systemd_install_path() is None
 
 
-def test_latest_resolv_backup_returns_most_recent(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_latest_resolv_backup_returns_most_recent(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     from shimkit.tools.adguard import resolv
 
     # Stub /etc to point at tmp_path
@@ -935,6 +942,7 @@ def test_latest_resolv_backup_returns_most_recent(monkeypatch: pytest.MonkeyPatc
     # the "no backups found" path.
     # Use a function-local probe instead — list a tmp dir for sanity.
     import time
+
     (tmp_path / "resolv.conf.bak-20250101").write_text("a")
     time.sleep(0.01)
     (tmp_path / "resolv.conf.bak-20250102").write_text("b")

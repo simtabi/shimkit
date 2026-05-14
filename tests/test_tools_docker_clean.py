@@ -25,6 +25,28 @@ def test_boot_exits_69_when_daemon_unreachable(
     assert exc.value.code == 69
 
 
+def test_boot_exits_69_when_optional_extra_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The brief's mandatory-minimum test: boot() refuses without the
+    `docker` extra installed."""
+    import builtins
+
+    from shimkit.tools.docker_clean.manager import DockerCleanManager
+
+    real_import = builtins.__import__
+
+    def fake_import(name, *a, **kw):  # type: ignore[no-untyped-def]
+        if name == "docker":
+            raise ImportError("simulated docker-missing for test")
+        return real_import(name, *a, **kw)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+    with pytest.raises(SystemExit) as exc:
+        DockerCleanManager.create().boot()
+    assert exc.value.code == 69
+
+
 # --- status ---------------------------------------------------------------
 
 
@@ -34,10 +56,17 @@ def test_status_json_emits_disk_breakdown(
     from shimkit.tools.docker_clean import client as client_mod
 
     stub_disk = DockerDisk(
-        images_count=3, images_size_bytes=10_000_000, images_reclaimable_bytes=5_000_000,
-        containers_count=2, containers_size_bytes=200, containers_reclaimable_bytes=100,
-        volumes_count=1, volumes_size_bytes=4096, volumes_reclaimable_bytes=0,
-        build_cache_size_bytes=999, build_cache_reclaimable_bytes=999,
+        images_count=3,
+        images_size_bytes=10_000_000,
+        images_reclaimable_bytes=5_000_000,
+        containers_count=2,
+        containers_size_bytes=200,
+        containers_reclaimable_bytes=100,
+        volumes_count=1,
+        volumes_size_bytes=4096,
+        volumes_reclaimable_bytes=0,
+        build_cache_size_bytes=999,
+        build_cache_reclaimable_bytes=999,
     )
     monkeypatch.setattr(client_mod, "get_client", lambda: object())
     monkeypatch.setattr(client_mod, "disk_usage", lambda: stub_disk)
@@ -53,9 +82,7 @@ def test_status_json_emits_disk_breakdown(
 # --- nuke confirmation token ---------------------------------------------
 
 
-def test_nuke_requires_confirm_token(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_nuke_requires_confirm_token(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     from shimkit.tools.docker_clean import client as client_mod
 
     monkeypatch.setattr(client_mod, "get_client", lambda: object())
@@ -64,9 +91,7 @@ def test_nuke_requires_confirm_token(
     assert "Pass --confirm DELETE" in result.stdout
 
 
-def test_nuke_rejects_wrong_token(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_nuke_rejects_wrong_token(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     from shimkit.tools.docker_clean import client as client_mod
 
     monkeypatch.setattr(client_mod, "get_client", lambda: object())
@@ -77,9 +102,7 @@ def test_nuke_rejects_wrong_token(
 # --- dry-run --------------------------------------------------------------
 
 
-def test_quick_dry_run_calls_no_pruner(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_quick_dry_run_calls_no_pruner(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     from shimkit.tools.docker_clean import client as client_mod
     from shimkit.tools.docker_clean import pruner
 
@@ -106,9 +129,19 @@ def test_cli_docker_clean_help_lists_all_subcommands(runner: CliRunner) -> None:
     result = runner.invoke(app, ["docker-clean", "--help"])
     assert result.exit_code == 0
     for cmd in (
-        "status", "quick", "nuke", "restart", "stop-all",
-        "prune-images", "prune-volumes", "prune-networks", "prune-builders",
-        "orphans", "inspect", "compose-down", "schedule",
+        "status",
+        "quick",
+        "nuke",
+        "restart",
+        "stop-all",
+        "prune-images",
+        "prune-volumes",
+        "prune-networks",
+        "prune-builders",
+        "orphans",
+        "inspect",
+        "compose-down",
+        "schedule",
     ):
         assert cmd in result.stdout
 
@@ -405,9 +438,7 @@ def test_docker_clean_quick_runs_all_prune_steps(
 
     result = runner.invoke(app, ["docker-clean", "quick", "--json"])
     assert result.exit_code == 0
-    assert called == [
-        "stop_all", "remove_all", "prune_images", "prune_volumes", "prune_networks"
-    ]
+    assert called == ["stop_all", "remove_all", "prune_images", "prune_volumes", "prune_networks"]
 
 
 def test_docker_clean_nuke_with_token_runs_buildx_prune(
@@ -421,28 +452,38 @@ def test_docker_clean_nuke_with_token_runs_buildx_prune(
     called: list[str] = []
     monkeypatch.setattr(client_mod, "get_client", lambda: object())
     monkeypatch.setattr(
-        pruner, "stop_all_containers",
+        pruner,
+        "stop_all_containers",
         lambda _c: called.append("stop") or CleanupOutcome(step="stop", applied=True),
     )
     monkeypatch.setattr(
-        pruner, "remove_all_containers",
+        pruner,
+        "remove_all_containers",
         lambda _c: called.append("rm") or CleanupOutcome(step="rm", applied=True),
     )
     monkeypatch.setattr(
-        pruner, "prune_images",
-        lambda _c, all_images=False: called.append("img") or CleanupOutcome(step="img", applied=True),
+        pruner,
+        "prune_images",
+        lambda _c, all_images=False: (
+            called.append("img") or CleanupOutcome(step="img", applied=True)
+        ),
     )
     monkeypatch.setattr(
-        pruner, "prune_volumes",
+        pruner,
+        "prune_volumes",
         lambda _c: called.append("vol") or CleanupOutcome(step="vol", applied=True),
     )
     monkeypatch.setattr(
-        pruner, "prune_networks",
+        pruner,
+        "prune_networks",
         lambda _c: called.append("net") or CleanupOutcome(step="net", applied=True),
     )
     monkeypatch.setattr(
-        pruner, "prune_buildx_builders",
-        lambda all_caches=True: called.append("buildx") or CleanupOutcome(step="buildx", applied=True),
+        pruner,
+        "prune_buildx_builders",
+        lambda all_caches=True: (
+            called.append("buildx") or CleanupOutcome(step="buildx", applied=True)
+        ),
     )
     result = runner.invoke(app, ["docker-clean", "nuke", "--confirm", "DELETE"])
     assert result.exit_code == 0
@@ -458,7 +499,8 @@ def test_docker_clean_prune_images_dry_run_skips(
     monkeypatch.setattr(client_mod, "get_client", lambda: object())
     called: list[str] = []
     monkeypatch.setattr(
-        pruner, "prune_images",
+        pruner,
+        "prune_images",
         lambda *_a, **_kw: called.append("nope") or None,
     )
     result = runner.invoke(app, ["docker-clean", "prune-images", "--dry-run"])
@@ -466,9 +508,7 @@ def test_docker_clean_prune_images_dry_run_skips(
     assert called == []
 
 
-def test_docker_clean_stop_all_dry_run(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_docker_clean_stop_all_dry_run(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     from shimkit.tools.docker_clean import client as client_mod
 
     monkeypatch.setattr(client_mod, "get_client", lambda: object())
@@ -507,13 +547,9 @@ def test_docker_clean_compose_down_invokes_docker_compose(
     )
     compose = tmp_path / "compose.yml"
     compose.write_text("services:\n  web:\n    image: nginx\n")
-    result = runner.invoke(
-        app, ["docker-clean", "compose-down", str(compose), "--volumes"]
-    )
+    result = runner.invoke(app, ["docker-clean", "compose-down", str(compose), "--volumes"])
     assert result.exit_code == 0
-    assert captured and captured[0] == [
-        "docker", "compose", "-f", str(compose), "down", "-v"
-    ]
+    assert captured and captured[0] == ["docker", "compose", "-f", str(compose), "down", "-v"]
 
 
 def test_docker_clean_restart_macos_uses_desktop(
@@ -526,16 +562,19 @@ def test_docker_clean_restart_macos_uses_desktop(
 
     monkeypatch.setattr(client_mod, "get_client", lambda: None)  # require_daemon=False
     monkeypatch.setattr(
-        Platform, "detect",
+        Platform,
+        "detect",
         classmethod(lambda cls: Platform(system="Darwin", machine="arm64")),
     )
     called: list[str] = []
     monkeypatch.setattr(
-        desktop, "restart",
+        desktop,
+        "restart",
         lambda platform=None: called.append("desktop") or True,
     )
     monkeypatch.setattr(
-        client_mod, "get_client",
+        client_mod,
+        "get_client",
         # First call (boot) returns None — but boot doesn't fail because
         # require_daemon=False on the restart path. After restart, get_client()
         # is polled — return a stub object on subsequent calls.
@@ -601,7 +640,8 @@ def test_docker_clean_quick_dry_run_short_circuits(
 
     monkeypatch.setattr(client_mod, "get_client", lambda: object())
     monkeypatch.setattr(
-        pruner, "stop_all_containers",
+        pruner,
+        "stop_all_containers",
         lambda _c: (_ for _ in ()).throw(AssertionError("should not call")),
     )
     result = runner.invoke(app, ["docker-clean", "quick", "--dry-run"])
@@ -708,9 +748,7 @@ def test_desktop_restart_uses_cli_when_available(
     captured: list[list[str]] = []
     monkeypatch.setattr(
         "shimkit.tools.docker_clean.desktop.CommandRunner.run",
-        staticmethod(
-            lambda cmd, **_: captured.append(cmd) or CommandResult(0, "", "")
-        ),
+        staticmethod(lambda cmd, **_: captured.append(cmd) or CommandResult(0, "", "")),
     )
     assert desktop.restart() is True
     assert captured == [["docker", "desktop", "restart"]]

@@ -56,17 +56,22 @@ def disk_usage() -> DockerDisk | None:
         reclaim = _parse_size(row.get("Reclaimable") or "0")
         count = _safe_int(row.get("Count") or row.get("TotalCount") or 0)
         if kind == "images":
-            out = _replace(out, images_count=count, images_size_bytes=size,
-                          images_reclaimable_bytes=reclaim)
+            out = _replace(
+                out, images_count=count, images_size_bytes=size, images_reclaimable_bytes=reclaim
+            )
         elif "container" in kind:
-            out = _replace(out, containers_count=count, containers_size_bytes=size,
-                          containers_reclaimable_bytes=reclaim)
+            out = _replace(
+                out,
+                containers_count=count,
+                containers_size_bytes=size,
+                containers_reclaimable_bytes=reclaim,
+            )
         elif "volume" in kind:
-            out = _replace(out, volumes_count=count, volumes_size_bytes=size,
-                          volumes_reclaimable_bytes=reclaim)
+            out = _replace(
+                out, volumes_count=count, volumes_size_bytes=size, volumes_reclaimable_bytes=reclaim
+            )
         elif "build" in kind or "cache" in kind:
-            out = _replace(out, build_cache_size_bytes=size,
-                          build_cache_reclaimable_bytes=reclaim)
+            out = _replace(out, build_cache_size_bytes=size, build_cache_reclaimable_bytes=reclaim)
     return out
 
 

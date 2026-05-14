@@ -204,9 +204,7 @@ def _make_backup_dir() -> Path:
     tmp = Path("/tmp").resolve()  # nosec B108
     allowed_roots = (home, tmp)
     if not any(_is_within(raw, root) for root in allowed_roots):
-        raise PermissionError(
-            f"Refusing to write DNS backups outside HOME or /tmp: {raw}"
-        )
+        raise PermissionError(f"Refusing to write DNS backups outside HOME or /tmp: {raw}")
     ts = datetime.now().strftime("%Y%m%d-%H%M%S")
     target = raw / ts
     target.mkdir(parents=True, exist_ok=True)
@@ -239,9 +237,7 @@ def step_nuclear() -> FixResult:
                 [*sudo_prefix(), "cp", "-a", str(src), str(backup_dir / src.name)],
                 capture_output=False,
             )
-            CommandRunner.run(
-                [*sudo_prefix(), "rm", "-f", str(src)], capture_output=False
-            )
+            CommandRunner.run([*sudo_prefix(), "rm", "-f", str(src)], capture_output=False)
 
     if service.is_wifi:
         ns.airport_power(service.device, on=False)

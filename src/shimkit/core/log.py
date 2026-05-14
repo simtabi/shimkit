@@ -34,8 +34,7 @@ def _scrub(value: object) -> object:
     """Recursively redact secret-looking keys in mappings and sequences."""
     if isinstance(value, dict):
         return {
-            k: ("***REDACTED***" if _REDACT_KEYS.search(k) else _scrub(v))
-            for k, v in value.items()
+            k: ("***REDACTED***" if _REDACT_KEYS.search(k) else _scrub(v)) for k, v in value.items()
         }
     if isinstance(value, list | tuple):
         return [_scrub(v) for v in value]

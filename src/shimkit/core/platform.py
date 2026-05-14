@@ -53,9 +53,10 @@ class Platform:
         if not self.is_linux:
             return False
         try:
-            return "microsoft" in Path("/proc/version").read_text(
-                encoding="utf-8", errors="ignore"
-            ).lower()
+            return (
+                "microsoft"
+                in Path("/proc/version").read_text(encoding="utf-8", errors="ignore").lower()
+            )
         except OSError:
             return False
 
@@ -115,9 +116,7 @@ class Platform:
 
     def _cgroup_has(self, *terms: str) -> bool:
         try:
-            content = Path("/proc/1/cgroup").read_text(
-                encoding="utf-8", errors="ignore"
-            ).lower()
+            content = Path("/proc/1/cgroup").read_text(encoding="utf-8", errors="ignore").lower()
             return any(t in content for t in terms)
         except OSError:
             return False

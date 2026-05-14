@@ -55,7 +55,9 @@ _CRON_LINE = "# shimkit docker-clean — {interval}\n{cron} shimkit docker-clean
 def _macos_calendar(interval: str) -> str:
     # Run weekly Mondays 03:00; daily 03:00 if --daily.
     if interval == "daily":
-        return "<dict><key>Hour</key><integer>3</integer><key>Minute</key><integer>0</integer></dict>"
+        return (
+            "<dict><key>Hour</key><integer>3</integer><key>Minute</key><integer>0</integer></dict>"
+        )
     return (
         "<dict><key>Weekday</key><integer>1</integer>"
         "<key>Hour</key><integer>3</integer>"
@@ -75,9 +77,7 @@ def emit(interval: str = "weekly", platform: Platform | None = None) -> str:
     """Return the scheduling snippet for the current platform."""
     plat = platform or Platform.detect()
     if plat.is_macos:
-        return _LAUNCHD_TEMPLATE.format(
-            interval=interval, calendar=_macos_calendar(interval)
-        )
+        return _LAUNCHD_TEMPLATE.format(interval=interval, calendar=_macos_calendar(interval))
     if plat.is_linux:
         return (
             f"# Save the following two files as:\n"

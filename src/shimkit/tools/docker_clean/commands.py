@@ -6,13 +6,18 @@ from pathlib import Path
 
 import typer
 
-from shimkit.core import UI, attach_file_handler, set_verbose
+from shimkit.core import UI, Menu, attach_file_handler, set_verbose
 from shimkit.core.cli_flags import (
+    COLOR,
     DRY_RUN,
+    FORCE,
     JSON_OUT,
     LOG_FILE,
+    NO_COLOR,
+    NO_INPUT,
     QUIET,
     VERBOSE,
+    YES,
 )
 
 docker_clean_app = typer.Typer(
@@ -32,7 +37,28 @@ def _bootstrap(log_file: str | None, verbose: bool, quiet: bool = False) -> None
 
 
 @docker_clean_app.callback(invoke_without_command=True)
-def _root(ctx: typer.Context) -> None:
+def _root(
+    ctx: typer.Context,
+    quiet: bool = QUIET,
+    verbose: bool = VERBOSE,
+    log_file: str = LOG_FILE,
+    no_color: bool = NO_COLOR,
+    color: str = COLOR,
+    no_input: bool = NO_INPUT,
+) -> None:
+    """Apply universal flags before dispatching to a subcommand."""
+    if verbose:
+        set_verbose(True)
+    if quiet:
+        UI.set_quiet(True)
+    if no_color:
+        UI.set_color_mode("never")
+    elif color:
+        UI.set_color_mode(color)
+    if no_input:
+        UI.set_no_input(True)
+    if log_file:
+        attach_file_handler(log_file)
     if ctx.invoked_subcommand is None:
         from .manager import DockerCleanManager
 
@@ -103,49 +129,83 @@ def stop_all(dry_run: bool = DRY_RUN) -> None:
     raise typer.Exit(code)
 
 
-@docker_clean_app.command("prune-images")
-def prune_images(dry_run: bool = DRY_RUN) -> None:
-    """`docker image prune -a` (removes images not used by any container)."""
+def _prune_with_prompt(kind: str, label: str, dry_run: bool, yes: bool, force: bool) -> None:
+    """MODERATE-tier prompt + dispatch shared by every `prune-*` command."""
     from .manager import DockerCleanManager
 
-    code = DockerCleanManager.create().boot().prune("images", dry_run=dry_run)
+    if not dry_run and not Menu.prompt_for_change(
+        f"Remove {label}",
+        yes=yes,
+        force=force,
+        no_input=UI.is_no_input(),
+    ):
+        UI.info("Cancelled. Pass --yes to skip the prompt or rerun with --dry-run.")
+        raise typer.Exit(1)
+
+    code = DockerCleanManager.create().boot().prune(kind, dry_run=dry_run)
     raise typer.Exit(code)
+
+
+@docker_clean_app.command("prune-images")
+def prune_images(
+    dry_run: bool = DRY_RUN,
+    yes: bool = YES,
+    force: bool = FORCE,
+) -> None:
+    """`docker image prune -a` (removes images not used by any container)."""
+    _prune_with_prompt("images", "all unused images", dry_run, yes, force)
 
 
 @docker_clean_app.command("prune-volumes")
-def prune_volumes(dry_run: bool = DRY_RUN) -> None:
+def prune_volumes(
+    dry_run: bool = DRY_RUN,
+    yes: bool = YES,
+    force: bool = FORCE,
+) -> None:
     """`docker volume prune` (with confirmation)."""
-    from .manager import DockerCleanManager
-
-    code = DockerCleanManager.create().boot().prune("volumes", dry_run=dry_run)
-    raise typer.Exit(code)
+    _prune_with_prompt("volumes", "all unused volumes (DATA LOSS RISK)", dry_run, yes, force)
 
 
 @docker_clean_app.command("prune-networks")
-def prune_networks(dry_run: bool = DRY_RUN) -> None:
+def prune_networks(
+    dry_run: bool = DRY_RUN,
+    yes: bool = YES,
+    force: bool = FORCE,
+) -> None:
     """`docker network prune` (custom networks only)."""
-    from .manager import DockerCleanManager
-
-    code = DockerCleanManager.create().boot().prune("networks", dry_run=dry_run)
-    raise typer.Exit(code)
+    _prune_with_prompt("networks", "all unused custom networks", dry_run, yes, force)
 
 
 @docker_clean_app.command("prune-builders")
-def prune_builders(dry_run: bool = DRY_RUN) -> None:
+def prune_builders(
+    dry_run: bool = DRY_RUN,
+    yes: bool = YES,
+    force: bool = FORCE,
+) -> None:
     """Iterate `docker buildx ls` and prune each builder's cache."""
-    from .manager import DockerCleanManager
-
-    code = DockerCleanManager.create().boot().prune("builders", dry_run=dry_run)
-    raise typer.Exit(code)
+    _prune_with_prompt(
+        "builders",
+        "all buildx caches (will re-download on next build)",
+        dry_run,
+        yes,
+        force,
+    )
 
 
 @docker_clean_app.command("orphans")
-def orphans(dry_run: bool = DRY_RUN) -> None:
+def orphans(
+    dry_run: bool = DRY_RUN,
+    yes: bool = YES,
+    force: bool = FORCE,
+) -> None:
     """Remove dangling images + unused volumes only (narrower than system prune)."""
-    from .manager import DockerCleanManager
-
-    code = DockerCleanManager.create().boot().prune("orphans", dry_run=dry_run)
-    raise typer.Exit(code)
+    _prune_with_prompt(
+        "orphans",
+        "dangling images + unused volumes",
+        dry_run,
+        yes,
+        force,
+    )
 
 
 @docker_clean_app.command("inspect")
@@ -180,9 +240,5 @@ def schedule_cmd(
     """Emit (do not install) a launchd plist, systemd timer, or cron line."""
     from .manager import DockerCleanManager
 
-    code = (
-        DockerCleanManager.create()
-        .boot(require_daemon=False)
-        .schedule_emit(interval, out)
-    )
+    code = DockerCleanManager.create().boot(require_daemon=False).schedule_emit(interval, out)
     raise typer.Exit(code)

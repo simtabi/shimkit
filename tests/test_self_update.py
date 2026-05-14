@@ -108,9 +108,7 @@ def test_run_when_no_pypi_response(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_run_when_already_up_to_date(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        "shimkit.self_update._latest_pypi_version", lambda: __version__
-    )
+    monkeypatch.setattr("shimkit.self_update._latest_pypi_version", lambda: __version__)
     rc = su.run(yes=True)
     assert rc == 0
 

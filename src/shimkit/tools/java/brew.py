@@ -65,9 +65,7 @@ class Brew:
             return []
         try:
             data = json.loads(r.stdout)
-            return [
-                f for f in data.get("formulae", []) if "openjdk" in f.get("name", "")
-            ]
+            return [f for f in data.get("formulae", []) if "openjdk" in f.get("name", "")]
         except (json.JSONDecodeError, KeyError, TypeError):
             return []
 
@@ -86,9 +84,7 @@ class Brew:
 
         tmp_path: str | None = None
         try:
-            with tempfile.NamedTemporaryFile(
-                mode="wb", suffix=".sh", delete=False
-            ) as tmp:
+            with tempfile.NamedTemporaryFile(mode="wb", suffix=".sh", delete=False) as tmp:
                 tmp_path = tmp.name
                 # urlopen scheme validated above (HTTPS-only).
                 with urlopen(url, timeout=30) as resp:  # nosec B310

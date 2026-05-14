@@ -41,9 +41,7 @@ def test_user_override_via_shimkit_config_env(
     override.write_text(
         json.dumps(
             {
-                "tools": {
-                    "java": {"default_version": 17}
-                },
+                "tools": {"java": {"default_version": 17}},
                 "ui": {"color": "always"},
             }
         )
@@ -57,9 +55,7 @@ def test_user_override_via_shimkit_config_env(
     assert len(cfg.tools.java.supported_versions) == 5
 
 
-def test_invalid_json_raises_clear_error(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_invalid_json_raises_clear_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     bad = tmp_path / "shimkit.json"
     bad.write_text("{not valid json")
     monkeypatch.setenv("SHIMKIT_CONFIG", str(bad))
@@ -82,9 +78,7 @@ def test_invalid_schema_raises_pointing_at_field(
     assert "ui.color" in str(ei.value)
 
 
-def test_unknown_keys_rejected(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_unknown_keys_rejected(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     bad = tmp_path / "shimkit.json"
     bad.write_text(json.dumps({"ui": {"colour": "auto"}}))  # typo
     monkeypatch.setenv("SHIMKIT_CONFIG", str(bad))
@@ -106,9 +100,7 @@ def test_dollar_schema_meta_key_is_stripped(
     assert cfg.schema_version == 1
 
 
-def test_xdg_config_home_resolution(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_xdg_config_home_resolution(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
     reset_cache()
     expected = tmp_path / "shimkit" / "shimkit.json"
@@ -145,6 +137,19 @@ def test_cli_config_validate(runner: CliRunner) -> None:
     result = runner.invoke(app, ["config", "validate"])
     assert result.exit_code == 0
     assert "valid" in result.stdout.lower()
+
+
+def test_cli_config_validate_exit_78_on_invalid_config(
+    runner: CliRunner, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """EX_CONFIG (78) — distinct from generic 1 so scripts can detect
+    'config is broken' specifically."""
+    bad = tmp_path / "bad.json"
+    bad.write_text('{"unknown_root_key": true}')
+    monkeypatch.setenv("SHIMKIT_CONFIG", str(bad))
+    reset_cache()
+    result = runner.invoke(app, ["config", "validate"])
+    assert result.exit_code == 78
 
 
 def test_cli_config_path(

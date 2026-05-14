@@ -35,10 +35,7 @@ class DnsManager:
     def boot(self) -> DnsManager:
         self._platform = Platform.detect()
         if not self._platform.is_macos:
-            UI.error(
-                "shimkit dns targets macOS. "
-                f"Detected platform: {self._platform.system}."
-            )
+            UI.error(f"shimkit dns targets macOS. Detected platform: {self._platform.system}.")
             sys.exit(EX_UNAVAILABLE)
         self._service = networksetup.active_service()
         if self._service is None:
@@ -93,8 +90,10 @@ class DnsManager:
             UI.warning("  No active service detected.")
         UI.line(f"  Resolvers      : {len(chain.resolvers)}")
         for r in chain.resolvers:
-            UI.line(f"    [#{r.index}] {','.join(r.nameservers) or '(none)'} "
-                    f"if={r.interface or '-'} flags={r.flags or '-'}")
+            UI.line(
+                f"    [#{r.index}] {','.join(r.nameservers) or '(none)'} "
+                f"if={r.interface or '-'} flags={r.flags or '-'}"
+            )
             if r.is_tailscale:
                 UI.warning("      ↑ Tailscale MagicDNS (100.100.100.100) present")
         if interference:
@@ -254,10 +253,7 @@ class DnsManager:
         """Run the 6-step escalation. Stops at the first step that fixes resolution."""
         cfg = get_config().tools.dns
         if profile not in cfg.dns_servers:
-            UI.error(
-                f"Unknown DNS profile: {profile}. "
-                f"Available: {', '.join(cfg.dns_servers)}"
-            )
+            UI.error(f"Unknown DNS profile: {profile}. Available: {', '.join(cfg.dns_servers)}")
             return EX_FAIL
         servers = cfg.dns_servers[profile]
         service = self._service
@@ -281,9 +277,7 @@ class DnsManager:
                     continue
                 token = cfg.nuclear_confirm_token
                 if nuclear_confirm != token:
-                    UI.error(
-                        f"Step 6 is destructive. Pass --confirm {token} to proceed."
-                    )
+                    UI.error(f"Step 6 is destructive. Pass --confirm {token} to proceed.")
                     return EX_FAIL
 
             UI.header(f"Step {step.number}/6 — {step.description}")

@@ -74,9 +74,7 @@ class Systemd:
 
     @staticmethod
     def reload_or_restart(unit: str) -> CommandResult:
-        return CommandRunner.run(
-            [*sudo_prefix(), "systemctl", "reload-or-restart", unit]
-        )
+        return CommandRunner.run([*sudo_prefix(), "systemctl", "reload-or-restart", unit])
 
     @staticmethod
     def write_drop_in(
@@ -127,8 +125,10 @@ class Systemd:
                 [
                     *sudo_prefix(),
                     "install",
-                    "-m", "0644",
-                    "-o", "root",
+                    "-m",
+                    "0644",
+                    "-o",
+                    "root",
                     tmp,
                     str(target),
                 ],

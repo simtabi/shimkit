@@ -42,7 +42,7 @@ def detect(override: Path | None = None) -> AdGuardInstall | None:
     roots: list[Path] = []
     if override:
         roots.append(Path(override))
-    if (p := _systemd_install_path()):
+    if p := _systemd_install_path():
         roots.append(p)
     for cand in get_config().tools.adguard.install_candidates:
         roots.append(Path(cand).expanduser())
@@ -57,8 +57,10 @@ def detect(override: Path | None = None) -> AdGuardInstall | None:
                     yaml_path = p
                     break
             if yaml_path is None:
-                for sys_path in ("/etc/AdGuardHome/AdGuardHome.yaml",
-                                 "/var/lib/AdGuardHome/AdGuardHome.yaml"):
+                for sys_path in (
+                    "/etc/AdGuardHome/AdGuardHome.yaml",
+                    "/var/lib/AdGuardHome/AdGuardHome.yaml",
+                ):
                     if Path(sys_path).is_file():
                         yaml_path = Path(sys_path)
                         break

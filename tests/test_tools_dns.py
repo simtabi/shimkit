@@ -44,9 +44,7 @@ def test_scutil_parse_empty_returns_empty_chain() -> None:
 
 
 def test_resolverchain_primary_nameservers() -> None:
-    chain = ResolverChain(
-        resolvers=(Resolver(index=1, nameservers=("8.8.8.8",)),)
-    )
+    chain = ResolverChain(resolvers=(Resolver(index=1, nameservers=("8.8.8.8",)),))
     assert chain.primary_nameservers == ("8.8.8.8",)
     assert ResolverChain().primary_nameservers == ()
 
@@ -75,7 +73,8 @@ def test_boot_on_macos_succeeds(monkeypatch: pytest.MonkeyPatch) -> None:
         Platform, "detect", classmethod(lambda cls: Platform(system="Darwin", machine="arm64"))
     )
     monkeypatch.setattr(
-        networksetup, "active_service",
+        networksetup,
+        "active_service",
         lambda: NetworkService(name="Wi-Fi", device="en0", is_wifi=True),
     )
     mgr = DnsManager.create().boot()
@@ -94,7 +93,8 @@ def _stub_macos(monkeypatch: pytest.MonkeyPatch) -> None:
         Platform, "detect", classmethod(lambda cls: Platform(system="Darwin", machine="arm64"))
     )
     monkeypatch.setattr(
-        networksetup, "active_service",
+        networksetup,
+        "active_service",
         lambda: NetworkService(name="Wi-Fi", device="en0", is_wifi=True),
     )
     monkeypatch.setattr(fixer, "detect_interference", lambda: [])
@@ -114,9 +114,7 @@ def test_diagnose_json_emits_parseable_document(
     assert "resolvers" in data["data"]
 
 
-def test_diagnose_human_output(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_diagnose_human_output(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     _stub_macos(monkeypatch)
     result = runner.invoke(app, ["dns", "diagnose"])
     assert result.exit_code == 0
@@ -135,9 +133,7 @@ def test_reset_aborts_without_confirm_token(
     assert "Pass --confirm RESET" in result.stdout
 
 
-def test_reset_aborts_with_wrong_token(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_reset_aborts_with_wrong_token(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     _stub_macos(monkeypatch)
     result = runner.invoke(app, ["dns", "reset", "--confirm", "wrong"])
     assert result.exit_code == 1
@@ -174,7 +170,9 @@ def test_set_real_run_calls_networksetup(
 
     monkeypatch.setattr("shimkit.tools.dns.networksetup.set_dns_servers", fake_set)
     monkeypatch.setattr("shimkit.tools.dns.networksetup.flush_cache", lambda: True)
-    result = runner.invoke(app, ["dns", "set", "1.1.1.1"])
+    # --yes bypasses the new MODERATE-tier prompt; without it, CliRunner
+    # (no TTY) would refuse and exit 1.
+    result = runner.invoke(app, ["dns", "set", "1.1.1.1", "--yes"])
     assert result.exit_code == 0
     assert calls == [("Wi-Fi", ["1.1.1.1"])]
 
@@ -186,8 +184,16 @@ def test_cli_dns_help_lists_all_subcommands(runner: CliRunner) -> None:
     result = runner.invoke(app, ["dns", "--help"])
     assert result.exit_code == 0
     for cmd in (
-        "diagnose", "flush", "show", "set", "reset", "test",
-        "profile", "fix", "rollback", "diagnostics",
+        "diagnose",
+        "flush",
+        "show",
+        "set",
+        "reset",
+        "test",
+        "profile",
+        "fix",
+        "rollback",
+        "diagnostics",
     ):
         assert cmd in result.stdout
 
@@ -195,18 +201,14 @@ def test_cli_dns_help_lists_all_subcommands(runner: CliRunner) -> None:
 # --- flush ---------------------------------------------------------------
 
 
-def test_flush_returns_77_on_failure(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_flush_returns_77_on_failure(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     _stub_macos(monkeypatch)
     monkeypatch.setattr("shimkit.tools.dns.networksetup.flush_cache", lambda: False)
     result = runner.invoke(app, ["dns", "flush"])
     assert result.exit_code == 77
 
 
-def test_flush_success(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_flush_success(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     _stub_macos(monkeypatch)
     monkeypatch.setattr("shimkit.tools.dns.networksetup.flush_cache", lambda: True)
     result = runner.invoke(app, ["dns", "flush"])
@@ -216,9 +218,7 @@ def test_flush_success(
 # --- test (resolution check) ---------------------------------------------
 
 
-def test_test_command_reports_results(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_test_command_reports_results(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     _stub_macos(monkeypatch)
     monkeypatch.setattr(
         "shimkit.tools.dns.fixer.test_resolution", lambda _domain, timeout=3.0: True
@@ -236,6 +236,141 @@ def test_test_command_returns_1_on_failure(
     )
     result = runner.invoke(app, ["dns", "test", "example.com"])
     assert result.exit_code == 1
+
+
+# --- shared CLI flag wiring (P1.1) ---------------------------------------
+
+
+def test_app_level_quiet_calls_ui_set_quiet(
+    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`shimkit dns --quiet flush` should call UI.set_quiet(True)."""
+    from shimkit.core import UI
+
+    _stub_macos(monkeypatch)
+    monkeypatch.setattr("shimkit.tools.dns.networksetup.flush_cache", lambda: True)
+    UI.set_quiet(False)  # baseline
+    result = runner.invoke(app, ["dns", "--quiet", "flush"])
+    assert result.exit_code == 0
+    # The callback set the flag — UI._quiet should now be True.
+    assert UI._quiet is True
+    UI.set_quiet(False)  # cleanup
+
+
+def test_app_level_no_color_sets_color_mode_never(
+    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`shimkit dns --no-color flush` should set UI._color_override='never'."""
+    from shimkit.core import UI
+
+    _stub_macos(monkeypatch)
+    monkeypatch.setattr("shimkit.tools.dns.networksetup.flush_cache", lambda: True)
+    UI.set_color_mode(None)
+    result = runner.invoke(app, ["dns", "--no-color", "flush"])
+    assert result.exit_code == 0
+    assert UI._color_override == "never"
+    UI.set_color_mode(None)
+
+
+def test_app_level_color_always_overrides(
+    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from shimkit.core import UI
+
+    _stub_macos(monkeypatch)
+    monkeypatch.setattr("shimkit.tools.dns.networksetup.flush_cache", lambda: True)
+    UI.set_color_mode(None)
+    result = runner.invoke(app, ["dns", "--color", "always", "flush"])
+    assert result.exit_code == 0
+    assert UI._color_override == "always"
+    UI.set_color_mode(None)
+
+
+def test_app_level_no_input_sets_flag(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
+    from shimkit.core import UI
+
+    _stub_macos(monkeypatch)
+    monkeypatch.setattr("shimkit.tools.dns.networksetup.flush_cache", lambda: True)
+    UI.set_no_input(False)
+    result = runner.invoke(app, ["dns", "--no-input", "flush"])
+    assert result.exit_code == 0
+    assert UI.is_no_input() is True
+    UI.set_no_input(False)
+
+
+def test_app_level_log_file_attaches_handler(
+    runner: CliRunner, monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:  # type: ignore[no-untyped-def]
+    """`--log-file PATH` should attach a JSONL FileHandler."""
+    import logging
+
+    from shimkit.core.log import reset_for_tests
+
+    _stub_macos(monkeypatch)
+    monkeypatch.setattr("shimkit.tools.dns.networksetup.flush_cache", lambda: True)
+    reset_for_tests()
+    log_path = tmp_path / "shimkit.jsonl"
+    result = runner.invoke(app, ["dns", "--log-file", str(log_path), "flush"])
+    assert result.exit_code == 0
+    root = logging.getLogger("shimkit")
+    file_handlers = [h for h in root.handlers if isinstance(h, logging.FileHandler)]
+    assert file_handlers, "expected a FileHandler attached to the shimkit logger"
+    assert any(str(log_path) in h.baseFilename for h in file_handlers)
+    reset_for_tests()
+
+
+def test_app_level_verbose_sets_debug_level(
+    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import logging
+
+    from shimkit.core.log import reset_for_tests
+
+    _stub_macos(monkeypatch)
+    monkeypatch.setattr("shimkit.tools.dns.networksetup.flush_cache", lambda: True)
+    reset_for_tests()
+    result = runner.invoke(app, ["dns", "--verbose", "flush"])
+    assert result.exit_code == 0
+    assert logging.getLogger("shimkit").level == logging.DEBUG
+    reset_for_tests()
+
+
+# --- MODERATE-tier prompt (P1.2) -----------------------------------------
+
+
+def test_dns_set_prompts_in_interactive_mode_and_yes_bypasses(
+    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`dns set` is MODERATE-tier; without --yes it should prompt."""
+    from shimkit.core import UI
+
+    _stub_macos(monkeypatch)
+    monkeypatch.setattr(
+        "shimkit.tools.dns.networksetup.set_dns_servers", lambda _svc, _servers: True
+    )
+    monkeypatch.setattr("shimkit.tools.dns.networksetup.flush_cache", lambda: True)
+
+    # No --yes, --no-input is implied (CliRunner has no real TTY) → refused.
+    UI.set_no_input(False)
+    result = runner.invoke(app, ["dns", "set", "1.1.1.1"])
+    assert result.exit_code == 1
+    assert "Cancelled" in result.stdout
+
+    # With --yes, bypasses the prompt and succeeds.
+    result_yes = runner.invoke(app, ["dns", "set", "1.1.1.1", "--yes"])
+    assert result_yes.exit_code == 0
+
+
+def test_dns_set_force_also_bypasses_prompt(
+    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _stub_macos(monkeypatch)
+    monkeypatch.setattr(
+        "shimkit.tools.dns.networksetup.set_dns_servers", lambda _svc, _servers: True
+    )
+    monkeypatch.setattr("shimkit.tools.dns.networksetup.flush_cache", lambda: True)
+    result = runner.invoke(app, ["dns", "set", "1.1.1.1", "--force"])
+    assert result.exit_code == 0
 
 
 # --- networksetup wrapper --------------------------------------------------
@@ -332,9 +467,7 @@ def test_set_dns_servers_empty_clears_to_dhcp(monkeypatch: pytest.MonkeyPatch) -
         captured.append(cmd)
         return CommandResult(0, "", "")
 
-    monkeypatch.setattr(
-        "shimkit.tools.dns.networksetup.CommandRunner.run", staticmethod(fake_run)
-    )
+    monkeypatch.setattr("shimkit.tools.dns.networksetup.CommandRunner.run", staticmethod(fake_run))
     assert ns.set_dns_servers("Wi-Fi", []) is True
     assert "empty" in captured[0]
 
@@ -373,9 +506,7 @@ def test_is_within_returns_false_for_outsider(tmp_path) -> None:  # type: ignore
     assert _is_within(other, sibling) is False
 
 
-def test_latest_backup_dir_returns_most_recent(
-    monkeypatch: pytest.MonkeyPatch, tmp_path
-) -> None:  # type: ignore[no-untyped-def]
+def test_latest_backup_dir_returns_most_recent(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:  # type: ignore[no-untyped-def]
     import shimkit.tools.dns.fixer as fixer_mod
     from shimkit.config import reset_cache
 
@@ -429,13 +560,9 @@ def test_dns_show_returns_servers_via_json(
     assert doc["data"]["servers"] == ["1.1.1.1", "8.8.8.8"]
 
 
-def test_dns_show_handles_dhcp(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_dns_show_handles_dhcp(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     _stub_macos(monkeypatch)
-    monkeypatch.setattr(
-        "shimkit.tools.dns.networksetup.get_dns_servers", lambda _svc: []
-    )
+    monkeypatch.setattr("shimkit.tools.dns.networksetup.get_dns_servers", lambda _svc: [])
     result = runner.invoke(app, ["dns", "show"])
     assert result.exit_code == 0
     assert "DHCP" in result.stdout
@@ -453,7 +580,7 @@ def test_dns_set_calls_networksetup_when_not_dry_run(
 
     monkeypatch.setattr("shimkit.tools.dns.networksetup.set_dns_servers", fake_set)
     monkeypatch.setattr("shimkit.tools.dns.networksetup.flush_cache", lambda: True)
-    result = runner.invoke(app, ["dns", "set", "1.1.1.1", "8.8.8.8"])
+    result = runner.invoke(app, ["dns", "set", "1.1.1.1", "8.8.8.8", "--yes"])
     assert result.exit_code == 0
     assert calls == [("Wi-Fi", ["1.1.1.1", "8.8.8.8"])]
 
@@ -477,9 +604,7 @@ def test_dns_fix_already_resolving_is_noop(
     runner: CliRunner, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _stub_macos(monkeypatch)
-    monkeypatch.setattr(
-        "shimkit.tools.dns.fixer.test_resolution", lambda *_a, **_k: True
-    )
+    monkeypatch.setattr("shimkit.tools.dns.fixer.test_resolution", lambda *_a, **_k: True)
     result = runner.invoke(app, ["dns", "fix"])
     assert result.exit_code == 0
     assert "already resolves" in result.stdout.lower()
@@ -516,9 +641,7 @@ def test_dns_fix_unknown_profile_is_user_error(
     runner: CliRunner, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _stub_macos(monkeypatch)
-    monkeypatch.setattr(
-        "shimkit.tools.dns.fixer.test_resolution", lambda *_a, **_k: False
-    )
+    monkeypatch.setattr("shimkit.tools.dns.fixer.test_resolution", lambda *_a, **_k: False)
     result = runner.invoke(app, ["dns", "fix", "--profile", "nonexistent"])
     assert result.exit_code == 1
     assert "Unknown DNS profile" in result.stdout
@@ -528,24 +651,16 @@ def test_dns_fix_nuclear_without_token_aborts(
     runner: CliRunner, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _stub_macos(monkeypatch)
-    monkeypatch.setattr(
-        "shimkit.tools.dns.fixer.test_resolution", lambda *_a, **_k: False
-    )
+    monkeypatch.setattr("shimkit.tools.dns.fixer.test_resolution", lambda *_a, **_k: False)
     # Run up to step 6 without --confirm — should refuse.
-    result = runner.invoke(
-        app, ["dns", "fix", "--start-at", "6", "--stop-at", "6"]
-    )
+    result = runner.invoke(app, ["dns", "fix", "--start-at", "6", "--stop-at", "6"])
     assert result.exit_code == 1
     assert "Pass --confirm REGENERATE" in result.stdout
 
 
-def test_dns_rollback_no_backup(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_dns_rollback_no_backup(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     _stub_macos(monkeypatch)
-    monkeypatch.setattr(
-        "shimkit.tools.dns.fixer.latest_backup_dir", lambda: None
-    )
+    monkeypatch.setattr("shimkit.tools.dns.fixer.latest_backup_dir", lambda: None)
     result = runner.invoke(app, ["dns", "rollback"])
     assert result.exit_code == 1
     assert "No DNS plist backup" in result.stdout
@@ -566,9 +681,7 @@ def test_dns_profile_list_handles_failure(
     assert result.exit_code == 77
 
 
-def test_dns_profile_list_emits_json(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_dns_profile_list_emits_json(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     from shimkit.core import CommandResult
 
     _stub_macos(monkeypatch)
@@ -592,9 +705,7 @@ def test_dns_diagnostics_export_writes_file(
         "shimkit.tools.dns.manager.CommandRunner.run",
         staticmethod(lambda _cmd, **_: CommandResult(0, "scutil output\n", "")),
     )
-    monkeypatch.setattr(
-        "shimkit.tools.dns.networksetup.get_dns_servers", lambda _svc: ["1.1.1.1"]
-    )
+    monkeypatch.setattr("shimkit.tools.dns.networksetup.get_dns_servers", lambda _svc: ["1.1.1.1"])
     out = tmp_path / "diag.txt"
     result = runner.invoke(app, ["dns", "diagnostics", "export", "--out", str(out)])
     assert result.exit_code == 0
@@ -613,12 +724,8 @@ def test_dns_diagnostics_export_writes_file(
 def test_step_flush_success_path(monkeypatch: pytest.MonkeyPatch) -> None:
     from shimkit.tools.dns import fixer
 
-    monkeypatch.setattr(
-        "shimkit.tools.dns.networksetup.flush_cache", lambda: True
-    )
-    monkeypatch.setattr(
-        "shimkit.tools.dns.fixer.test_resolution", lambda *_a, **_k: True
-    )
+    monkeypatch.setattr("shimkit.tools.dns.networksetup.flush_cache", lambda: True)
+    monkeypatch.setattr("shimkit.tools.dns.fixer.test_resolution", lambda *_a, **_k: True)
     monkeypatch.setattr("time.sleep", lambda _s: None)  # speed up
     res = fixer.step_flush()
     assert res.applied is True
@@ -655,9 +762,7 @@ def test_step_uniform_dnssec_success(monkeypatch: pytest.MonkeyPatch) -> None:
         lambda _svc, _servers: True,
     )
     monkeypatch.setattr("shimkit.tools.dns.networksetup.flush_cache", lambda: True)
-    monkeypatch.setattr(
-        "shimkit.tools.dns.fixer.test_resolution", lambda *_a, **_k: True
-    )
+    monkeypatch.setattr("shimkit.tools.dns.fixer.test_resolution", lambda *_a, **_k: True)
     monkeypatch.setattr("time.sleep", lambda _s: None)
     res = fixer.step_uniform_dnssec("Wi-Fi")
     assert res.applied is True
@@ -667,9 +772,7 @@ def test_step_uniform_dnssec_success(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_step_cycle_interface_no_service(monkeypatch: pytest.MonkeyPatch) -> None:
     from shimkit.tools.dns import fixer
 
-    monkeypatch.setattr(
-        "shimkit.tools.dns.networksetup.active_service", lambda: None
-    )
+    monkeypatch.setattr("shimkit.tools.dns.networksetup.active_service", lambda: None)
     res = fixer.step_cycle_interface()
     assert res.applied is False
 
@@ -684,13 +787,9 @@ def test_step_cycle_interface_wifi_success(
         "shimkit.tools.dns.networksetup.active_service",
         lambda: NetworkService(name="Wi-Fi", device="en0", is_wifi=True),
     )
-    monkeypatch.setattr(
-        "shimkit.tools.dns.networksetup.airport_power", lambda _d, on: True
-    )
+    monkeypatch.setattr("shimkit.tools.dns.networksetup.airport_power", lambda _d, on: True)
     monkeypatch.setattr("shimkit.tools.dns.networksetup.flush_cache", lambda: True)
-    monkeypatch.setattr(
-        "shimkit.tools.dns.fixer.test_resolution", lambda *_a, **_k: True
-    )
+    monkeypatch.setattr("shimkit.tools.dns.fixer.test_resolution", lambda *_a, **_k: True)
     monkeypatch.setattr("time.sleep", lambda _s: None)
     res = fixer.step_cycle_interface()
     assert res.applied is True
@@ -700,12 +799,8 @@ def test_step_cycle_interface_wifi_success(
 def test_step_detect_vpn_no_interference(monkeypatch: pytest.MonkeyPatch) -> None:
     from shimkit.tools.dns import fixer
 
-    monkeypatch.setattr(
-        "shimkit.tools.dns.fixer.detect_interference", lambda: []
-    )
-    monkeypatch.setattr(
-        "shimkit.tools.dns.fixer.test_resolution", lambda *_a, **_k: True
-    )
+    monkeypatch.setattr("shimkit.tools.dns.fixer.detect_interference", lambda: [])
+    monkeypatch.setattr("shimkit.tools.dns.fixer.test_resolution", lambda *_a, **_k: True)
     res = fixer.step_detect_vpn()
     assert res.applied is True
     assert res.resolved is True
@@ -730,15 +825,11 @@ def test_rollback_returns_false_when_no_backup(
 ) -> None:
     from shimkit.tools.dns import fixer
 
-    monkeypatch.setattr(
-        "shimkit.tools.dns.fixer.latest_backup_dir", lambda: None
-    )
+    monkeypatch.setattr("shimkit.tools.dns.fixer.latest_backup_dir", lambda: None)
     assert fixer.rollback() is False
 
 
-def test_rollback_restores_existing_backup_files(
-    monkeypatch: pytest.MonkeyPatch, tmp_path
-) -> None:  # type: ignore[no-untyped-def]
+def test_rollback_restores_existing_backup_files(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:  # type: ignore[no-untyped-def]
     """When a backup dir exists with plist files, rollback copies each one
     back via sudo cp."""
     from shimkit.core import CommandResult
@@ -749,9 +840,7 @@ def test_rollback_restores_existing_backup_files(
     backup_dir.mkdir()
     (backup_dir / "preferences.plist").write_text("fake plist")
 
-    monkeypatch.setattr(
-        "shimkit.tools.dns.fixer.latest_backup_dir", lambda: backup_dir
-    )
+    monkeypatch.setattr("shimkit.tools.dns.fixer.latest_backup_dir", lambda: backup_dir)
     captured: list[list[str]] = []
     monkeypatch.setattr(
         "shimkit.tools.dns.fixer.CommandRunner.run",
@@ -776,14 +865,14 @@ def test_detect_interference_reports_running_processes(
         if "pgrep" in joined:
             if joined.endswith("OrbStack") or joined.endswith("tailscaled"):
                 return CommandResult(0, "1234", "")
-            return CommandResult(0, "1234\n", "") if "Docker" in joined else CommandResult(1, "", "")
+            return (
+                CommandResult(0, "1234\n", "") if "Docker" in joined else CommandResult(1, "", "")
+            )
         if "ifconfig" in joined:
             return CommandResult(0, "lo0: flags=8049<UP,LOOPBACK>\n", "")
         return CommandResult(1, "", "")
 
-    monkeypatch.setattr(
-        "shimkit.tools.dns.fixer.CommandRunner.run", staticmethod(fake_run)
-    )
+    monkeypatch.setattr("shimkit.tools.dns.fixer.CommandRunner.run", staticmethod(fake_run))
     findings = fixer.detect_interference()
     # The exact strings depend on which pgrep paths matched; at minimum the
     # function should return a list (possibly empty) without raising.

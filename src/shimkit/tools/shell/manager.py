@@ -30,8 +30,7 @@ class ShellManager:
         self._platform = Platform.detect()
         if not self._platform.is_supported:
             UI.error(
-                f"Unsupported platform: {self._platform.system}. "
-                "macOS and Linux are supported."
+                f"Unsupported platform: {self._platform.system}. macOS and Linux are supported."
             )
             sys.exit(1)
         self._pkgmgr = PackageManager.detect(self._platform)
@@ -74,9 +73,7 @@ class ShellManager:
                 f"{name} is your currently active shell. Upgrading it mid-session "
                 "can leave you with broken builtins until you start a new terminal."
             )
-            if not Menu.confirm(
-                f"Continue upgrading {name} anyway?", default=False
-            ):
+            if not Menu.confirm(f"Continue upgrading {name} anyway?", default=False):
                 UI.info("Cancelled.")
                 return False
         UI.header(f"Upgrading {name}")

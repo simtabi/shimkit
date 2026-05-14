@@ -35,9 +35,7 @@ class CleanupPlan:
 
     @property
     def any_destructive(self) -> bool:
-        return any(
-            (self.containers, self.images, self.volumes, self.networks, self.build_cache)
-        )
+        return any((self.containers, self.images, self.volumes, self.networks, self.build_cache))
 
 
 @dataclass

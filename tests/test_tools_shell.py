@@ -74,9 +74,7 @@ def test_pkgmgr_argv_form_renders_without_shell(
         captured["kwargs"] = kwargs
         return CommandResult(0, "", "")
 
-    monkeypatch.setattr(
-        "shimkit.core.pkgmgr.CommandRunner.run", staticmethod(fake_run)
-    )
+    monkeypatch.setattr("shimkit.core.pkgmgr.CommandRunner.run", staticmethod(fake_run))
     # A package name with metacharacters; argv path keeps it as one token.
     pm.install("bash; rm -rf /")
     cmd = captured["cmd"]
@@ -86,15 +84,15 @@ def test_pkgmgr_argv_form_renders_without_shell(
     assert not captured["kwargs"].get("shell", False)
 
 
-def test_pkgmgr_skips_pm_not_in_platforms(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_pkgmgr_skips_pm_not_in_platforms(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     # apt's platforms are ["linux"]; on macOS it should be skipped even if
     # `apt` happens to be on PATH (unlikely but possible).
     monkeypatch.setattr(
         "shimkit.core.pkgmgr.shutil.which",
-        lambda name: f"/usr/bin/{name}" if name == "apt" else (
-            "/opt/homebrew/bin/brew" if name == "brew" else None
+        lambda name: (
+            f"/usr/bin/{name}"
+            if name == "apt"
+            else ("/opt/homebrew/bin/brew" if name == "brew" else None)
         ),
     )
     pm = PackageManager.detect(Platform(system="Darwin", machine="arm64"))
@@ -122,9 +120,7 @@ def test_upgrader_supported_shells_from_config() -> None:
 def test_upgrader_installed_version_parses_semver(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        "shimkit.tools.shell.upgrader.shutil.which", lambda _: "/bin/bash"
-    )
+    monkeypatch.setattr("shimkit.tools.shell.upgrader.shutil.which", lambda _: "/bin/bash")
 
     def fake_run(cmd, **_):  # type: ignore[no-untyped-def]
         return CommandResult(0, "GNU bash, version 5.2.32(1)-release", "")
@@ -138,9 +134,7 @@ def test_upgrader_installed_version_parses_semver(
 def test_upgrader_installed_version_returns_none_if_missing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        "shimkit.tools.shell.upgrader.shutil.which", lambda _: None
-    )
+    monkeypatch.setattr("shimkit.tools.shell.upgrader.shutil.which", lambda _: None)
     up = ShellUpgrader(Platform.detect(), _stub_pm())
     assert up.installed_version("bash") is None
 
@@ -182,9 +176,7 @@ def test_cli_shell_info_runs(runner: CliRunner) -> None:
 
 
 def test_cli_shell_upgrade_exit_codes(runner: CliRunner) -> None:
-    with patch(
-        "shimkit.tools.shell.manager.ShellManager.upgrade_shell", return_value=False
-    ):
+    with patch("shimkit.tools.shell.manager.ShellManager.upgrade_shell", return_value=False):
         result = runner.invoke(app, ["shell", "upgrade", "bash"])
     assert result.exit_code == 1
 

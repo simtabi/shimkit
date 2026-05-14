@@ -137,3 +137,30 @@ class Menu:
             return result if result is not None else []
         except Exception:
             return []
+
+    @classmethod
+    def prompt_for_change(
+        cls,
+        description: str,
+        *,
+        yes: bool = False,
+        force: bool = False,
+        no_input: bool = False,
+    ) -> bool:
+        """[y/N] confirmation for MODERATE-tier mutations.
+
+        Returns True iff the user authorised the change. Bypasses:
+          - yes:      `--yes` was passed
+          - force:    `--force` was passed (logged as bypass)
+          - no_input: explicit non-interactive flag, or stdin not a TTY
+                      (returns False in non-interactive mode — the
+                      caller must rerun with --yes to actually proceed)
+
+        SEVERE-tier mutations use ``--confirm <token>`` instead and do
+        NOT call this helper.
+        """
+        if yes or force:
+            return True
+        if no_input or not sys.stdin.isatty():
+            return False
+        return cls.confirm(f"{description} — proceed?", default=False)

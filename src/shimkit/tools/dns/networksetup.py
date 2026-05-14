@@ -26,7 +26,7 @@ def list_hardware_ports() -> list[NetworkService]:
     services: list[NetworkService] = []
     name: str | None = None
     for line in r.stdout.splitlines():
-        if (m := _HW_HEADER_RE.match(line)):
+        if m := _HW_HEADER_RE.match(line):
             name = m.group(1).strip()
         elif (m := _HW_DEVICE_RE.match(line)) and name is not None:
             dev = m.group(1)
@@ -47,7 +47,7 @@ def default_interface() -> str | None:
     if not r.ok:
         return None
     for line in r.stdout.splitlines():
-        if (m := _DEFAULT_IF_RE.match(line)):
+        if m := _DEFAULT_IF_RE.match(line):
             return m.group(1)
     return None
 
@@ -99,7 +99,5 @@ def airport_power(device: str, on: bool) -> bool:
     from shimkit.core import sudo_prefix
 
     state = "on" if on else "off"
-    r = CommandRunner.run(
-        [*sudo_prefix(), "networksetup", "-setairportpower", device, state]
-    )
+    r = CommandRunner.run([*sudo_prefix(), "networksetup", "-setairportpower", device, state])
     return r.ok

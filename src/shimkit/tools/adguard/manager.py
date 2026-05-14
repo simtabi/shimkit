@@ -39,7 +39,11 @@ EX_NOPERM = 77
 def _require_optional_extras() -> bool:
     """Refuse to proceed when the ``adguard`` extra isn't installed."""
     missing: list[str] = []
-    for name, mod in (("psutil", "psutil"), ("requests", "requests"), ("ruamel.yaml", "ruamel.yaml")):
+    for name, mod in (
+        ("psutil", "psutil"),
+        ("requests", "requests"),
+        ("ruamel.yaml", "ruamel.yaml"),
+    ):
         try:
             __import__(mod)
         except ImportError:
@@ -72,10 +76,7 @@ class AdGuardManager:
     ) -> AdGuardManager:
         self._platform = Platform.detect()
         if not self._platform.is_linux:
-            UI.error(
-                "shimkit adguard targets Linux. "
-                f"Detected platform: {self._platform.system}."
-            )
+            UI.error(f"shimkit adguard targets Linux. Detected platform: {self._platform.system}.")
             sys.exit(EX_UNAVAILABLE)
         if not _require_optional_extras():
             sys.exit(EX_UNAVAILABLE)
@@ -128,9 +129,7 @@ class AdGuardManager:
             for owner in ports.owners_of(port, proto):
                 if ports.is_agh_process(owner.name):
                     continue
-                conflicts.append(
-                    PortConflict(port=port, proto=proto, role=role, owner=owner)
-                )
+                conflicts.append(PortConflict(port=port, proto=proto, role=role, owner=owner))
         return conflicts
 
     # ---- read-only commands ---------------------------------------------
@@ -149,7 +148,9 @@ class AdGuardManager:
                         "dns_port": dns_p,
                         "http_port": http_p,
                         "install": str(self._install.binary) if self._install else None,
-                        "yaml": str(self._install.yaml_path) if self._install and self._install.yaml_path else None,
+                        "yaml": str(self._install.yaml_path)
+                        if self._install and self._install.yaml_path
+                        else None,
                         "conflicts": [
                             {
                                 "port": c.port,
@@ -275,9 +276,7 @@ class AdGuardManager:
         shutil.copy2(self._install.yaml_path, backup)
         UI.dim(f"  yaml backup: {backup}")
         try:
-            new_dns, new_http = yaml_editor.set_ports(
-                self._install.yaml_path, dns=dns, http=http
-            )
+            new_dns, new_http = yaml_editor.set_ports(self._install.yaml_path, dns=dns, http=http)
         except Exception as exc:
             UI.error(f"YAML edit failed: {exc}")
             Systemd.start("AdGuardHome")
@@ -306,9 +305,7 @@ class AdGuardManager:
         }
         if action == "status":
             state = Systemd.state("AdGuardHome")
-            UI.line(
-                f"active={state.active}  enabled={state.enabled}  exists={state.exists}"
-            )
+            UI.line(f"active={state.active}  enabled={state.enabled}  exists={state.exists}")
             return EX_OK if state.active else EX_FAIL
         fn = cmd_map.get(action)
         if fn is None:
@@ -326,9 +323,9 @@ class AdGuardManager:
         # restore resolv.conf from the most recent /etc backup.
         restored_any = False
         if self._install and self._install.yaml_path:
-            backups = sorted(self._install.yaml_path.parent.glob(
-                f"{self._install.yaml_path.name}.bak-*"
-            ))
+            backups = sorted(
+                self._install.yaml_path.parent.glob(f"{self._install.yaml_path.name}.bak-*")
+            )
             if backups:
                 shutil.copy2(backups[-1], self._install.yaml_path)
                 UI.success(f"Restored yaml from {backups[-1]}.")
@@ -377,9 +374,7 @@ class AdGuardManager:
                     else resolv.write_resolv_symlink()
                 )
                 if resolv_ok:
-                    o.notes.append(
-                        f"/etc/resolv.conf rewritten ({cfg.resolv_conf_mode})."
-                    )
+                    o.notes.append(f"/etc/resolv.conf rewritten ({cfg.resolv_conf_mode}).")
                 else:
                     o.error = (
                         "Could not rewrite /etc/resolv.conf "
@@ -390,12 +385,10 @@ class AdGuardManager:
                 if nm_applied:
                     o.notes.append("NetworkManager dns=none drop-in written.")
                 elif resolv.is_nm_active():
-                    o.notes.append(
-                        "NetworkManager is active but the drop-in write failed."
-                    )
+                    o.notes.append("NetworkManager is active but the drop-in write failed.")
                 # else: NM inactive, nothing to do — no note.
 
-                o.applied = (o.error is None)
+                o.applied = o.error is None
             outcomes.append(o)
 
         # Phase: known-safe units. dnsmasq/bind9/named/unbound get stopped.
@@ -451,9 +444,7 @@ class AdGuardManager:
 
         return self._emit_outcomes(outcomes, json_out=json_out)
 
-    def _emit_outcomes(
-        self, outcomes: list[FixOutcome], *, json_out: bool
-    ) -> int:
+    def _emit_outcomes(self, outcomes: list[FixOutcome], *, json_out: bool) -> int:
         if json_out:
             emit_json(
                 [

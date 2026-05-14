@@ -60,9 +60,7 @@ def prune_images(c: Any, all_images: bool = False) -> CleanupOutcome:
         return out
     out.applied = True
     out.reclaimed_bytes = int(res.get("SpaceReclaimed") or 0)
-    out.notes.append(
-        f"Reclaimed ~{out.reclaimed_bytes // (1024 * 1024)} MiB."
-    )
+    out.notes.append(f"Reclaimed ~{out.reclaimed_bytes // (1024 * 1024)} MiB.")
     return out
 
 

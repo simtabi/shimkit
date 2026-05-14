@@ -100,14 +100,19 @@ def config_edit() -> None:
 
 @config_app.command("validate")
 def config_validate() -> None:
-    """Validate defaults + user overrides against the schema."""
+    """Validate defaults + user overrides against the schema.
+
+    Exits 78 (EX_CONFIG, sysexits.h) when validation fails — distinct
+    from generic 1 so scripts can detect "config is broken" vs other
+    failures.
+    """
     from shimkit.config import ConfigError, load
 
     try:
         load()
     except ConfigError as exc:
         UI.error(str(exc))
-        raise typer.Exit(1) from exc
+        raise typer.Exit(78) from exc
     UI.success("Configuration is valid.")
 
 
@@ -180,9 +185,7 @@ def doctor() -> None:
             from shimkit.tools.adguard import finder
 
             install = finder.detect()
-            UI.line(
-                f"adguard        {install.binary if install else '<absent>'}"
-            )
+            UI.line(f"adguard        {install.binary if install else '<absent>'}")
         except Exception as exc:
             UI.line(f"adguard        ERROR — {exc}")
 
@@ -197,9 +200,7 @@ def doctor() -> None:
         if _shutil.which("docker") is None:
             UI.line("docker         <not installed>")
         else:
-            r = CommandRunner.run(
-                ["docker", "version", "--format", "{{.Server.Version}}"]
-            )
+            r = CommandRunner.run(["docker", "version", "--format", "{{.Server.Version}}"])
             ver = r.stdout.strip()
             if r.ok and ver:
                 UI.line(f"docker         {ver}")
@@ -218,9 +219,7 @@ def _detect_shimkit_install_method() -> str | None:
 
 @app.command("self-update")
 def self_update(
-    yes: bool = typer.Option(
-        False, "--yes", "-y", help="Skip the confirmation prompt."
-    ),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip the confirmation prompt."),
 ) -> None:
     """Update shimkit itself to the latest release."""
     from shimkit import self_update as _su

@@ -64,15 +64,15 @@ def parse(text: str) -> ResolverChain:
             continue
         if current_idx is None:
             continue
-        if (m := _NAMESERVER_RE.match(line)):
+        if m := _NAMESERVER_RE.match(line):
             nameservers.append(m.group(1))
-        elif (m := _SEARCH_RE.match(line)):
+        elif m := _SEARCH_RE.match(line):
             search.append(m.group(1))
-        elif (m := _INTERFACE_RE.match(line)):
+        elif m := _INTERFACE_RE.match(line):
             interface = m.group(1)
-        elif (m := _FLAGS_RE.match(line)):
+        elif m := _FLAGS_RE.match(line):
             flags = m.group(1).strip()
-        elif (m := _REACH_RE.match(line)):
+        elif m := _REACH_RE.match(line):
             reach = m.group(1).strip()
 
     flush()

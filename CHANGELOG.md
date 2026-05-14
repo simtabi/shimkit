@@ -138,6 +138,28 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   gaps between shipped docs and shipped code (notably:
   partially-wired CLI flags, missing MODERATE-tier prompts, test
   coverage of CLI plumbing). Cleanup plan included.
+- Shared CLI flags now wired through every new tool's Typer
+  callback: `--quiet`, `--verbose`, `--log-file`, `--no-color`,
+  `--color {auto,always,never}`, `--no-input`. Previously declared
+  in `core/cli_flags.py` but only some commands consumed them;
+  the rest silently dropped the flag.
+- `Menu.prompt_for_change()` and `UI.set_no_input()` /
+  `UI.set_color_mode()` so MODERATE-tier confirmations can be
+  short-circuited by `--yes` / `--force` and skipped under
+  `--no-input` (returns refusal rather than blocking).
+  `shimkit dns set`, `shimkit adguard ports set`, and the
+  `shimkit docker-clean prune-*` family now use this — the brief
+  promised MODERATE prompts but no command implemented them.
+- Test coverage: `--quiet`, `--verbose`, `--log-file`,
+  `--no-color`, `--color`, `--no-input` exercised at the
+  app-callback level; MODERATE-tier prompt exercised on
+  `shimkit dns set`; extras-missing → exit 69 exercised on both
+  `adguard` and `docker-clean` (sabotaging `psutil` and `docker`
+  imports). Closes the brief's "mandatory minimum" gap.
+- `tests/conftest.py` autouse fixture resets `UI._quiet` /
+  `_color_override` / `_no_input` and the log file-handler state
+  between tests so a flag-setting test doesn't bleed into the
+  next.
 
 ### Fixed (post the initial Unreleased section)
 
@@ -206,6 +228,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   in the pre-baked yaml, AGH gates `/control/status` behind
   auth — an unauthenticated curl gets 401 and `-f` makes the loop
   time out even when AGH is healthy.
+- `UI._color_enabled()` is resilient to a broken config: previous
+  code called `get_config().ui.color`, which re-raised
+  `ConfigError` when validation failed — the very `UI.error()`
+  call meant to explain the problem then crashed with a secondary
+  exception, leaving the user with a Python traceback instead of
+  the config error. UI now falls back to TTY auto-detect when
+  `get_config()` fails.
+- `shimkit config validate` now exits **78** (EX_CONFIG, from
+  `sysexits.h`) on validation failure, distinct from generic exit
+  1. Scripts can detect "config is broken" specifically. Previously
+  documented in the brief but never wired.
 
 ## [0.1.0] — Initial release
 

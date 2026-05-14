@@ -38,9 +38,7 @@ class BrewConfig(_StrictModel):
     # Pinned to a known-good Homebrew/install commit by default. Bump in
     # defaults.json when needed; users can override via shimkit.json. Do not
     # use HEAD here — that's curl|sh against a moving upstream target.
-    install_url: str = (
-        "https://raw.githubusercontent.com/Homebrew/install/97a0b89e0cfce05ce1806c8f9ebc7b3f1813589e/install.sh"
-    )
+    install_url: str = "https://raw.githubusercontent.com/Homebrew/install/97a0b89e0cfce05ce1806c8f9ebc7b3f1813589e/install.sh"
 
 
 class JavaVersionEntry(_StrictModel):
@@ -81,9 +79,7 @@ class ShellToolConfig(_StrictModel):
 class DnsConfig(_StrictModel):
     """macOS DNS recovery tool — `shimkit dns`."""
 
-    test_domains: list[str] = Field(
-        default_factory=lambda: ["google.com", "cloudflare.com"]
-    )
+    test_domains: list[str] = Field(default_factory=lambda: ["google.com", "cloudflare.com"])
     dns_servers: dict[str, list[str]] = Field(
         default_factory=lambda: {
             "cloudflare": ["1.1.1.1", "1.0.0.1"],

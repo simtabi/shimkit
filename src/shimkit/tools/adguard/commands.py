@@ -6,14 +6,19 @@ from pathlib import Path
 
 import typer
 
-from shimkit.core import UI, attach_file_handler, set_verbose
+from shimkit.core import UI, Menu, attach_file_handler, set_verbose
 from shimkit.core.cli_flags import (
+    COLOR,
     DRY_RUN,
+    FORCE,
     JSON_OUT,
     LOG_FILE,
+    NO_COLOR,
+    NO_INPUT,
     QUIET,
     TIMEOUT,
     VERBOSE,
+    YES,
 )
 
 adguard_app = typer.Typer(
@@ -33,7 +38,28 @@ def _bootstrap(log_file: str | None, verbose: bool, quiet: bool = False) -> None
 
 
 @adguard_app.callback(invoke_without_command=True)
-def _root(ctx: typer.Context) -> None:
+def _root(
+    ctx: typer.Context,
+    quiet: bool = QUIET,
+    verbose: bool = VERBOSE,
+    log_file: str = LOG_FILE,
+    no_color: bool = NO_COLOR,
+    color: str = COLOR,
+    no_input: bool = NO_INPUT,
+) -> None:
+    """Apply universal flags before dispatching to a subcommand."""
+    if verbose:
+        set_verbose(True)
+    if quiet:
+        UI.set_quiet(True)
+    if no_color:
+        UI.set_color_mode("never")
+    elif color:
+        UI.set_color_mode(color)
+    if no_input:
+        UI.set_no_input(True)
+    if log_file:
+        attach_file_handler(log_file)
     if ctx.invoked_subcommand is None:
         from .manager import AdGuardManager
 
@@ -116,9 +142,7 @@ def ports_show(
     """Print the configured dns.port / http.port from AdGuardHome.yaml."""
     from .manager import AdGuardManager
 
-    code = AdGuardManager.create().boot(install_override=install).ports_show(
-        json_out=json_out
-    )
+    code = AdGuardManager.create().boot(install_override=install).ports_show(json_out=json_out)
     raise typer.Exit(code)
 
 
@@ -128,9 +152,20 @@ def ports_set(
     http: int = typer.Option(..., "--http", min=1, max=65535),
     install: Path = typer.Option(None, "--install"),
     dry_run: bool = DRY_RUN,
+    yes: bool = YES,
+    force: bool = FORCE,
 ) -> None:
     """Set AGH's DNS/HTTP ports (API-first, yaml fallback with service stop)."""
     from .manager import AdGuardManager
+
+    if not dry_run and not Menu.prompt_for_change(
+        f"Set AGH ports to dns={dns} http={http}",
+        yes=yes,
+        force=force,
+        no_input=UI.is_no_input(),
+    ):
+        UI.info("Cancelled. Pass --yes to skip the prompt or rerun with --dry-run.")
+        raise typer.Exit(1)
 
     code = (
         AdGuardManager.create()

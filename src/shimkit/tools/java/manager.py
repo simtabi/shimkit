@@ -242,9 +242,9 @@ class JavaManager:
         installed = set(self._scanner.homebrew_java_versions())
         versions = JavaVersion.all()
 
-        choices = [
-            f"{v}  [✓ installed]" if v.number in installed else str(v) for v in versions
-        ] + [back]
+        choices = [f"{v}  [✓ installed]" if v.number in installed else str(v) for v in versions] + [
+            back
+        ]
         picked = Menu.select("Select Java version to install:", choices)
         if not picked or picked == back:
             return

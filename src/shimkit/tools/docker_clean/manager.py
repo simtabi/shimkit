@@ -140,8 +140,12 @@ class DockerCleanManager:
         try:
             if kind == "containers":
                 data = [
-                    {"id": ctr.short_id, "name": ctr.name, "status": ctr.status,
-                     "image": ctr.image.tags[0] if ctr.image.tags else ctr.image.short_id}
+                    {
+                        "id": ctr.short_id,
+                        "name": ctr.name,
+                        "status": ctr.status,
+                        "image": ctr.image.tags[0] if ctr.image.tags else ctr.image.short_id,
+                    }
                     for ctr in c.containers.list(all=True)
                 ]
             elif kind == "images":
@@ -175,8 +179,11 @@ class DockerCleanManager:
             return EX_FAIL
 
         if json_out:
-            emit_json(Event(tool="docker_clean", step=f"inspect:{kind}",
-                            status="ok", data={"items": data}))
+            emit_json(
+                Event(
+                    tool="docker_clean", step=f"inspect:{kind}", status="ok", data={"items": data}
+                )
+            )
         else:
             UI.header(f"Inspect: {kind}")
             for item in data:
