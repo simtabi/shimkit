@@ -49,6 +49,9 @@ Top-level utilities (not tools):
 - **[Validation scope](validation-scope.md)** — what's in scope for
   automated + manual gates, what's deliberately out of scope, and
   how to expand the envelope.
+- **[Known issues + pending items](plans/known-issues.md)** — checks
+  that exist in our scope but can't be automated (and why), coverage
+  deferrals, and aspirational follow-ups without owners.
 
 ## Release notes
 

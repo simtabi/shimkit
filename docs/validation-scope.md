@@ -132,8 +132,10 @@ The `adguard-integration` CI job runs AGH on non-default ports
 The **only** remaining gap is the runtime "NM survives a real
 interface event" check — a container has no real network
 interfaces, so a `nmcli connection down/up` cycle would be a
-no-op. To verify NM doesn't clobber `/etc/resolv.conf` when a
-real link event fires, a real Ubuntu desktop is still the proof.
+no-op. The full rationale (why containers can't validate it, why
+we accept the residual risk, and what would change the
+calculation) is documented in
+[`plans/known-issues.md`](plans/known-issues.md#nm-honours-dnsnone-on-real-interface-event--not-automated).
 
 Why we don't try to fake real interfaces:
 
