@@ -186,9 +186,14 @@ jobs:
           cd "$RUNNER_TEMP/AdGuardHome"
           ./AdGuardHome -c AdGuardHome.yaml -w . --no-check-update -l agh.log > /dev/null 2>&1 &
           echo $! > agh.pid
-          # Wait up to 30s for the control API.
+          # Wait up to 30s for the control API. Once `users:` is set in
+          # the yaml, `/control/status` requires Basic auth — without
+          # `-u`, curl gets 401 and `-f` makes it exit non-zero,
+          # masking the fact that AGH is up.
           for i in $(seq 1 30); do
-            if curl -fsS "http://127.0.0.1:${AGH_HTTP_PORT}/control/status" >/dev/null 2>&1; then
+            if curl -fsS -u "${ADGUARD_USER}:${ADGUARD_PASS}" \
+                "http://127.0.0.1:${AGH_HTTP_PORT}/control/status" \
+                >/dev/null 2>&1; then
               echo "AGH up after ${i}s"
               exit 0
             fi
