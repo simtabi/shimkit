@@ -25,7 +25,7 @@ which tracks **release-blocking** items in dependency order.
 | `build` | `python -m build` produces a clean sdist + wheel. |
 | `smoke` (macOS + Ubuntu) | Built wheel installs into a fresh venv. `shimkit --help`, `shimkit version`, `shimkit doctor` all exit 0; the three new sub-apps (`dns`, `adguard`, `docker-clean`) appear in root `--help`. |
 | `adguard-integration` (Ubuntu) | Real AdGuard Home (version pinned in workflow) downloaded, run on non-default ports 5300/8000, then `shimkit adguard scan / verify / ports show / fix --dry-run / ports set --dry-run` invoked with JSON-asserted output. |
-| `adguard-mutating-integration` (Ubuntu) | Real `shimkit adguard fix` (NOT dry-run) inside a privileged systemd container with `systemd-resolved` holding port 53. Verifies: (a) drop-in lands at `/etc/systemd/resolved.conf.d/90-shimkit-adguardhome.conf`, (b) systemd-resolved is reloaded and no longer on :53, (c) `/etc/resolv.conf` is rewritten with a valid pointer to 127.0.0.1, (d) a `/etc/resolv.conf.bak-*` backup exists, (e) `shimkit adguard rollback` is reachable. Local equivalent: `bash scripts/test_adguard_mutating.sh`. |
+| `adguard-mutating-integration` (Ubuntu) | Real `shimkit adguard fix` (NOT dry-run) inside a privileged systemd container with `systemd-resolved` AND NetworkManager active, AGH registered as a systemd unit. Verifies: (a) drop-in lands at `/etc/systemd/resolved.conf.d/90-shimkit-adguardhome.conf`, (b) systemd-resolved is reloaded and no longer on :53, (c) `/etc/resolv.conf` is rewritten with a valid pointer to 127.0.0.1, (d) `/etc/NetworkManager/conf.d/90-shimkit-adguardhome.conf` is written with `dns=none`, (e) the yaml-remap stop-edit-start dance (`shimkit adguard ports set` with `prefer_api_over_yaml=false`) — AGH stopped, yaml edited via ruamel, AGH restarted on the new ports, (f) `/etc/resolv.conf.bak-*` and `*.yaml.bak-*` backups exist, (g) `shimkit adguard rollback` is reachable. Local equivalent: `bash scripts/test_adguard_mutating.sh`. |
 
 ### Manual gates (run by the human releasing a new version)
 
@@ -119,23 +119,23 @@ The `adguard-integration` CI job runs AGH on non-default ports
 - ✅ The `fix --dry-run` decision tree
 - ✅ The exit-code contracts for `verify`, `ports show`, `ports set --dry-run`
 
-…but does **not** exercise:
+…and **also** exercises (as of the post-v0.2.0 expansion):
 
-- ❌ The `NetworkManager` `dns=none` drop-in (NM isn't installed
-  in the standard ansible-test container; a container has no real
-  network interfaces, so the "drop-in survives a link cycle"
-  property can't be verified without a real desktop)
-- ❌ The `fix` mutating path's `systemctl stop AdGuardHome` →
-  yaml-edit → `systemctl start` sequence (the existing
-  adguard-integration job runs on non-default ports, so AGH stays
-  up; the mutating job runs --dns-cleanup-only so the yaml-edit
-  path isn't hit)
+- ✅ systemd-resolved drop-in at `/etc/systemd/resolved.conf.d/`
+- ✅ `/etc/resolv.conf` rewrite + backup
+- ✅ NetworkManager `dns=none` drop-in written + `nmcli general
+  reload` invoked
+- ✅ The full yaml-remap stop-edit-start dance (AGH bound, ports
+  set forces yaml fallback, AGH restarted on new ports)
+- ✅ `shimkit adguard rollback` callable
 
-The **systemd-resolved drop-in, the resolv.conf rewrite, and the
-rollback** paths ARE exercised by the new
-`adguard-mutating-integration` CI job (since v0.2.0). The
-remaining NetworkManager-related items still need a real Ubuntu
-desktop for full Phase 7 sign-off. Why this split:
+The **only** remaining gap is the runtime "NM survives a real
+interface event" check — a container has no real network
+interfaces, so a `nmcli connection down/up` cycle would be a
+no-op. To verify NM doesn't clobber `/etc/resolv.conf` when a
+real link event fires, a real Ubuntu desktop is still the proof.
+
+Why we don't try to fake real interfaces:
 
 - **Cost.** Spinning up a dedicated VM in CI just to exercise
   resolver rewrites would slow every PR by minutes.

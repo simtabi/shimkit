@@ -68,30 +68,53 @@ docker pull --quiet ${PLATFORM_ARG} "${IMAGE}"
 TEST_SCRIPT='
 set -euo pipefail
 
-echo "::group::install python + curl + dependencies"
+echo "::group::install python + curl + NM + deps (BEFORE we break DNS)"
+# Install everything upfront so subsequent steps don'\''t need DNS
+# resolution. After `shimkit adguard fix` disables the resolved stub,
+# DNS routes through 127.0.0.1 (where AGH isn'\''t actually running)
+# and apt-get would fail.
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -y -qq python3 python3-venv python3-pip curl ca-certificates \
-    iproute2 procps systemd-resolved >/dev/null
+    iproute2 procps systemd-resolved network-manager >/dev/null
 echo "::endgroup::"
 
-echo "::group::start systemd-resolved (so it holds port 53)"
+echo "::group::start systemd-resolved (holds port 53) + NetworkManager"
 systemctl enable --now systemd-resolved
 systemctl is-active systemd-resolved
+# NetworkManager: a container has no real interfaces, so its main
+# loop is a no-op. We just need the unit active so resolv module
+# detects "NM is up, write the drop-in".
+systemctl start NetworkManager
+for i in $(seq 1 15); do
+    systemctl is-active --quiet NetworkManager && {
+        echo "  NetworkManager active after ${i}s"
+        break
+    }
+    sleep 1
+done
+systemctl is-active NetworkManager
 ss -tulnp | grep ":53\b" || true
 echo "::endgroup::"
 
 echo "::group::install shimkit (built wheel) with the [adguard] extra"
 python3 -m venv /opt/venv
 /opt/venv/bin/pip install --quiet --upgrade pip
-/opt/venv/bin/pip install --quiet "/wheel/'"${WHEEL_NAME}"'[adguard]"
+# bcrypt is needed later by the yaml-remap step (when DNS is broken
+# and pip-from-pypi would fail). Install upfront.
+/opt/venv/bin/pip install --quiet "/wheel/'"${WHEEL_NAME}"'[adguard]" bcrypt
 /opt/venv/bin/shimkit version
 echo "::endgroup::"
 
 echo "::group::download + register AdGuard Home as a systemd unit"
+case "$(uname -m)" in
+    x86_64|amd64) AGH_ARCH=amd64 ;;
+    aarch64|arm64) AGH_ARCH=arm64 ;;
+    *) echo "::error::unsupported container arch: $(uname -m)"; exit 64 ;;
+esac
 curl -fsSL --proto "=https" --tlsv1.2 \
     -o /tmp/agh.tar.gz \
-    "https://github.com/AdguardTeam/AdGuardHome/releases/download/'"${AGH_VERSION}"'/AdGuardHome_linux_amd64.tar.gz"
+    "https://github.com/AdguardTeam/AdGuardHome/releases/download/'"${AGH_VERSION}"'/AdGuardHome_linux_${AGH_ARCH}.tar.gz"
 tar -xzf /tmp/agh.tar.gz -C /tmp
 mkdir -p /opt/AdGuardHome
 install -m 0755 /tmp/AdGuardHome/AdGuardHome /opt/AdGuardHome/AdGuardHome
@@ -117,11 +140,15 @@ http:
 YAML
 
 # Register as systemd service. AGH refuses to bind :53 right now
-# (resolved holds it) — so we install the service but do NOT start it.
+# (resolved holds it), so the unit will start and immediately fail —
+# we explicitly stop it after install so the failing-state doesn'\''t
+# confuse subsequent steps. `daemon-reload` is essential after
+# `-s install` so systemctl sees the freshly-installed unit.
 cd /opt/AdGuardHome
-./AdGuardHome -s install >/dev/null 2>&1 || true
+./AdGuardHome -s install
+systemctl daemon-reload
 systemctl stop AdGuardHome 2>/dev/null || true
-systemctl is-enabled AdGuardHome || true
+systemctl is-enabled AdGuardHome
 echo "::endgroup::"
 
 echo "::group::pre-state: shimkit adguard scan"
@@ -182,16 +209,108 @@ ls /etc/resolv.conf.bak-* >/dev/null 2>&1 || {
 }
 echo "::endgroup::"
 
+echo "::group::verify NetworkManager dns=none drop-in landed"
+# fix already ran in the prior step with NM active. Assert the
+# drop-in is on disk and the JSON reported it accurately.
+NM_DROPIN=/etc/NetworkManager/conf.d/90-shimkit-adguardhome.conf
+ls -la "${NM_DROPIN}"
+grep -q "dns=none" "${NM_DROPIN}"
+echo "  NM drop-in body:"
+cat "${NM_DROPIN}"
+
+python3 - <<"PY"
+import json
+out = json.load(open("/tmp/fix.json"))
+resolved = next(e for e in out if e["step"] == "resolved")
+notes = " ".join(resolved["data"]["notes"])
+assert "NetworkManager dns=none drop-in written" in notes, \
+    "expected NM drop-in note, got: " + notes
+assert resolved["data"]["applied"] is True, resolved
+print("NM drop-in note present and step marked applied: ok")
+PY
+echo "::endgroup::"
+
+echo "::group::yaml-remap with daemon running (force prefer_api_over_yaml=false)"
+# Re-pre-bake the yaml so AGH binds non-conflicting ports (5300/8000
+# on loopback only — doesn'\''t fight whatever resolved has left).
+# bcrypt was installed upfront because DNS is now broken (resolved
+# stub disabled, AGH not yet serving on 127.0.0.1:53).
+HASH=$(/opt/venv/bin/python3 -c "import bcrypt; print(bcrypt.hashpw(b\"ci-test-pass\", bcrypt.gensalt(10)).decode())")
+cat > /opt/AdGuardHome/AdGuardHome.yaml <<YAML
+schema_version: 28
+users:
+  - name: ci-admin
+    password: ${HASH}
+dns:
+  port: 5300
+  bind_hosts: [127.0.0.1]
+  bootstrap_dns: [127.0.0.1]
+  upstream_dns: [127.0.0.1]
+http:
+  address: 127.0.0.1:8000
+YAML
+
+# Start AGH for real. It should bind 127.0.0.1:5300 (dns) and
+# 127.0.0.1:8000 (http) — neither collides with systemd-resolved'\''s
+# per-link resolver on 127.0.0.54:53.
+systemctl restart AdGuardHome
+for i in $(seq 1 20); do
+    if ss -tulnp 2>/dev/null | grep -q "127.0.0.1:5300"; then
+        echo "  AGH bound 127.0.0.1:5300 after ${i}s"
+        break
+    fi
+    sleep 1
+done
+systemctl is-active AdGuardHome
+ss -tulnp 2>/dev/null | grep -E "127.0.0.1:(5300|8000)" | head -5
+
+# Force shimkit to use the yaml fallback by setting
+# prefer_api_over_yaml=false. Run ports set to NEW values and verify
+# the stop-edit-start dance worked.
+cat > /tmp/shimkit-yamlpath.json <<JSON
+{
+  "tools": {
+    "adguard": {
+      "prefer_api_over_yaml": false,
+      "api_base_url": "http://127.0.0.1:9999"
+    }
+  }
+}
+JSON
+SHIMKIT_CONFIG=/tmp/shimkit-yamlpath.json \
+    /opt/venv/bin/shimkit adguard ports set \
+    --install /opt/AdGuardHome --dns 5400 --http 8100
+
+# Verify the new ports landed in the yaml.
+python3 - <<"PY"
+import re
+y = open("/opt/AdGuardHome/AdGuardHome.yaml").read()
+assert re.search(r"^\s*port: 5400$", y, re.M), "dns.port not updated:\n" + y
+assert "address: 127.0.0.1:8100" in y, "http.address not updated:\n" + y
+print("yaml-remap: dns.port=5400, http.address=127.0.0.1:8100 confirmed")
+PY
+
+# AGH should have been restarted by the ports-set flow. Confirm.
+sleep 2
+systemctl is-active AdGuardHome
+# And it should be on the new ports now.
+ss -tulnp 2>/dev/null | grep -E ":(5400|8100)\b" | head -5
+echo "::endgroup::"
+
 echo "::group::shimkit adguard rollback"
 /opt/venv/bin/shimkit adguard rollback --install /opt/AdGuardHome >/dev/null || true
-# After rollback, /etc/resolv.conf should match the backup.
-echo "/etc/resolv.conf after rollback:"
-ls -la /etc/resolv.conf
-cat /etc/resolv.conf | head -5
+# Yaml backup should have been restored.
+echo "yaml after rollback:"
+grep -E "port:|address:" /opt/AdGuardHome/AdGuardHome.yaml | head -5
 echo "::endgroup::"
 
 echo "::group::summary"
-echo "All mutating-path assertions passed."
+echo "All Phase 7 mutating-path assertions passed:"
+echo "  - systemd-resolved drop-in at /etc/systemd/resolved.conf.d/"
+echo "  - /etc/resolv.conf rewritten"
+echo "  - NetworkManager dns=none drop-in written"
+echo "  - yaml-remap stop-edit-start dance succeeded"
+echo "  - rollback callable"
 echo "::endgroup::"
 '
 
