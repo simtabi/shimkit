@@ -10,14 +10,20 @@
 
 ARG PYTHON_VERSION=3.12
 
-FROM python:${PYTHON_VERSION}-slim AS builder
+# Base image is pinned by manifest digest so the build is reproducible.
+# Dependabot's `docker` ecosystem watches this line and opens a PR when
+# a new digest is published upstream.
+# To refresh manually:
+#   docker pull python:${PYTHON_VERSION}-slim
+#   docker inspect --format='{{index .RepoDigests 0}}' python:${PYTHON_VERSION}-slim
+FROM python:${PYTHON_VERSION}-slim@sha256:401f6e1a67dad31a1bd78e9ad22d0ee0a3b52154e6bd30e90be696bb6a3d7461 AS builder
 WORKDIR /build
 COPY pyproject.toml README.md LICENSE ./
 COPY src ./src
 RUN pip install --no-cache-dir --upgrade pip build \
  && python -m build --wheel --outdir /wheel
 
-FROM python:${PYTHON_VERSION}-slim AS runtime
+FROM python:${PYTHON_VERSION}-slim@sha256:401f6e1a67dad31a1bd78e9ad22d0ee0a3b52154e6bd30e90be696bb6a3d7461 AS runtime
 LABEL org.opencontainers.image.title="shimkit" \
       org.opencontainers.image.description="A toolkit of developer utilities" \
       org.opencontainers.image.source="https://github.com/simtabi/shimkit" \
@@ -37,6 +43,11 @@ RUN pip install --no-cache-dir /tmp/*.whl \
 RUN useradd --create-home --shell /bin/bash shimkit
 USER shimkit
 WORKDIR /home/shimkit
+
+# `shimkit version` is cheap, has no side effects, and validates that
+# the entrypoint resolves — enough to decide image health for orchestrators.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD ["shimkit", "version"]
 
 ENTRYPOINT ["shimkit"]
 CMD ["--help"]

@@ -1,0 +1,50 @@
+# Pre-commit hooks for shimkit. Mirrors the CI gates locally so PRs land
+# without surprises.
+#
+#   pip install pre-commit
+#   pre-commit install
+#
+# Mypy runs in CI but not on every commit (too slow). To run it locally:
+#   pre-commit run --hook-stage manual mypy
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.12
+    hooks:
+      - id: ruff
+        args: ['--fix']
+      - id: ruff-format
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        files: \.(sh|bash)$
+
+  # Mypy is gated to `manual` so it doesn't slow down every commit. Run
+  # explicitly with: pre-commit run --hook-stage manual mypy
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.18.2
+    hooks:
+      - id: mypy
+        stages: [manual]
+        additional_dependencies:
+          - 'pydantic>=2.10'
+          - 'typer>=0.15'
+          - 'rich>=13.9'
+        args: ['--strict', '--show-error-codes']
+        files: ^src/shimkit/
