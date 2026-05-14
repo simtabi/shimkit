@@ -196,9 +196,16 @@ def doctor() -> None:
             UI.line("docker         <not running>")
         else:
             ver = "unknown"
-            with contextlib.suppress(Exception):
-                ver = c.version().get("Version", "unknown")
-            UI.line(f"docker         {ver}")
+            try:
+                with contextlib.suppress(Exception):
+                    ver = c.version().get("Version", "unknown")
+                UI.line(f"docker         {ver}")
+            finally:
+                # Close the docker-py client so the daemon socket is not
+                # left dangling. Without this, GC of the lingering fd on
+                # Python 3.12+ trips pytest's UnraisableException warning.
+                with contextlib.suppress(Exception):
+                    c.close()
     except Exception as exc:
         UI.line(f"docker         ERROR — {exc}")
 

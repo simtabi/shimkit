@@ -271,41 +271,36 @@ def test_is_agh_process_handles_kernel_truncation() -> None:
     assert is_agh_process("systemd-resolve") is False
 
 
-def test_pid_to_unit_prefers_unified_hierarchy(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    from shimkit.tools.adguard import ports as ports_mod
+def test_pid_to_unit_prefers_unified_hierarchy(tmp_path: Path) -> None:
+    from shimkit.tools.adguard.ports import _pid_to_unit
 
-    # Build a fake /proc/<pid>/cgroup with a legacy line first and the
-    # unified 0:: line second. The parser must prefer 0::.
-    fake_proc = tmp_path / "9999"
-    fake_proc.mkdir()
-    (fake_proc / "cgroup").write_text(
+    # Build a fake <proc_root>/<pid>/cgroup with a legacy line first
+    # and the unified 0:: line second. The parser must prefer 0::.
+    (tmp_path / "9999").mkdir()
+    (tmp_path / "9999" / "cgroup").write_text(
         "12:cpu:/system.slice/legacy-wrong.service\n"
         "0::/system.slice/correct.service\n"
     )
-    # Monkeypatch Path("/proc/...") to redirect to our tmp.
-    real_path = ports_mod.Path
-
-    class RedirectingPath(real_path):  # type: ignore[misc]
-        def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def]
-            s = args[0] if args else ""
-            if isinstance(s, str) and s == "/proc/9999/cgroup":
-                return real_path.__new__(real_path, fake_proc / "cgroup")
-            return real_path.__new__(real_path, *args, **kwargs)
-
-    monkeypatch.setattr(ports_mod, "Path", RedirectingPath)
-    unit = ports_mod._pid_to_unit(9999)
+    unit = _pid_to_unit(9999, proc_root=tmp_path)
     assert unit == "correct.service"
 
 
-def test_pid_to_unit_returns_none_when_no_cgroup_file(
-    tmp_path: Path,
-) -> None:
+def test_pid_to_unit_falls_back_to_legacy_when_no_unified(tmp_path: Path) -> None:
+    """Hybrid cgroup hierarchies have no `0::` line; the legacy match wins."""
     from shimkit.tools.adguard.ports import _pid_to_unit
 
-    # PID 0 isn't a valid /proc entry; we expect None.
-    assert _pid_to_unit(0) is None
+    (tmp_path / "8888").mkdir()
+    (tmp_path / "8888" / "cgroup").write_text(
+        "12:cpu:/system.slice/legacy-only.service\n"
+    )
+    assert _pid_to_unit(8888, proc_root=tmp_path) == "legacy-only.service"
+
+
+def test_pid_to_unit_returns_none_for_missing_proc(tmp_path: Path) -> None:
+    """No /proc/<pid>/cgroup file → None, no exception."""
+    from shimkit.tools.adguard.ports import _pid_to_unit
+
+    assert _pid_to_unit(7777, proc_root=tmp_path) is None
 
 
 def test_owners_of_returns_empty_on_invalid_proto() -> None:

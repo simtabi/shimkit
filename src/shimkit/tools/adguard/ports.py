@@ -16,9 +16,13 @@ from .models import PortOwner
 _UNIT_RE = re.compile(r"/([^/]+\.(?:service|scope))(?:/|$)")
 
 
-def _pid_to_unit(pid: int) -> str | None:
-    """cgroup-v2-aware: prefer the line starting ``0::`` (unified)."""
-    cgroup = Path(f"/proc/{pid}/cgroup")
+def _pid_to_unit(pid: int, proc_root: Path | str = "/proc") -> str | None:
+    """cgroup-v2-aware: prefer the line starting ``0::`` (unified).
+
+    ``proc_root`` is injectable so tests can point at a tmpdir without
+    needing to monkeypatch the global ``Path`` class.
+    """
+    cgroup = Path(proc_root) / str(pid) / "cgroup"
     if not cgroup.is_file():
         return None
     try:
