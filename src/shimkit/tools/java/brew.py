@@ -10,11 +10,14 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import tempfile
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
+from urllib.request import urlopen
 
 from shimkit.config import get_config
-from shimkit.core import CommandResult, CommandRunner, Platform
+from shimkit.core import UI, CommandResult, CommandRunner, Platform
 
 
 class Brew:
@@ -69,10 +72,36 @@ class Brew:
             return []
 
     def install_self(self) -> bool:
-        """Bootstrap Homebrew via the upstream install script."""
+        """Bootstrap Homebrew via the upstream install script.
+
+        The script is downloaded to a tempfile and executed as
+        ``/bin/bash <tmp>`` rather than via shell interpolation. This
+        avoids any chance of the config-supplied URL injecting shell
+        metacharacters, and gives us a clean cleanup path on failure.
+        """
         url = get_config().brew.install_url
-        script = f'/bin/bash -c "$(curl -fsSL {url})"'
-        r = CommandRunner.run(script, shell=True, capture_output=False)
+        if urlparse(url).scheme != "https":
+            UI.error(f"Refusing to fetch Homebrew installer from non-HTTPS URL: {url}")
+            return False
+
+        tmp_path: str | None = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="wb", suffix=".sh", delete=False
+            ) as tmp:
+                tmp_path = tmp.name
+                # urlopen scheme validated above (HTTPS-only).
+                with urlopen(url, timeout=30) as resp:  # nosec B310
+                    shutil.copyfileobj(resp, tmp)
+            os.chmod(tmp_path, 0o700)
+            r = CommandRunner.run(["/bin/bash", tmp_path], capture_output=False)
+        except Exception as exc:
+            UI.error(f"Failed to fetch Homebrew installer: {exc}")
+            return False
+        finally:
+            if tmp_path and os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
         if r.ok:
             for prefix_bin in (
                 "/opt/homebrew/bin",

@@ -336,7 +336,7 @@ class JavaManager:
                 tick = "✓" if inst.active else " "
                 UI.info(f"  {tick} [{inst.kind}] {inst.version}")
                 UI.dim(f"      {inst.path}")
-        print()
+        UI.line()
         assert self._scanner
         active = self._scanner.active_version_string
         if active and active != "Not installed":
