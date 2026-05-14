@@ -6,6 +6,21 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.2.2] — 2026-05-14
+
+### Fixed
+
+- Release pipeline: trusted-publishing now configured on PyPI for
+  this repo + workflow + `pypi` environment, so `publish-pypi` can
+  exchange its OIDC token for an upload credential. v0.2.1 published
+  the container to GHCR and the GitHub Release but failed at the
+  PyPI step with `invalid-publisher`. Also carries the release.yml
+  `contents: write` grant on the `publish-ghcr` job so the container
+  SBOM lands on the Release page instead of erroring with "Resource
+  not accessible by integration".
+- **Code is byte-identical to v0.2.1 (and v0.2.0); the bump is
+  purely a release-infra retry to land the artifact on PyPI.**
+
 ## [0.2.1] — 2026-05-14
 
 ### Fixed
