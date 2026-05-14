@@ -30,16 +30,12 @@ def test_update_check_result_has_update() -> None:
     assert none.has_update is False
 
 
-def test_install_one_liner_uses_config_repo(
-    monkeypatch: pytest.MonkeyPatch, tmp_path
-) -> None:
-    override = tmp_path / "shimkit.json"
-    override.write_text(json.dumps({"self_update": {"github_repo": "alice/fork"}}))
-    monkeypatch.setenv("SHIMKIT_CONFIG", str(override))
-    reset_cache()
-    line = su.install_one_liner()
-    assert "alice/fork" in line
-    assert line.startswith("curl -fsSL --proto '=https' --tlsv1.2")
+def test_install_commands_lists_direct_methods() -> None:
+    cmds = su.install_commands()
+    assert any(c.startswith("uv tool install") for c in cmds)
+    assert any(c.startswith("pipx install") for c in cmds)
+    assert any(c.startswith("pip install --user") for c in cmds)
+    assert any(c.startswith("brew install") for c in cmds)
 
 
 # --- detect ---------------------------------------------------------------

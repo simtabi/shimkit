@@ -54,15 +54,16 @@ push tag v*
     ▼
 ┌── build ─────────────────────────────────────────────────────┐
 │  python -m build  (sdist + wheel)                            │
-│  sha256sum install.sh > install.sh.sha256                    │
-│  upload artifacts: dist/, installer/                         │
+│  anchore/sbom-action  →  dist/shimkit-sbom.spdx.json         │
+│  actions/attest-build-provenance over the wheel + sdist      │
+│  upload artifact: dist/                                      │
 └───────────────────────────────────────────────────────────────┘
     │
     ├──► publish-pypi ───── OIDC publish; waits on `pypi` env
     │                       protection rules if configured.
     │
-    ├──► github-release ─── creates the GH Release with installer +
-    │                       sha256 + wheel + sdist attached.
+    ├──► github-release ─── creates the GH Release with wheel +
+    │                       sdist + SBOM attached.
     │
     ├──► publish-ghcr ───── multi-arch (amd64+arm64) container image
     │                       to ghcr.io/simtabi/shimkit:{tag,version,major.minor,latest}
@@ -85,13 +86,14 @@ release=v0.1.0
 pip install shimkit==${release#v}
 shimkit version
 
-# GitHub Release + installer
-curl -fsSL "https://github.com/simtabi/shimkit/releases/download/${release}/install.sh" -o /tmp/install.sh
-curl -fsSL "https://github.com/simtabi/shimkit/releases/download/${release}/install.sh.sha256" -o /tmp/install.sh.sha256
-( cd /tmp && sha256sum -c install.sh.sha256 )
+# GitHub Release SBOM
+curl -fsSL "https://github.com/simtabi/shimkit/releases/download/${release}/shimkit-sbom.spdx.json" -o /tmp/sbom.json
+jq .name /tmp/sbom.json   # should print "shimkit"
 
 # GHCR
 docker run --rm --pull=always ghcr.io/simtabi/shimkit:${release} version
+# Verify the image's signed provenance (Sigstore/GHCR):
+gh attestation verify oci://ghcr.io/simtabi/shimkit:${release} -o simtabi
 
 # Homebrew tap (once the tap is configured)
 brew install simtabi/tap/shimkit

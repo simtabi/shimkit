@@ -428,7 +428,6 @@ security           ← bandit -ll + pip-audit. Fails on medium+.
 build              ← sdist + wheel. Artifact uploaded.
 smoke              ← install built wheel on macOS + Ubuntu, run CLI.
 adguard-integration ← real AGH on ubuntu-latest. JSON-asserted output.
-installer-shellcheck ← shellcheck on installer/install.sh.
 dockerfile-hadolint  ← hadolint on Dockerfile.
 ```
 

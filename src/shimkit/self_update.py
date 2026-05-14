@@ -6,7 +6,7 @@ the PyPI JSON API for ``shimkit``; the GitHub repo from
 ``config.self_update.github_repo`` is reported in messages but is not
 itself downloaded.
 
-Graceful when no install method is detected — prints the one-liner
+Graceful when no install method is detected — prints the direct
 install commands so the user can reinstall manually.
 """
 
@@ -114,13 +114,14 @@ def apply(method: InstallMethod) -> bool:
     return r.ok
 
 
-def install_one_liner() -> str:
-    """Return the canonical install one-liner for environments where dispatch is impossible."""
-    repo = get_config().self_update.github_repo
-    return (
-        f"curl -fsSL --proto '=https' --tlsv1.2 "
-        f"https://github.com/{repo}/releases/latest/download/install.sh | sh"
-    )
+def install_commands() -> list[str]:
+    """Return the direct install commands for environments where dispatch is impossible."""
+    return [
+        "uv tool install shimkit",
+        "pipx install shimkit",
+        "pip install --user shimkit            # Python ≥ 3.10",
+        "brew install simtabi/tap/shimkit",
+    ]
 
 
 def run(yes: bool = False) -> int:
@@ -148,9 +149,10 @@ def run(yes: bool = False) -> int:
     if res.method is None:
         UI.warning(
             "Could not detect how shimkit was installed (no uv/pipx/brew/pip "
-            "match). Reinstall manually with:"
+            "match). Reinstall manually with one of:"
         )
-        UI.dim(f"  {install_one_liner()}")
+        for cmd in install_commands():
+            UI.dim(f"  {cmd}")
         return 2
 
     UI.info(f"Detected install method: {res.method}")

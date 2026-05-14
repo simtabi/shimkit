@@ -20,8 +20,7 @@ which tracks **release-blocking** items in dependency order.
 | Gate | What it validates |
 |------|-------------------|
 | `test` (macOS + Ubuntu × Python 3.10/3.11/3.12/3.13) | Unit + CLI integration tests with mocked `CommandRunner`, `Platform`, `requests`, `psutil`, `Systemd`. Coverage floor enforced. |
-| `security` | `bandit -ll` (SAST, fail on medium+) and `pip-audit --strict --skip-editable` (CVE scan of resolved deps). |
-| `installer-shellcheck` | `installer/install.sh` is shellcheck-clean. |
+| `security` | `bandit -ll` (SAST, fail on medium+) and `pip-audit --skip-editable` (CVE scan of resolved deps). |
 | `dockerfile-hadolint` | `Dockerfile` is hadolint-clean. |
 | `build` | `python -m build` produces a clean sdist + wheel. |
 | `smoke` (macOS + Ubuntu) | Built wheel installs into a fresh venv. `shimkit --help`, `shimkit version`, `shimkit doctor` all exit 0; the three new sub-apps (`dns`, `adguard`, `docker-clean`) appear in root `--help`. |

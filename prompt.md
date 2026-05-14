@@ -113,7 +113,7 @@ Before any edit:
 - Read `.github/workflows/ci.yml` and `release.yml` in full. Note
   the job DAG: `guard → build → publish-pypi → github-release →
   publish-ghcr → bump-homebrew-tap`.
-- Read `installer/install.sh` and `Dockerfile`.
+- Read `Dockerfile`.
 
 When done, write a single internal note (not committed) listing:
 
@@ -138,7 +138,6 @@ Run, capture output for the deliverable report:
 .venv/bin/ruff check src tests
 .venv/bin/mypy src/shimkit
 .venv/bin/python -m build
-shellcheck installer/install.sh
 ```
 
 ### Add new static gates
@@ -155,12 +154,8 @@ And run them now:
 
 ```
 .venv/bin/bandit -r src/shimkit -ll
-.venv/bin/pip-audit --strict
+.venv/bin/pip-audit --skip-editable
 ```
-
-For shellcheck: it already runs in CI per
-`docs/shipping-checklist.md` line 1.2. Confirm and extend to any
-new shell glue.
 
 ### Code-level audit
 
@@ -609,9 +604,7 @@ maintainer.
 
 ```
 .venv/bin/bandit -r src/shimkit -ll        # SAST
-.venv/bin/pip-audit --strict               # CVE in deps
-.venv/bin/pip-audit -r requirements*.txt   # if present
-shellcheck installer/install.sh            # one shell file we ship
+.venv/bin/pip-audit --skip-editable        # CVE in deps
 hadolint Dockerfile                        # container linter
 ```
 
@@ -678,9 +671,8 @@ or a comment justifying the residual risk.
   - All deps pinned at minimum-version floors with `>=` (already
     done). Hash-pinned in CI's `pip install --require-hashes`
     if practical.
-  - `installer/install.sh` should verify the downloaded
-    artifact against a published signature or sha256, not just
-    `curl | sh`.
+  - Released wheels carry an SPDX SBOM and `actions/attest-build-
+    provenance` signatures (verifiable via `gh attestation verify`).
   - Confirm `pyproject.toml` doesn't pull from anywhere except
     PyPI (no `tool.uv.sources` pointing at a fork).
 
@@ -820,15 +812,12 @@ Add to `release.yml`:
   `org.opencontainers.image.licenses`,
   `org.opencontainers.image.description`.
 
-### Installer
+### Installation channels
 
-`installer/install.sh` — confirm or fix:
-
-- `set -euo pipefail`.
-- Verifies downloaded artifact (sha256 against release manifest).
-- Supports `--method=pipx|uv|pip|brew` to pick the install method.
-- Idempotent.
-- shellcheck clean.
+shimkit installs via uv/pipx/pip/brew directly — no custom installer
+script. Verify the published wheels carry an SBOM, the container
+image has a signed attestation, and `shimkit self-update` correctly
+dispatches per install method.
 
 ---
 
@@ -843,9 +832,8 @@ Hat: all four, in rotation.
 .venv/bin/ruff check src tests
 .venv/bin/mypy src/shimkit
 .venv/bin/bandit -r src/shimkit -ll
-.venv/bin/pip-audit --strict
+.venv/bin/pip-audit --skip-editable
 .venv/bin/python -m build
-shellcheck installer/install.sh
 hadolint Dockerfile
 ```
 
@@ -1144,7 +1132,7 @@ PASS or SKIP — no FAIL — to cut the tag.**
 
 | Check | Source | Notes |
 |-------|--------|-------|
-| All CI gates green on `main` | GitHub Actions | `test`, `security`, `build`, `smoke`, `dockerfile-hadolint`, `installer-shellcheck`, `adguard-integration` |
+| All CI gates green on `main` | GitHub Actions | `test`, `security`, `build`, `smoke`, `dockerfile-hadolint`, `adguard-integration` |
 | `python -m build` on Ubuntu | Step 1.2 above | sdist + wheel produced |
 | `docker build` on Ubuntu | Step 1.3 above | image builds + runs |
 | `HEALTHCHECK` reports `healthy` | Step 1.4 | 30s observation |

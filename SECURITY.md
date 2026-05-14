@@ -28,7 +28,7 @@ fixes only for severities at or above High.
 
 ## Scope
 
-The shimkit codebase, the bundled `installer/install.sh`, the
+The shimkit codebase, the published wheels and sdists on PyPI, the
 container image at `ghcr.io/simtabi/shimkit`, and the GitHub Actions
 workflows in this repository are in scope.
 

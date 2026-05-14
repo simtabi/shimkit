@@ -101,6 +101,25 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   (`python:3.12-slim@sha256:401f6e1a...`). Dependabot's `docker`
   ecosystem watches the line; new digests come in as reviewable PRs.
 
+### Removed
+
+- The `installer/` directory (`install.sh` and the Homebrew formula
+  template). The custom `curl | sh` installer is no longer
+  shipped — installation goes through the direct package-manager
+  channels (`uv tool install shimkit` / `pipx install shimkit` /
+  `pip install --user shimkit` / `brew install simtabi/tap/shimkit`).
+  Side effects:
+  - `installer-shellcheck` CI job removed.
+  - `release.yml`'s install.sh + install.sh.sha256 asset upload
+    steps removed; SBOM is still uploaded to the GitHub Release.
+  - `self_update.install_one_liner()` renamed to `install_commands()`
+    and now returns the list of direct install commands rather
+    than the curl-pipe URL.
+  - README, `docs/installation.md`, `docs/release.md`,
+    `docs/release-notes/v0.2.0.md`, `docs/validation-scope.md`,
+    `prompt.md`, `SECURITY.md`, and the PR template scrubbed of
+    install.sh references.
+
 ## [0.1.0] — Initial release
 
 shimkit is a toolkit of developer utilities — Python tools, shimmed by

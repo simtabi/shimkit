@@ -16,21 +16,13 @@ shimkit
 ## Install
 
 ```bash
-curl -fsSL --proto '=https' --tlsv1.2 \
-  https://github.com/simtabi/shimkit/releases/latest/download/install.sh \
-  | sh
-```
-
-Or pick a channel directly:
-
-```bash
 uv tool install shimkit
 pipx install shimkit
 brew install simtabi/tap/shimkit
 pip install --user shimkit
 ```
 
-Full install matrix, container image, paranoid verification recipe, and
+Full install matrix, container image, optional dependency extras, and
 self-update behaviour: [`docs/installation.md`](docs/installation.md).
 
 ## Tools
