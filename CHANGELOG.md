@@ -8,6 +8,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- `shimkit gpg` — GPG key + git-signing hygiene. `keys
+  list/generate/export`, `agent status`, `git-signing
+  show/configure [--scope global|local]`. Shells out to baseline
+  `gpg` + `git`; passphrases stay in gpg's TTY pinentry (never
+  captured by shimkit). Pure parser for `gpg --with-colons` (algo
+  IDs → friendly names; unix-epoch timestamps → ISO dates;
+  `expires=0` → `None`). `git-signing configure` writes exactly
+  two `git config` entries (`user.signingkey`,
+  `commit.gpgsign=true`) via `CommandRunner` to respect Rule 2.
+  Adds 20 tests (337 total). [`docs/tools/gpg.md`](docs/tools/gpg.md).
 - `shimkit env` — `.env` viewer + scaffolder with default-deny
   secret redaction. `show [PATH] [--reveal]`, `list [ROOT]`,
   `scaffold PATH`, `diff A B`, `redact SRC DST`. Default-deny on

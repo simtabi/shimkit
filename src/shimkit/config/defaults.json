@@ -136,6 +136,10 @@
     "env": {
       "redact_pattern": "password|passwd|pwd|secret|token|api[_-]?key|authorization|key|credential",
       "default_search_paths": [".env", ".env.local", ".env.development", ".env.production"]
+    },
+    "gpg": {
+      "default_key_type": "ed25519",
+      "default_key_expiry": "1y"
     }
   },
   "package_managers": {

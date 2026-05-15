@@ -113,6 +113,12 @@ ignore = ["E501"]
 # B008 would otherwise flag every command we declare.
 extend-immutable-calls = ["typer.Argument", "typer.Option"]
 
+[tool.ruff.lint.isort]
+# CI installs shimkit editably via `pip install -e ".[dev]"`, after which
+# ruff's first-party heuristic can flip-flop on whether `shimkit` is the
+# source tree or the installed package. Pin it explicitly.
+known-first-party = ["shimkit"]
+
 [tool.mypy]
 python_version = "3.10"
 strict = true

@@ -54,6 +54,9 @@ behaviour: [`docs/installation.md`](docs/installation.md).
 - **[`shimkit env`](docs/tools/env.md)** — `.env` viewer +
   scaffolder with default-deny secret redaction. show / list /
   scaffold / diff / redact. macOS + Linux.
+- **[`shimkit gpg`](docs/tools/gpg.md)** — GPG key + git-signing
+  hygiene. keys list/generate/export, agent status, git-signing
+  show/configure. No third-party deps; passphrases handled by gpg.
 
 Plus three utilities:
 

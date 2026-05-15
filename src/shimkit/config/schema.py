@@ -174,6 +174,16 @@ class SshPermsConfig(_StrictModel):
     authorized_keys: str = "644"
 
 
+class GpgConfig(_StrictModel):
+    """GPG key + git-signing hygiene — `shimkit gpg`."""
+
+    default_key_type: str = "ed25519"
+    # Expiry passed to `gpg --quick-gen-key`. Accepts gpg's relative
+    # form (`1y`, `6m`, `0` for never). Default is 1 year so keys
+    # don't accumulate forever.
+    default_key_expiry: str = "1y"
+
+
 class EnvConfig(_StrictModel):
     """`.env` viewer + scaffolder — `shimkit env`."""
 
@@ -220,6 +230,7 @@ class ToolsConfig(_StrictModel):
     hosts: HostsConfig = Field(default_factory=HostsConfig)
     ssh: SshConfig = Field(default_factory=SshConfig)
     env: EnvConfig = Field(default_factory=EnvConfig)
+    gpg: GpgConfig = Field(default_factory=GpgConfig)
 
 
 class PackageManagerEntry(_StrictModel):
