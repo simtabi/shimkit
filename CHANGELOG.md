@@ -6,6 +6,23 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- `shimkit env` — `.env` viewer + scaffolder with default-deny
+  secret redaction. `show [PATH] [--reveal]`, `list [ROOT]`,
+  `scaffold PATH`, `diff A B`, `redact SRC DST`. Default-deny on
+  values: keys matching the secret-fragment regex (same shape as
+  `core/log.py::redact_value`) are masked as `KEY=********`
+  until `--reveal` is passed. Pure parser handles `KEY=value`,
+  `KEY="quoted"`, `KEY='single'`, `export KEY=...`, trailing
+  comments. Variable interpolation (`${OTHER}`) deliberately not
+  supported — that's a runtime concern. Auto-discovers a `.env`
+  in cwd via `tools.env.default_search_paths`. Adds 22 tests (339
+  total): parser unit tests including escape decoding, secret
+  pattern matcher, redact value capping, scaffold refusal on
+  overwrite, list pruning of `node_modules`/hidden dirs. No new
+  optional dependency extras. [`docs/tools/env.md`](docs/tools/env.md).
+
 ## [0.3.0] — 2026-05-15
 
 Three new host-machine dev-workflow tools, each shipped under the

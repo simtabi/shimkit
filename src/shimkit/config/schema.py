@@ -174,6 +174,20 @@ class SshPermsConfig(_StrictModel):
     authorized_keys: str = "644"
 
 
+class EnvConfig(_StrictModel):
+    """`.env` viewer + scaffolder — `shimkit env`."""
+
+    # Regex (alternation) of key-name fragments to treat as secrets.
+    # Match is case-insensitive, anchored to substring.
+    redact_pattern: str = (
+        "password|passwd|pwd|secret|token|api[_-]?key|authorization|key|credential"
+    )
+    # Names tried when no path is given — read in order; first hit wins.
+    default_search_paths: list[str] = Field(
+        default_factory=lambda: [".env", ".env.local", ".env.development", ".env.production"]
+    )
+
+
 class SshConfig(_StrictModel):
     """SSH key + agent + perms hygiene — `shimkit ssh`."""
 
@@ -205,6 +219,7 @@ class ToolsConfig(_StrictModel):
     ports: PortsConfig = Field(default_factory=PortsConfig)
     hosts: HostsConfig = Field(default_factory=HostsConfig)
     ssh: SshConfig = Field(default_factory=SshConfig)
+    env: EnvConfig = Field(default_factory=EnvConfig)
 
 
 class PackageManagerEntry(_StrictModel):

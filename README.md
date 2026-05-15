@@ -51,6 +51,9 @@ behaviour: [`docs/installation.md`](docs/installation.md).
   known_hosts + perms hygiene. keys list/generate/rotate, agent
   status/add, known-hosts audit/prune, perms audit/fix, config
   show. No third-party deps; passphrases handled by ssh-keygen.
+- **[`shimkit env`](docs/tools/env.md)** — `.env` viewer +
+  scaffolder with default-deny secret redaction. show / list /
+  scaffold / diff / redact. macOS + Linux.
 
 Plus three utilities:
 

@@ -132,6 +132,10 @@
         "known_hosts": "644",
         "authorized_keys": "644"
       }
+    },
+    "env": {
+      "redact_pattern": "password|passwd|pwd|secret|token|api[_-]?key|authorization|key|credential",
+      "default_search_paths": [".env", ".env.local", ".env.development", ".env.production"]
     }
   },
   "package_managers": {
