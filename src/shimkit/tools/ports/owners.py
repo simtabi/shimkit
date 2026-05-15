@@ -174,7 +174,9 @@ def _split_addr_port(local: str) -> tuple[str | None, int | None]:
     if idx < 0:
         return None, None
     addr = local[:idx] or None
-    if addr in ("*", "0.0.0.0"):
+    # Normalise wildcard-bind addresses from `ss` output to None so the
+    # PortOwner.address is informational only. We're parsing, not binding.
+    if addr in ("*", "0.0.0.0"):  # nosec B104 — string match on parser output, not a bind
         addr = None
     try:
         port = int(local[idx + 1 :])
