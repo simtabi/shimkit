@@ -6,6 +6,66 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.10.0] — 2026-05-15
+
+### Tests
+
+- Coverage push from 74% to **85%** (1009 → 1027 tests added across
+  11 new test files; +397 tests on top of the v0.9.0 baseline).
+  All new tests target previously-thin code paths in:
+  - `core/` — command (sudo/has_sudo/CommandResult), platform
+    (WSL detection, brew-prefix, container probes), menu
+    (FallbackMenu fallback paths + Menu.prompt_for_change),
+    host_service (SystemdHost + BrewServicesHost), systemd
+    (state / lifecycle / journal), ui (banner / spinner / quiet).
+  - `tools/java/` — manager menu paths (_menu_install /
+    _menu_upgrade / _menu_switch / _menu_uninstall /
+    _menu_remove_oracle / run() loop), scanner (scan / homebrew
+    versions / SDKman / JAVA_HOME), installer (install /
+    reinstall / uninstall / upgrade / switch / verify /
+    reload_env), brew (prefix cache / install / outdated / link),
+    oracle (safe-roots enforcement).
+  - `tools/ssh/` — manager (keys_generate / keys_rotate / agent
+    paths / known_hosts audit + prune / perms audit + fix /
+    config show / run() loop), scanner (parse_agent_keys / 
+    parse_known_hosts / prune_known_hosts / list_keys / 
+    _looks_like_private_key / _read_pub_metadata).
+  - `tools/adguard/` — manager (scan with/without conflicts /
+    verify / loopback DNS / ports_show / ports_set / service /
+    logs / rollback / config_validate), ports (psutil branch +
+    cgroup parsing).
+  - `tools/dns/` — manager (diagnose / flush / show / test /
+    set / reset / fix dispatcher / no-service paths), fixer
+    (detect_interference / step_detect_vpn / _make_backup_dir
+    safety / latest_backup_dir / rollback).
+  - `tools/db/` — _to_status_row helper, --on-host JSON output
+    paths, on-host Linux + macOS service-name resolution, dump
+    to file, status JSON shape with running container.
+  - `tools/gpg/` — manager (keys_generate / keys_export /
+    git_signing_show / git_signing_configure / agent_status /
+    run() loop), error paths for missing git binary.
+  - `tools/docker_clean/` — manager (prune dispatch / quick
+    dry-run / nuke token enforcement / inspect / compose_down
+    with/without --volumes / schedule_emit stdout vs file).
+  - `tools/tls/` — revoke dry-run, renew failure exit-code
+    propagation, status with unparseable expiry, cron-install
+    delegation.
+  - `tools/hosts/` — _read_source URL + local file paths,
+    _back_up sudo failure + success, _atomic_write fallback
+    chain, run() interactive loop.
+  - `tools/web/nginx/` — list with empty sites-available, apply
+    + remove severe-token enforcement, vhost generate flavors.
+  - `cli.py` — config show/path/edit/validate, doctor full run,
+    self-update no-update path, per-tool --help registration.
+
+### Changed
+
+- `pyproject.toml` — added `tests/* = ["RUF012"]` to ruff's
+  `per-file-ignores`. Test stubs use throwaway classes to mock
+  pydantic models; RUF012 (mutable class-attribute defaults
+  need ClassVar) is real-code advice that doesn't apply to
+  dataclass-style test fakes.
+
 ## [0.9.0] — 2026-05-15
 
 ### Added
