@@ -177,7 +177,7 @@ class DockerEnv:
         *,
         name: str,
         env: Mapping[str, str] | None = None,
-        ports: Mapping[str, int] | None = None,
+        ports: Mapping[str, int | tuple[str, int]] | None = None,
         volumes: Mapping[str, Mapping[str, str]] | None = None,
         detach: bool = True,
         labels: Mapping[str, str] | None = None,

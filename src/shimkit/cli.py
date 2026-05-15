@@ -15,6 +15,7 @@ import typer
 from shimkit import __version__
 from shimkit.core import UI
 from shimkit.tools.adguard.commands import adguard_app
+from shimkit.tools.db.commands import db_app
 from shimkit.tools.dns.commands import dns_app
 from shimkit.tools.docker_clean.commands import docker_clean_app
 from shimkit.tools.env.commands import env_app
@@ -46,6 +47,7 @@ app.add_typer(ssh_app)
 app.add_typer(env_app)
 app.add_typer(gpg_app)
 app.add_typer(logs_app)
+app.add_typer(db_app)
 
 
 # --- config -----------------------------------------------------------------

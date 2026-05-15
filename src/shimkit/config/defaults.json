@@ -145,6 +145,20 @@
       "default_lines": 100,
       "max_grep_lines": 5000
     },
+    "db": {
+      "default_volume_root": "~/.shimkit/data/db",
+      "default_bind_host": "127.0.0.1",
+      "default_id": "dev",
+      "default_password": "shimkit-dev",
+      "reset_severe_token": "RESET-DB",
+      "engines": {
+        "mysql":      {"image": "mysql:8.0",     "default_port": 13306},
+        "mariadb":    {"image": "mariadb:10.11", "default_port": 13307},
+        "postgres":   {"image": "postgres:16",   "default_port": 15432},
+        "mongo":      {"image": "mongo:7",       "default_port": 17017},
+        "phpmyadmin": {"image": "phpmyadmin:5",  "default_port": 18080}
+      }
+    },
     "versions": {
       "docker": {"min": "20.10"},
       "nginx":  {"min": "1.20"},

@@ -229,6 +229,35 @@ class HostsConfig(_StrictModel):
     managed_block_marker: str = "# === shimkit-managed ==="
 
 
+class DbEngineEntry(_StrictModel):
+    """Per-engine container settings — image + default port."""
+
+    image: str
+    default_port: int = Field(ge=1, le=65535)
+
+
+class DbConfig(_StrictModel):
+    """`shimkit db` — container-first database orchestration."""
+
+    default_volume_root: str = "~/.shimkit/data/db"
+    default_bind_host: str = "127.0.0.1"
+    default_id: str = "dev"
+    # Default password for the engine admin user. Used when --password
+    # isn't passed; the random-per-container path uses this as the
+    # fallback when secret-generation fails.
+    default_password: str = "shimkit-dev"
+    reset_severe_token: str = "RESET-DB"
+    engines: dict[str, DbEngineEntry] = Field(
+        default_factory=lambda: {
+            "mysql": DbEngineEntry(image="mysql:8.0", default_port=13306),
+            "mariadb": DbEngineEntry(image="mariadb:10.11", default_port=13307),
+            "postgres": DbEngineEntry(image="postgres:16", default_port=15432),
+            "mongo": DbEngineEntry(image="mongo:7", default_port=17017),
+            "phpmyadmin": DbEngineEntry(image="phpmyadmin:5", default_port=18080),
+        }
+    )
+
+
 class VersionConstraint(_StrictModel):
     """User-declarable acceptable-range for one external tool.
 
@@ -269,6 +298,7 @@ class ToolsConfig(_StrictModel):
     env: EnvConfig = Field(default_factory=EnvConfig)
     gpg: GpgConfig = Field(default_factory=GpgConfig)
     logs: LogsConfig = Field(default_factory=LogsConfig)
+    db: DbConfig = Field(default_factory=DbConfig)
     versions: VersionsConfig = Field(default_factory=VersionsConfig)
 
 
