@@ -9,6 +9,8 @@ import pytest
 from typer.testing import CliRunner
 
 from shimkit.cli import app
+from shimkit.core.platform import Platform
+from shimkit.tools.env.manager import EnvManager
 
 
 def _force_linux(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -137,9 +139,6 @@ def test_render_redacted_with_reveal_shows_values() -> None:
 
 
 def test_boot_exits_69_on_unsupported_platform(monkeypatch: pytest.MonkeyPatch) -> None:
-    from shimkit.core.platform import Platform
-    from shimkit.tools.env.manager import EnvManager
-
     monkeypatch.setattr(
         Platform,
         "detect",
