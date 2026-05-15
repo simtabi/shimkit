@@ -540,6 +540,13 @@ def test_docker_clean_compose_down_invokes_docker_compose(
     from shimkit.tools.docker_clean import client as client_mod
 
     monkeypatch.setattr(client_mod, "get_client", lambda: object())
+    # boot() now preflights `tools.versions.docker`; bypass the
+    # version-module check directly so the test stays focused on
+    # the compose-down argv assertion.
+    monkeypatch.setattr(
+        "shimkit.core.version.preflight",
+        lambda tools, force=False, runner=None: None,
+    )
     captured: list[list[str]] = []
     monkeypatch.setattr(
         "shimkit.tools.docker_clean.manager.CommandRunner.run",

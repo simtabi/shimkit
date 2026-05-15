@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import typer
 
+from shimkit.core.cli_flags import JSON_OUT
+
 shell_app = typer.Typer(name="shell", help="Manage shell installations and upgrades.")
 
 
@@ -46,3 +48,11 @@ def simulate(name: str = typer.Argument(..., help="bash | zsh | fish | ksh")) ->
     from .manager import ShellManager
 
     ShellManager.create().boot().simulate(name)
+
+
+@shell_app.command("colors")
+def colors(json_out: bool = JSON_OUT) -> None:
+    """Render the 256-color ANSI palette this terminal will display."""
+    from . import colors as _colors
+
+    raise typer.Exit(_colors.show(json_out=json_out))
