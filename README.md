@@ -57,6 +57,9 @@ behaviour: [`docs/installation.md`](docs/installation.md).
 - **[`shimkit gpg`](docs/tools/gpg.md)** — GPG key + git-signing
   hygiene. keys list/generate/export, agent status, git-signing
   show/configure. No third-party deps; passphrases handled by gpg.
+- **[`shimkit logs`](docs/tools/logs.md)** — system log tail / grep.
+  macOS `log show/stream`, Linux `journalctl`. Read-only — no
+  mutators, no prompts.
 
 Plus three utilities:
 

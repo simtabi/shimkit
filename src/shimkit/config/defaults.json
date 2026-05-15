@@ -140,6 +140,10 @@
     "gpg": {
       "default_key_type": "ed25519",
       "default_key_expiry": "1y"
+    },
+    "logs": {
+      "default_lines": 100,
+      "max_grep_lines": 5000
     }
   },
   "package_managers": {

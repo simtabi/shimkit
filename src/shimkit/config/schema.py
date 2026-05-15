@@ -174,6 +174,15 @@ class SshPermsConfig(_StrictModel):
     authorized_keys: str = "644"
 
 
+class LogsConfig(_StrictModel):
+    """System-log tail/grep — `shimkit logs`."""
+
+    default_lines: int = Field(default=100, ge=1, le=100_000)
+    # Cap on lines returned from a single `grep` invocation. Stops
+    # an over-broad pattern from saturating the terminal.
+    max_grep_lines: int = Field(default=5000, ge=1, le=1_000_000)
+
+
 class GpgConfig(_StrictModel):
     """GPG key + git-signing hygiene — `shimkit gpg`."""
 
@@ -231,6 +240,7 @@ class ToolsConfig(_StrictModel):
     ssh: SshConfig = Field(default_factory=SshConfig)
     env: EnvConfig = Field(default_factory=EnvConfig)
     gpg: GpgConfig = Field(default_factory=GpgConfig)
+    logs: LogsConfig = Field(default_factory=LogsConfig)
 
 
 class PackageManagerEntry(_StrictModel):

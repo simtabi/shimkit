@@ -21,6 +21,7 @@ from shimkit.tools.env.commands import env_app
 from shimkit.tools.gpg.commands import gpg_app
 from shimkit.tools.hosts.commands import hosts_app
 from shimkit.tools.java.commands import java_app
+from shimkit.tools.logs.commands import logs_app
 from shimkit.tools.ports.commands import ports_app
 from shimkit.tools.shell.commands import shell_app
 from shimkit.tools.ssh.commands import ssh_app
@@ -44,6 +45,7 @@ app.add_typer(hosts_app)
 app.add_typer(ssh_app)
 app.add_typer(env_app)
 app.add_typer(gpg_app)
+app.add_typer(logs_app)
 
 
 # --- config -----------------------------------------------------------------

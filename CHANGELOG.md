@@ -6,8 +6,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-05-15
+
+Three more host-machine dev-workflow tools, same five-rule
+architecture, same MODERATE-prompt-on-mutators pattern (where
+applicable). Test count 295 → 351. No new optional dependency
+extras.
+
 ### Added
 
+- `shimkit logs` — system log tail / grep. macOS routes through
+  `log show` / `log stream` (Apple's Unified Logging); Linux
+  routes through `journalctl`. Read-only by design — no
+  mutators, no prompts. Per-platform predicate syntax passed
+  through verbatim (NSPredicate on macOS, journalctl flags on
+  Linux). `--json` short-circuits the shell-out and emits the
+  argv list that would run, useful for previewing flag
+  combinations. Adds 14 tests.
+  [`docs/tools/logs.md`](docs/tools/logs.md).
 - `shimkit gpg` — GPG key + git-signing hygiene. `keys
   list/generate/export`, `agent status`, `git-signing
   show/configure [--scope global|local]`. Shells out to baseline
