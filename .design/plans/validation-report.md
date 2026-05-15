@@ -174,12 +174,13 @@ When approved by the maintainer, W9 deletion proceeds as:
 5. **Open the PR** against `main` with this report + the migration
    plan in the description.
 
-## Archive details (filled in at Phase 7)
+## Archive details
 
 | | |
 |---|---|
-| Archive path     | (filled in at Phase 7) |
-| SHA-256          | (filled in at Phase 7) |
-| Size             | (filled in at Phase 7) |
-| File count       | (filled in at Phase 7) |
-| Source size      | 416K (88 tracked files) |
+| Archive path     | `.design/archive/ubuntu-snapshot-2026-05-15.tar.gz` |
+| SHA-256          | `3491cb8fe9ebd7250f608117679fb981410de9db7bd8e044bce6eee39715a367` |
+| Size             | 35 KB (gzip) |
+| File count       | 115 entries (88 files + 27 dirs/DS_Store entries) |
+| Source size      | 416 KB (88 tracked files) |
+| Verified         | `tar -tzf` parses; `tar -xzOf ... ubuntu/assets/bash-colors.sh` reads first lines of the palette script |
