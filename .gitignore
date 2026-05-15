@@ -9,10 +9,12 @@ dist/
 build/
 .eggs/
 
-# Virtual environments
-.venv/
-venv/
-env/
+# Virtual environments — anchor each pattern to the repo root so it
+# doesn't accidentally swallow nested dirs (the `shimkit env` tool's
+# source lives at src/shimkit/tools/env/).
+/.venv/
+/venv/
+/env/
 
 # IDEs
 .idea/
