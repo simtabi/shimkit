@@ -221,6 +221,37 @@ def doctor() -> None:
     except Exception as exc:
         UI.line(f"docker         ERROR — {exc}")
 
+    # --- version constraints audit ------------------------------------
+    from shimkit.core import version as _vc
+
+    UI.line("")
+    UI.line("versions")
+    for vr in _vc.validate_all():
+        name = vr.tool.ljust(10)
+        if vr.status is _vc.Status.OK:
+            ver = vr.tool_version.raw if vr.tool_version else "?"
+            UI.line(f"  {name} {ver.ljust(10)} ok")
+            continue
+        if vr.status is _vc.Status.OUT_OF_RANGE:
+            ver = vr.tool_version.raw if vr.tool_version else "?"
+            spec: list[str] = []
+            if vr.constraint.min:
+                spec.append(f"min={vr.constraint.min}")
+            if vr.constraint.max:
+                spec.append(f"max={vr.constraint.max}")
+            UI.line(f"  {name} {ver.ljust(10)} OUT-OF-RANGE  ({', '.join(spec)})")
+            if vr.remediation:
+                UI.dim(f"    → {vr.remediation}")
+            continue
+        if vr.status is _vc.Status.MISSING:
+            UI.line(f"  {name} <missing>  not on PATH")
+            if vr.remediation:
+                UI.dim(f"    → {vr.remediation}")
+            continue
+        if vr.status is _vc.Status.UNPARSEABLE:
+            raw = vr.tool_version.raw if vr.tool_version else "?"
+            UI.line(f"  {name} {raw.ljust(10)} UNPARSEABLE (output didn't match)")
+
 
 def _detect_shimkit_install_method() -> str | None:
     """Cheap install-method probe for `doctor` (separate from self_update.run)."""

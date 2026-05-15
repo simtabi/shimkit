@@ -229,6 +229,34 @@ class HostsConfig(_StrictModel):
     managed_block_marker: str = "# === shimkit-managed ==="
 
 
+class VersionConstraint(_StrictModel):
+    """User-declarable acceptable-range for one external tool.
+
+    `min` / `max` accept either a bare version (interpreted as `>=`
+    / `<=`) or an explicit specifier (e.g. ``"<25.0"``). `preferred`
+    is informational only.
+    """
+
+    min: str | None = None
+    max: str | None = None
+    preferred: str | None = None
+
+
+class VersionsConfig(_StrictModel):
+    """Per-tool version constraints. Every field optional.
+
+    Adding a new entry requires the detector also being registered in
+    :mod:`shimkit.core.version`; an entry without a detector is
+    silently ignored.
+    """
+
+    docker: VersionConstraint = Field(default_factory=VersionConstraint)
+    nginx: VersionConstraint = Field(default_factory=VersionConstraint)
+    git: VersionConstraint = Field(default_factory=VersionConstraint)
+    gpg: VersionConstraint = Field(default_factory=VersionConstraint)
+    python: VersionConstraint = Field(default_factory=VersionConstraint)
+
+
 class ToolsConfig(_StrictModel):
     java: JavaConfig
     shell: ShellToolConfig
@@ -241,6 +269,7 @@ class ToolsConfig(_StrictModel):
     env: EnvConfig = Field(default_factory=EnvConfig)
     gpg: GpgConfig = Field(default_factory=GpgConfig)
     logs: LogsConfig = Field(default_factory=LogsConfig)
+    versions: VersionsConfig = Field(default_factory=VersionsConfig)
 
 
 class PackageManagerEntry(_StrictModel):

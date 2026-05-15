@@ -48,8 +48,7 @@ class SshManager:
         self._platform = Platform.detect()
         if not (self._platform.is_macos or self._platform.is_linux):
             UI.error(
-                "shimkit ssh targets macOS and Linux. "
-                f"Detected platform: {self._platform.system}."
+                f"shimkit ssh targets macOS and Linux. Detected platform: {self._platform.system}."
             )
             sys.exit(EX_UNAVAILABLE)
         cfg = get_config().tools.ssh
@@ -250,10 +249,7 @@ class SshManager:
                     status="warning" if dupes else "ok",
                     data={
                         "path": str(kh),
-                        "duplicates": [
-                            {"host": h, "line_numbers": lines}
-                            for h, lines in dupes
-                        ],
+                        "duplicates": [{"host": h, "line_numbers": lines} for h, lines in dupes],
                     },
                 )
             )

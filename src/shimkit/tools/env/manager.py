@@ -50,8 +50,7 @@ class EnvManager:
         # unix/macos charter check.
         if not (self._platform.is_macos or self._platform.is_linux):
             UI.error(
-                "shimkit env targets macOS and Linux. "
-                f"Detected platform: {self._platform.system}."
+                f"shimkit env targets macOS and Linux. Detected platform: {self._platform.system}."
             )
             sys.exit(EX_UNAVAILABLE)
         return self
@@ -88,7 +87,8 @@ class EnvManager:
                                 "key": e.key,
                                 "value": (
                                     e.value
-                                    if reveal or not _parser.is_secret_key(e.key, cfg.redact_pattern)
+                                    if reveal
+                                    or not _parser.is_secret_key(e.key, cfg.redact_pattern)
                                     else _parser.redact_value(e.value)
                                 ),
                                 "redacted": (
@@ -255,8 +255,7 @@ class EnvManager:
         for dirpath, dirnames, filenames in _walk(root):
             # Prune hidden + node_modules / vendor dirs.
             dirnames[:] = [
-                d for d in dirnames
-                if not d.startswith(".") and d not in {"node_modules", "vendor"}
+                d for d in dirnames if not d.startswith(".") and d not in {"node_modules", "vendor"}
             ]
             for fn in filenames:
                 if fn == ".env" or fn.startswith(".env."):

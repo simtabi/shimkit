@@ -144,6 +144,13 @@
     "logs": {
       "default_lines": 100,
       "max_grep_lines": 5000
+    },
+    "versions": {
+      "docker": {"min": "20.10"},
+      "nginx":  {"min": "1.20"},
+      "git":    {"min": "2.30"},
+      "gpg":    {"min": "2.2"},
+      "python": {"min": "3.10", "preferred": "3.12"}
     }
   },
   "package_managers": {

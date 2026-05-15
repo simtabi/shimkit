@@ -41,8 +41,7 @@ class LogsManager:
         self._platform = Platform.detect()
         if not (self._platform.is_macos or self._platform.is_linux):
             UI.error(
-                "shimkit logs targets macOS and Linux. "
-                f"Detected platform: {self._platform.system}."
+                f"shimkit logs targets macOS and Linux. Detected platform: {self._platform.system}."
             )
             sys.exit(EX_UNAVAILABLE)
         binary = "log" if self._platform.is_macos else "journalctl"

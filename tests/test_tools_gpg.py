@@ -144,9 +144,7 @@ def test_boot_exits_69_when_gpg_missing(monkeypatch: pytest.MonkeyPatch) -> None
 # ─── keys list ──────────────────────────────────────────────────────────
 
 
-def test_gpg_keys_list_empty(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_gpg_keys_list_empty(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     _force_linux(monkeypatch)
     monkeypatch.setattr(
         "shimkit.tools.gpg.manager.CommandRunner.run",
@@ -158,9 +156,7 @@ def test_gpg_keys_list_empty(
     assert doc["data"]["keys"] == []
 
 
-def test_gpg_keys_list_one_key_via_json(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_gpg_keys_list_one_key_via_json(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     _force_linux(monkeypatch)
     stdout = (
         "pub:u:256:22:ABCD1234EF567890:1700000000:1800000000::u:::::::::ed25519:\n"
@@ -183,9 +179,7 @@ def test_gpg_keys_list_one_key_via_json(
 # ─── keys generate ──────────────────────────────────────────────────────
 
 
-def test_gpg_keys_generate_invokes_gpg(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_gpg_keys_generate_invokes_gpg(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     _force_linux(monkeypatch)
     captured: list[list[str]] = []
 
@@ -193,9 +187,7 @@ def test_gpg_keys_generate_invokes_gpg(
         captured.append(list(cmd))
         return CommandResult(0, "", "")
 
-    monkeypatch.setattr(
-        "shimkit.tools.gpg.manager.CommandRunner.run", staticmethod(fake_run)
-    )
+    monkeypatch.setattr("shimkit.tools.gpg.manager.CommandRunner.run", staticmethod(fake_run))
     result = runner.invoke(
         app,
         [
@@ -251,9 +243,7 @@ def test_gpg_keys_generate_dry_run_does_not_invoke_gpg(
         captured.append(list(cmd))
         return CommandResult(0, "", "")
 
-    monkeypatch.setattr(
-        "shimkit.tools.gpg.manager.CommandRunner.run", staticmethod(fake_run)
-    )
+    monkeypatch.setattr("shimkit.tools.gpg.manager.CommandRunner.run", staticmethod(fake_run))
     result = runner.invoke(
         app,
         [
@@ -273,9 +263,7 @@ def test_gpg_keys_generate_dry_run_does_not_invoke_gpg(
 # ─── keys export ────────────────────────────────────────────────────────
 
 
-def test_gpg_keys_export_to_stdout(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_gpg_keys_export_to_stdout(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     _force_linux(monkeypatch)
     armoured = "-----BEGIN PGP PUBLIC KEY BLOCK-----\nfake\n-----END PGP PUBLIC KEY BLOCK-----\n"
     monkeypatch.setattr(
@@ -297,9 +285,7 @@ def test_gpg_keys_export_to_file(
         staticmethod(lambda _cmd, **_: CommandResult(0, armoured, "")),
     )
     out = tmp_path / "public.asc"
-    result = runner.invoke(
-        app, ["gpg", "keys", "export", "ABCD1234", "--dest", str(out)]
-    )
+    result = runner.invoke(app, ["gpg", "keys", "export", "ABCD1234", "--dest", str(out)])
     assert result.exit_code == 0
     assert out.read_text().startswith("-----BEGIN PGP PUBLIC KEY BLOCK-----")
 
@@ -307,9 +293,7 @@ def test_gpg_keys_export_to_file(
 # ─── agent ──────────────────────────────────────────────────────────────
 
 
-def test_gpg_agent_status_up(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_gpg_agent_status_up(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     _force_linux(monkeypatch)
     monkeypatch.setattr(
         "shimkit.tools.gpg.manager.CommandRunner.run",
@@ -321,9 +305,7 @@ def test_gpg_agent_status_up(
     assert doc["data"]["agent_running"] is True
 
 
-def test_gpg_agent_status_down(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_gpg_agent_status_down(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     _force_linux(monkeypatch)
     monkeypatch.setattr(
         "shimkit.tools.gpg.manager.CommandRunner.run",
@@ -338,9 +320,7 @@ def test_gpg_agent_status_down(
 # ─── git-signing ────────────────────────────────────────────────────────
 
 
-def test_gpg_git_signing_show(
-    runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_gpg_git_signing_show(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     _force_linux(monkeypatch)
     monkeypatch.setattr(
         "shimkit.tools.gpg.manager.shutil.which",
@@ -375,9 +355,7 @@ def test_gpg_git_signing_configure_writes_two_git_configs(
         captured.append(list(cmd))
         return CommandResult(0, "", "")
 
-    monkeypatch.setattr(
-        "shimkit.tools.gpg.manager.CommandRunner.run", staticmethod(fake_run)
-    )
+    monkeypatch.setattr("shimkit.tools.gpg.manager.CommandRunner.run", staticmethod(fake_run))
     result = runner.invoke(
         app,
         ["gpg", "git-signing", "configure", "ABCD1234", "--yes"],

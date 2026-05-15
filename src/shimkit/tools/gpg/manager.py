@@ -45,8 +45,7 @@ class GpgManager:
         self._platform = Platform.detect()
         if not (self._platform.is_macos or self._platform.is_linux):
             UI.error(
-                "shimkit gpg targets macOS and Linux. "
-                f"Detected platform: {self._platform.system}."
+                f"shimkit gpg targets macOS and Linux. Detected platform: {self._platform.system}."
             )
             sys.exit(EX_UNAVAILABLE)
         if shutil.which("gpg") is None:
@@ -113,10 +112,7 @@ class GpgManager:
         cfg = get_config().tools.gpg
         ktype = key_type or cfg.default_key_type
         if ktype not in _KEY_TYPE_TO_GPG:
-            UI.error(
-                f"Unknown key type {ktype!r}. Allowed: "
-                f"{', '.join(sorted(_KEY_TYPE_TO_GPG))}."
-            )
+            UI.error(f"Unknown key type {ktype!r}. Allowed: {', '.join(sorted(_KEY_TYPE_TO_GPG))}.")
             return EX_FAIL
         gpg_alg = _KEY_TYPE_TO_GPG[ktype]
         uid = f"{name} <{email}>"
@@ -126,8 +122,8 @@ class GpgManager:
             "--quick-gen-key",
             "--batch",
             "--passphrase",
-            "",   # gpg requires --passphrase even when empty; user
-                  # supplies via TTY when prompted.
+            "",  # gpg requires --passphrase even when empty; user
+            # supplies via TTY when prompted.
             uid,
             gpg_alg,
             "sign",

@@ -72,19 +72,13 @@ def show(
     """Print a .env file with secret values redacted (unless --reveal)."""
     from .manager import EnvManager
 
-    code = (
-        EnvManager.create()
-        .boot()
-        .show(_maybe_path(path), reveal=reveal, json_out=json_out)
-    )
+    code = EnvManager.create().boot().show(_maybe_path(path), reveal=reveal, json_out=json_out)
     raise typer.Exit(code)
 
 
 @env_app.command("list")
 def list_(
-    root: str = typer.Argument(
-        ".", help="Directory to walk for .env* files."
-    ),
+    root: str = typer.Argument(".", help="Directory to walk for .env* files."),
     json_out: bool = JSON_OUT,
 ) -> None:
     """List every .env* file under ROOT (default: cwd)."""
@@ -102,11 +96,7 @@ def scaffold(
     """Write a starter .env file at PATH. Refuses to overwrite."""
     from .manager import EnvManager
 
-    code = (
-        EnvManager.create()
-        .boot()
-        .scaffold(Path(path).expanduser(), dry_run=dry_run)
-    )
+    code = EnvManager.create().boot().scaffold(Path(path).expanduser(), dry_run=dry_run)
     raise typer.Exit(code)
 
 

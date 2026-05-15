@@ -9,11 +9,11 @@ from dataclasses import dataclass, field
 class GpgKey:
     """One primary key from ``gpg --list-keys --with-colons``."""
 
-    key_id: str         # long form, e.g. "ABCD1234EF567890"
-    fingerprint: str    # 40-char hex
-    key_type: str       # "ed25519", "rsa3072", "rsa4096", "?"
-    bits: int           # 256 for ed25519, 3072/4096 for rsa
-    created: str        # ISO date "YYYY-MM-DD"
+    key_id: str  # long form, e.g. "ABCD1234EF567890"
+    fingerprint: str  # 40-char hex
+    key_type: str  # "ed25519", "rsa3072", "rsa4096", "?"
+    bits: int  # 256 for ed25519, 3072/4096 for rsa
+    created: str  # ISO date "YYYY-MM-DD"
     expires: str | None  # "YYYY-MM-DD" or None (never expires)
     uids: tuple[str, ...] = field(default_factory=tuple)
 

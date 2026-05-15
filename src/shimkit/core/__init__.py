@@ -17,21 +17,35 @@ from .platform import Platform
 from .shell import Shell, ShellConfigWriter, java_home_for
 from .systemd import Systemd, UnitState
 from .ui import UI
+from .version import (
+    Detector,
+    Result,
+    Status,
+    ToolVersion,
+    VersionConstraint,
+    VersionViolationError,
+)
 
 __all__ = [
     "UI",
     "AskResult",
     "CommandResult",
     "CommandRunner",
+    "Detector",
     "Event",
     "FallbackMenu",
     "Menu",
     "PackageManager",
     "Platform",
+    "Result",
     "Shell",
     "ShellConfigWriter",
+    "Status",
     "Systemd",
+    "ToolVersion",
     "UnitState",
+    "VersionConstraint",
+    "VersionViolationError",
     "attach_file_handler",
     "emit_json",
     "get_logger",

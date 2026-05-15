@@ -85,9 +85,7 @@ def keys_list(
 @keys_app.command("generate")
 def keys_generate(
     name: str = typer.Argument(..., help="Filename for the new key (e.g. `id_ed25519`)."),
-    key_type: str = typer.Option(
-        None, "--type", "-t", help="Key type (default from config)."
-    ),
+    key_type: str = typer.Option(None, "--type", "-t", help="Key type (default from config)."),
     comment: str = typer.Option(None, "--comment", "-C"),
     ssh_dir: str = typer.Option(None, "--ssh-dir"),
     dry_run: bool = DRY_RUN,
@@ -261,9 +259,7 @@ def perms_fix(
         UI.info("Cancelled. Pass --yes to skip the prompt or rerun with --dry-run.")
         raise typer.Exit(1)
     code = (
-        SshManager.create()
-        .boot(ssh_dir_override=_ssh_override(ssh_dir))
-        .perms_fix(dry_run=dry_run)
+        SshManager.create().boot(ssh_dir_override=_ssh_override(ssh_dir)).perms_fix(dry_run=dry_run)
     )
     raise typer.Exit(code)
 
@@ -284,9 +280,5 @@ def config_show(
     """Print ~/.ssh/config; with HOST, show its expanded config."""
     from .manager import SshManager
 
-    code = (
-        SshManager.create()
-        .boot(ssh_dir_override=_ssh_override(ssh_dir))
-        .config_show(host)
-    )
+    code = SshManager.create().boot(ssh_dir_override=_ssh_override(ssh_dir)).config_show(host)
     raise typer.Exit(code)
