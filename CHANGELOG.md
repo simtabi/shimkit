@@ -6,6 +6,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- `shimkit ports` — cross-platform TCP/UDP port owner inspector +
+  killer. `shimkit ports show [PORT]` lists every listening socket
+  via `lsof` on macOS or `ss` on Linux; `shimkit ports kill PORT`
+  signals the holder(s) with a MODERATE prompt. Allowed signals
+  `TERM/KILL/INT/HUP`; system-tier PIDs (below
+  `tools.ports.system_pid_threshold`, default 100) require the
+  severe-tier `--confirm KILL-INIT` token. No new optional extras —
+  uses `CommandRunner` only. Adds 19 tests (parser fixtures for
+  both `lsof -F pcnuP` and `ss -tulnpH` output, plus CLI/manager
+  coverage). [`docs/tools/ports.md`](docs/tools/ports.md).
+
 ## [0.2.3] — 2026-05-14
 
 ### Removed

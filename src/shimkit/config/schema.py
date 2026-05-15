@@ -152,12 +152,24 @@ class DockerCleanConfig(_StrictModel):
     default_buildx_prune_all: bool = True
 
 
+class PortsConfig(_StrictModel):
+    """Port owner inspection + killer — `shimkit ports`."""
+
+    default_signal: str = "TERM"
+    init_pid_severe_token: str = "KILL-INIT"
+    # Killing a PID below this threshold is treated as a system-process
+    # operation and prompts the severe-tier token. Linux services live
+    # below ~1000; user-launched dev servers are typically >1000.
+    system_pid_threshold: int = Field(default=100, ge=1, le=65535)
+
+
 class ToolsConfig(_StrictModel):
     java: JavaConfig
     shell: ShellToolConfig
     dns: DnsConfig = Field(default_factory=DnsConfig)
     adguard: AdGuardConfig = Field(default_factory=AdGuardConfig)
     docker_clean: DockerCleanConfig = Field(default_factory=DockerCleanConfig)
+    ports: PortsConfig = Field(default_factory=PortsConfig)
 
 
 class PackageManagerEntry(_StrictModel):

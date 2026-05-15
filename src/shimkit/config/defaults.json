@@ -109,6 +109,11 @@
       "kubernetes_image_patterns": ["registry.k8s.io", "kube-", "kubernetes", "desktop-"],
       "daemon_verify_timeout_seconds": 30,
       "default_buildx_prune_all": true
+    },
+    "ports": {
+      "default_signal": "TERM",
+      "init_pid_severe_token": "KILL-INIT",
+      "system_pid_threshold": 100
     }
   },
   "package_managers": {

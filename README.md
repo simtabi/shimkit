@@ -41,6 +41,9 @@ behaviour: [`docs/installation.md`](docs/installation.md).
 - **[`shimkit docker-clean`](docs/tools/docker-clean.md)** — Docker
   resource cleanup (Linux + macOS + WSL). Status, quick, prune-*, nuke,
   schedule-snippet emit.
+- **[`shimkit ports`](docs/tools/ports.md)** — list / kill the process
+  holding a TCP or UDP port (macOS + Linux). `lsof` on macOS, `ss` on
+  Linux. MODERATE prompt on `kill`; severe token for system-tier PIDs.
 
 Plus three utilities:
 
