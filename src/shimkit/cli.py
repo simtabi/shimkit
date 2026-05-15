@@ -15,6 +15,7 @@ import typer
 from shimkit import __version__
 from shimkit.core import UI
 from shimkit.tools.adguard.commands import adguard_app
+from shimkit.tools.cron.commands import cron_app
 from shimkit.tools.db.commands import db_app
 from shimkit.tools.dns.commands import dns_app
 from shimkit.tools.docker_clean.commands import docker_clean_app
@@ -52,6 +53,7 @@ app.add_typer(logs_app)
 app.add_typer(db_app)
 app.add_typer(stack_app)
 app.add_typer(web_app)
+app.add_typer(cron_app)
 
 
 # --- config -----------------------------------------------------------------

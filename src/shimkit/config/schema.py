@@ -325,6 +325,19 @@ class VersionsConfig(_StrictModel):
     python: VersionConstraint = Field(default_factory=VersionConstraint)
 
 
+class CronConfig(_StrictModel):
+    """`shimkit cron` — generic user-crontab editor."""
+
+    # Comment that identifies a shimkit-managed entry. Format on disk:
+    #   # shimkit:<name>
+    #   <schedule> <command>
+    managed_prefix: str = "# shimkit:"
+    backup_dir: str = "~/.shimkit/data/cron"
+    # Max entries shimkit will manage per crontab — keeps a malicious
+    # config from explosion-installing.
+    max_managed_entries: int = Field(default=200, ge=1, le=10_000)
+
+
 class ToolsConfig(_StrictModel):
     java: JavaConfig
     shell: ShellToolConfig
@@ -340,6 +353,7 @@ class ToolsConfig(_StrictModel):
     db: DbConfig = Field(default_factory=DbConfig)
     stack: StackConfig = Field(default_factory=StackConfig)
     web: WebConfig = Field(default_factory=WebConfig)
+    cron: CronConfig = Field(default_factory=CronConfig)
     versions: VersionsConfig = Field(default_factory=VersionsConfig)
 
 

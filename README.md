@@ -16,6 +16,7 @@ shimkit
   env           .env viewer + scaffolder with secret redaction.
   gpg           GPG key + git-signing hygiene.
   logs          System log tail / grep.
+  cron          Manage shimkit-tagged entries in the user crontab.
   db            Container-first databases (5 engines).
   stack         Multi-container app recipes (LEMP today).
   web           Web-server tooling (nginx vhost generator).
@@ -72,6 +73,10 @@ behaviour: [`docs/installation.md`](docs/installation.md).
 - **[`shimkit logs`](docs/tools/logs.md)** — system log tail / grep.
   macOS `log show/stream`, Linux `journalctl`. Read-only — no
   mutators, no prompts.
+- **[`shimkit cron`](docs/tools/cron.md)** — manage shimkit-tagged
+  entries in your user crontab. add / list / remove / show /
+  rollback. Atomic write + backup-on-mutate; never touches
+  user-authored entries.
 
 ### Server-class tools (Docker-first; opt-in to host install)
 
@@ -151,6 +156,7 @@ The repo root has the short version. The long version lives under
 | `shimkit env` deep-dive | [`docs/tools/env.md`](docs/tools/env.md) |
 | `shimkit gpg` deep-dive | [`docs/tools/gpg.md`](docs/tools/gpg.md) |
 | `shimkit logs` deep-dive | [`docs/tools/logs.md`](docs/tools/logs.md) |
+| `shimkit cron` deep-dive | [`docs/tools/cron.md`](docs/tools/cron.md) |
 | `shimkit db` deep-dive | [`docs/tools/db.md`](docs/tools/db.md) |
 | `shimkit stack` deep-dive | [`docs/tools/stack.md`](docs/tools/stack.md) |
 | `shimkit web nginx` deep-dive | [`docs/tools/web.md`](docs/tools/web.md) |

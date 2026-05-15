@@ -6,6 +6,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-05-15
+
+### Added
+
+- `shimkit cron` — generic user-crontab editor. `show` / `list` /
+  `add --name N --schedule S --cmd C [--comment T]` (MODERATE
+  prompt) / `remove NAME` (MODERATE) / `rollback` (MODERATE).
+  Shimkit-managed entries identified by a `# shimkit:<name>`
+  comment immediately above the schedule line; user-authored
+  entries never touched. Atomic write via `crontab <tempfile>`;
+  backup-on-mutate to `~/.shimkit/data/cron/crontab-YYYY...bak`.
+  Structural schedule validation (5-field or `@`-shorthand); cron
+  itself owns semantic validation. Adds 25 tests (528 total). No
+  new optional dependency extras. Replaces the source ubuntu
+  `add:cron.sh` (which was Laravel-specific); shimkit cron is the
+  generic host-side editor any framework can layer on.
+  [`docs/tools/cron.md`](docs/tools/cron.md).
+
 ## [0.5.0] — 2026-05-15
 
 ### Migration

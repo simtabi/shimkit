@@ -180,6 +180,11 @@
         "managed_marker": "# managed-by: shimkit"
       }
     },
+    "cron": {
+      "managed_prefix": "# shimkit:",
+      "backup_dir": "~/.shimkit/data/cron",
+      "max_managed_entries": 200
+    },
     "versions": {
       "docker": {"min": "20.10"},
       "nginx":  {"min": "1.20"},
