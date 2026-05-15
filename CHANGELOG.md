@@ -6,6 +6,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.7.1] — 2026-05-15
+
+### Fixed
+
+- Release-workflow drift: the v0.7.0 tag was pushed with
+  `pyproject.toml` still at `0.6.0` (only `src/shimkit/__init__.py`
+  got bumped). The release workflow's tag-version verifier
+  rejected the mismatch and v0.7.0 never published. v0.7.1 bumps
+  both files to the same value and re-issues the v0.7.0 surface
+  unchanged. No code or test changes.
+
 ## [0.7.0] — 2026-05-15
 
 ### Added
