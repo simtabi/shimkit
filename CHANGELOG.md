@@ -6,6 +6,101 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Migration
+
+Migrated the legacy `ubuntu/` server-provisioning scripts into
+shimkit under a **Docker-first** charter expansion. The original
+22-script tree (LEMP installer, mysql/mariadb/postgres/mongo
+host-installers, nginx vhost generator, supervisor / cron / laravel
+helpers) had 5 Critical + 7 High security flags — disabled apparmor,
+mongodb/mysql bound to `0.0.0.0`, deprecated `apt-key adv`,
+`curl|sh` patterns. The Docker-first design dissolves every
+Critical without per-tool effort.
+
+Full audit + gap analysis + plan under
+[`.design/`](.design/) (architecture-current, architecture-target,
+version-constraints-spec, plans/feature-gap-analysis,
+plans/migration-plan).
+
+### Added
+
+- **`shimkit.core.version`** — tool-version detection + constraint
+  enforcement subsystem. One source of truth (the JSON
+  `tools.versions` registry) consulted at three enforcement points
+  (install-time docs, runtime preflight, `shimkit doctor`) with
+  four distinct outcomes (OK / OUT_OF_RANGE / MISSING /
+  UNPARSEABLE). Five built-in detectors: docker / nginx / git /
+  gpg / python. SemVer-aware comparison via
+  `packaging.SpecifierSet` — no home-rolled parser. Adds 35
+  tests. Full spec:
+  [`.design/version-constraints-spec.md`](.design/version-constraints-spec.md).
+- **`shimkit.core.docker.DockerEnv`** — shimkit-flavored chokepoint
+  for the docker-py SDK. Builder pattern; boot-checks the daemon
+  once; standardises container naming
+  (`shimkit-<scope>-<kind>-<id>`) and volume layout
+  (`~/.shimkit/data/db/<engine>-<id>/`). Containers shimkit creates
+  carry a `shimkit.tool=<scope>` label. Adds `network_get_or_create`
+  + `network_remove` for the multi-container stack recipes. Adds
+  28 tests (mocked at the SDK boundary; no real daemon access).
+- **`shimkit db <engine>`** — container-first databases. Five
+  engines (mysql / mariadb / postgres / mongo / phpmyadmin)
+  registered via the per-engine driver pattern under
+  `tools/db/engines/`. Subcommands: `ls`, `up` (idempotent —
+  already-running, started-from-stopped, or fresh), `down`,
+  `shell` (engine-native client), `dump` (mysqldump / pg_dumpall /
+  mongodump --archive), `reset` (SEVERE — `--confirm RESET-DB`),
+  `status` / `--json`. Default ports shimkit-prefixed
+  (`:13306` / `:13307` / `:15432` / `:17017` / `:18080`); default
+  bind 127.0.0.1; persistent volume at
+  `~/.shimkit/data/db/<engine>-<id>/`. phpmyadmin links to a
+  backing DB via `host.docker.internal`. Adds 35 tests.
+- **`shimkit web nginx vhost`** — hardened vhost generator with
+  opt-in apply. `generate` writes a file (no host mutation by
+  default; `--out PATH` or stdout); `apply` and `remove` are
+  SEVERE-tier (`--confirm APPLY-VHOST` / `--confirm
+  REMOVE-VHOST`), refuse to clobber non-shimkit-managed vhosts via
+  a `# managed-by: shimkit` marker check. Three flavors: static /
+  php / laravel. Security headers borrowed from the source
+  ubuntu `nginx:host.sh` (X-Frame-Options, X-Content-Type-Options,
+  X-XSS-Protection, Referrer-Policy, `server_tokens off`) plus
+  modern additions (Permissions-Policy). Adds 21 tests.
+- **`shimkit stack lemp`** — three-container LEMP recipe. db
+  (mysql/mariadb/postgres via the W3 engine drivers) + php-fpm
+  + nginx, all on a per-project user-defined bridge network so
+  containers can fastcgi-pass each other by name. Project root
+  bind-mounted at `/srv/app`. Idempotent `up` (already_running /
+  started / created per role); `down` removes all three + the
+  network; `status` / `logs` / `exec` round out the surface.
+  Multiple projects side-by-side via `--project`. Adds 21 tests.
+- **`shimkit shell colors`** — 256-color ANSI palette diagnostic.
+  Read-only; prints the basic 16 + 6x6x6 cube + 24-step grayscale
+  ramp. `--json` returns the structured Xterm-RGB dump. Adds 7
+  tests.
+
+### Changed
+
+- **`shimkit doctor`** extended with a `versions` section that
+  tabulates the status of every detector in the version registry
+  with platform-specific remediation hints (`brew install …` on
+  macOS; `apt-get install …` on Linux).
+- **`shimkit docker-clean` and `shimkit gpg git-signing` managers**
+  now consult the version-constraint registry on boot, so a
+  missing or out-of-range docker / git surfaces the same
+  structured remediation message as the new tools. `--force` is
+  plumbed through to override an `OUT_OF_RANGE` for docker-clean.
+
+### Removed
+
+- The legacy `ubuntu/` source tree is removed in a separate W9
+  commit (after the validation report is approved). Archived at
+  `.design/archive/ubuntu-snapshot-YYYYMMDD.tar.gz` (SHA-256
+  recorded in `.design/plans/validation-report.md`). The migration
+  skipped 15 source features — including the entire host-install
+  path for php / node / composer / packages, the Laravel-specific
+  scaffolders, supervisor + cron helpers, and three
+  broken/duplicate scripts. See
+  [`.design/plans/feature-gap-analysis.md`](.design/plans/feature-gap-analysis.md).
+
 ## [0.4.0] — 2026-05-15
 
 Three more host-machine dev-workflow tools, same five-rule
