@@ -6,6 +6,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-05-15
+
 ### Migration
 
 Migrated the legacy `ubuntu/` server-provisioning scripts into
