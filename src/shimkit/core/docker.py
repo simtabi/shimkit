@@ -286,6 +286,39 @@ class DockerEnv:
         result: list[Any] = self.client.containers.list(all=True, filters=filters)
         return result
 
+    # ─── networks ──────────────────────────────────────────────────
+
+    def network_get_or_create(self, name: str) -> Any:
+        """Return the docker network with ``name``, creating it as a
+        user-defined bridge if absent. Idempotent.
+
+        Containers attached to a user-defined bridge can resolve each
+        other's names via Docker's built-in DNS — which is how shimkit
+        stacks let nginx fastcgi-pass to ``shimkit-stack-lemp-<proj>-php``
+        without exposing a host port.
+        """
+        from docker.errors import NotFound
+
+        try:
+            return self.client.networks.get(name)
+        except NotFound:
+            return self.client.networks.create(
+                name,
+                driver="bridge",
+                labels={"shimkit.tool": _scope_from(name)},
+            )
+
+    def network_remove(self, name: str) -> bool:
+        """Remove the named network. Returns False when absent."""
+        from docker.errors import NotFound
+
+        try:
+            net = self.client.networks.get(name)
+        except NotFound:
+            return False
+        net.remove()
+        return True
+
     def remove_volume(self, path: Path) -> bool:
         """Remove a bind-mount volume directory created by shimkit.
 

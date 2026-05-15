@@ -229,6 +229,23 @@ class HostsConfig(_StrictModel):
     managed_block_marker: str = "# === shimkit-managed ==="
 
 
+class LempConfig(_StrictModel):
+    """`shimkit stack lemp` — three-container LEMP recipe."""
+
+    nginx_image: str = "nginx:1.27-alpine"
+    php_fpm_image: str = "php:8.3-fpm"
+    default_port: int = Field(default=18080, ge=1, le=65535)
+    # One of `tools.db.engines.<engine>` — picks which DB to spin up.
+    default_db: str = "mysql"
+
+
+class StackConfig(_StrictModel):
+    """`shimkit stack *` — multi-container app recipes."""
+
+    default_project: str = "shimkit-dev"
+    lemp: LempConfig = Field(default_factory=LempConfig)
+
+
 class WebNginxConfig(_StrictModel):
     """`shimkit web nginx` — vhost generator + (opt-in) host apply."""
 
@@ -321,6 +338,7 @@ class ToolsConfig(_StrictModel):
     gpg: GpgConfig = Field(default_factory=GpgConfig)
     logs: LogsConfig = Field(default_factory=LogsConfig)
     db: DbConfig = Field(default_factory=DbConfig)
+    stack: StackConfig = Field(default_factory=StackConfig)
     web: WebConfig = Field(default_factory=WebConfig)
     versions: VersionsConfig = Field(default_factory=VersionsConfig)
 

@@ -159,6 +159,15 @@
         "phpmyadmin": {"image": "phpmyadmin:5",  "default_port": 18080}
       }
     },
+    "stack": {
+      "default_project": "shimkit-dev",
+      "lemp": {
+        "nginx_image": "nginx:1.27-alpine",
+        "php_fpm_image": "php:8.3-fpm",
+        "default_port": 18080,
+        "default_db": "mysql"
+      }
+    },
     "web": {
       "nginx": {
         "sites_available_dir": "/etc/nginx/sites-available",
