@@ -98,4 +98,3 @@ jobs:
             dist/*.whl
             dist/*.tar.gz
             dist/shimkit-sbom.spdx.json
-          upload-artifact: true
