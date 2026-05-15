@@ -10,6 +10,22 @@ from shimkit.cli import app
 from shimkit.tools.docker_clean import client
 from shimkit.tools.docker_clean.models import DockerDisk
 
+
+@pytest.fixture(autouse=True)
+def _bypass_version_preflight(monkeypatch: pytest.MonkeyPatch) -> None:
+    """`DockerCleanManager.boot()` (W7) preflights the docker version
+    constraint via `shutil.which`. macOS CI runners don't have docker
+    installed, so the preflight would exit 69 before the test's own
+    `client.get_client` / `_require_optional_extras` stubs are reached.
+    Bypass the preflight by default; tests that want to assert it fires
+    can re-enable it in their own monkeypatch scope.
+    """
+    monkeypatch.setattr(
+        "shimkit.core.version.preflight",
+        lambda tools, force=False, runner=None: None,
+    )
+
+
 # --- platform gate ---------------------------------------------------------
 
 
@@ -540,13 +556,7 @@ def test_docker_clean_compose_down_invokes_docker_compose(
     from shimkit.tools.docker_clean import client as client_mod
 
     monkeypatch.setattr(client_mod, "get_client", lambda: object())
-    # boot() now preflights `tools.versions.docker`; bypass the
-    # version-module check directly so the test stays focused on
-    # the compose-down argv assertion.
-    monkeypatch.setattr(
-        "shimkit.core.version.preflight",
-        lambda tools, force=False, runner=None: None,
-    )
+    # (preflight bypass handled by the module-level autouse fixture)
     captured: list[list[str]] = []
     monkeypatch.setattr(
         "shimkit.tools.docker_clean.manager.CommandRunner.run",
