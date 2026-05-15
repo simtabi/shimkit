@@ -15,6 +15,7 @@ import typer
 from shimkit import __version__
 from shimkit.core import UI
 from shimkit.tools.adguard.commands import adguard_app
+from shimkit.tools.db.commands import db_app
 from shimkit.tools.dns.commands import dns_app
 from shimkit.tools.docker_clean.commands import docker_clean_app
 from shimkit.tools.env.commands import env_app
@@ -25,6 +26,8 @@ from shimkit.tools.logs.commands import logs_app
 from shimkit.tools.ports.commands import ports_app
 from shimkit.tools.shell.commands import shell_app
 from shimkit.tools.ssh.commands import ssh_app
+from shimkit.tools.stack.commands import stack_app
+from shimkit.tools.web.commands import web_app
 
 app = typer.Typer(
     name="shimkit",
@@ -46,6 +49,9 @@ app.add_typer(ssh_app)
 app.add_typer(env_app)
 app.add_typer(gpg_app)
 app.add_typer(logs_app)
+app.add_typer(db_app)
+app.add_typer(stack_app)
+app.add_typer(web_app)
 
 
 # --- config -----------------------------------------------------------------
@@ -220,6 +226,37 @@ def doctor() -> None:
                 UI.line("docker         <not running>")
     except Exception as exc:
         UI.line(f"docker         ERROR — {exc}")
+
+    # --- version constraints audit ------------------------------------
+    from shimkit.core import version as _vc
+
+    UI.line("")
+    UI.line("versions")
+    for vr in _vc.validate_all():
+        name = vr.tool.ljust(10)
+        if vr.status is _vc.Status.OK:
+            ver = vr.tool_version.raw if vr.tool_version else "?"
+            UI.line(f"  {name} {ver.ljust(10)} ok")
+            continue
+        if vr.status is _vc.Status.OUT_OF_RANGE:
+            ver = vr.tool_version.raw if vr.tool_version else "?"
+            spec: list[str] = []
+            if vr.constraint.min:
+                spec.append(f"min={vr.constraint.min}")
+            if vr.constraint.max:
+                spec.append(f"max={vr.constraint.max}")
+            UI.line(f"  {name} {ver.ljust(10)} OUT-OF-RANGE  ({', '.join(spec)})")
+            if vr.remediation:
+                UI.dim(f"    → {vr.remediation}")
+            continue
+        if vr.status is _vc.Status.MISSING:
+            UI.line(f"  {name} <missing>  not on PATH")
+            if vr.remediation:
+                UI.dim(f"    → {vr.remediation}")
+            continue
+        if vr.status is _vc.Status.UNPARSEABLE:
+            raw = vr.tool_version.raw if vr.tool_version else "?"
+            UI.line(f"  {name} {raw.ljust(10)} UNPARSEABLE (output didn't match)")
 
 
 def _detect_shimkit_install_method() -> str | None:

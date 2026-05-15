@@ -45,8 +45,7 @@ class GpgManager:
         self._platform = Platform.detect()
         if not (self._platform.is_macos or self._platform.is_linux):
             UI.error(
-                "shimkit gpg targets macOS and Linux. "
-                f"Detected platform: {self._platform.system}."
+                f"shimkit gpg targets macOS and Linux. Detected platform: {self._platform.system}."
             )
             sys.exit(EX_UNAVAILABLE)
         if shutil.which("gpg") is None:
@@ -113,10 +112,7 @@ class GpgManager:
         cfg = get_config().tools.gpg
         ktype = key_type or cfg.default_key_type
         if ktype not in _KEY_TYPE_TO_GPG:
-            UI.error(
-                f"Unknown key type {ktype!r}. Allowed: "
-                f"{', '.join(sorted(_KEY_TYPE_TO_GPG))}."
-            )
+            UI.error(f"Unknown key type {ktype!r}. Allowed: {', '.join(sorted(_KEY_TYPE_TO_GPG))}.")
             return EX_FAIL
         gpg_alg = _KEY_TYPE_TO_GPG[ktype]
         uid = f"{name} <{email}>"
@@ -126,8 +122,8 @@ class GpgManager:
             "--quick-gen-key",
             "--batch",
             "--passphrase",
-            "",   # gpg requires --passphrase even when empty; user
-                  # supplies via TTY when prompted.
+            "",  # gpg requires --passphrase even when empty; user
+            # supplies via TTY when prompted.
             uid,
             gpg_alg,
             "sign",
@@ -194,8 +190,7 @@ class GpgManager:
     # ─── git-signing ───────────────────────────────────────────────────
 
     def git_signing_show(self, *, json_out: bool = False) -> int:
-        if shutil.which("git") is None:
-            UI.error("`git` not on PATH; nothing to inspect.")
+        if not _check_git_or_warn():
             return EX_UNAVAILABLE
         r = CommandRunner.run(
             ["git", "config", "--global", "--get-regexp", r"^(user|commit|gpg)\."]
@@ -230,8 +225,7 @@ class GpgManager:
         ``scope`` is ``"global"`` (default) or ``"local"`` (this repo
         only). Caller already prompted MODERATE-tier.
         """
-        if shutil.which("git") is None:
-            UI.error("`git` not on PATH.")
+        if not _check_git_or_warn():
             return EX_UNAVAILABLE
         if scope not in {"global", "local"}:
             UI.error(f"Unknown scope {scope!r}. Use 'global' or 'local'.")
@@ -283,3 +277,22 @@ class GpgManager:
             _LOG.warning("gpg --list-keys returned %s; stderr=%r", r.returncode, r.stderr)
             return []
         return _parser.parse_list_keys(r.stdout)
+
+
+def _check_git_or_warn() -> bool:
+    """Verify ``git`` is present. Surface the platform-specific
+    install hint from the version-constraint registry's remediation
+    table on failure so the UX matches the other tools.
+
+    Returns True iff git is present. ``git_signing_*`` only invokes
+    ``git config``; we don't enforce a version constraint here.
+    """
+    if shutil.which("git") is not None:
+        return True
+    from shimkit.core.version import _remediation_for
+
+    UI.error("`git` is not on PATH.")
+    hint = _remediation_for("git")
+    if hint:
+        UI.dim(f"  -> {hint}")
+    return False

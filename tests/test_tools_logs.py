@@ -26,9 +26,7 @@ def _force_linux(monkeypatch: pytest.MonkeyPatch) -> None:
         "detect",
         classmethod(lambda cls: Platform(system="Linux", machine="x86_64")),
     )
-    monkeypatch.setattr(
-        "shimkit.tools.logs.manager.shutil.which", lambda _: "/usr/bin/journalctl"
-    )
+    monkeypatch.setattr("shimkit.tools.logs.manager.shutil.which", lambda _: "/usr/bin/journalctl")
 
 
 def _force_macos(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -37,9 +35,7 @@ def _force_macos(monkeypatch: pytest.MonkeyPatch) -> None:
         "detect",
         classmethod(lambda cls: Platform(system="Darwin", machine="arm64")),
     )
-    monkeypatch.setattr(
-        "shimkit.tools.logs.manager.shutil.which", lambda _: "/usr/bin/log"
-    )
+    monkeypatch.setattr("shimkit.tools.logs.manager.shutil.which", lambda _: "/usr/bin/log")
 
 
 # ─── platform / binary gating ───────────────────────────────────────────
@@ -87,9 +83,7 @@ def test_logs_tail_emits_journalctl_argv_on_linux(
     runner: CliRunner, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _force_linux(monkeypatch)
-    result = runner.invoke(
-        app, ["logs", "tail", "--lines", "50", "--unit", "sshd", "--json"]
-    )
+    result = runner.invoke(app, ["logs", "tail", "--lines", "50", "--unit", "sshd", "--json"])
     assert result.exit_code == 0
     doc = json.loads(result.stdout)
     assert doc["data"]["platform"] == "Linux"
@@ -128,9 +122,7 @@ def test_logs_tail_predicate_passes_through_on_macos(
 ) -> None:
     _force_macos(monkeypatch)
     pred = 'process == "kernel"'
-    result = runner.invoke(
-        app, ["logs", "tail", "--predicate", pred, "--json"]
-    )
+    result = runner.invoke(app, ["logs", "tail", "--predicate", pred, "--json"])
     assert result.exit_code == 0
     doc = json.loads(result.stdout)
     args = doc["data"]["args"]
@@ -143,9 +135,7 @@ def test_logs_tail_predicate_becomes_grep_on_linux(
     runner: CliRunner, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _force_linux(monkeypatch)
-    result = runner.invoke(
-        app, ["logs", "tail", "--predicate", "ERROR", "--json"]
-    )
+    result = runner.invoke(app, ["logs", "tail", "--predicate", "ERROR", "--json"])
     assert result.exit_code == 0
     doc = json.loads(result.stdout)
     args = doc["data"]["args"]
@@ -162,9 +152,7 @@ def test_logs_tail_invokes_command_runner_in_non_json_mode(
         captured.append(list(cmd))
         return CommandResult(0, "", "")
 
-    monkeypatch.setattr(
-        "shimkit.tools.logs.manager.CommandRunner.run", staticmethod(fake_run)
-    )
+    monkeypatch.setattr("shimkit.tools.logs.manager.CommandRunner.run", staticmethod(fake_run))
     result = runner.invoke(app, ["logs", "tail"])
     assert result.exit_code == 0
     assert captured and captured[0][0] == "journalctl"
@@ -177,9 +165,7 @@ def test_logs_grep_uses_eventmessage_contains_on_macos(
     runner: CliRunner, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _force_macos(monkeypatch)
-    result = runner.invoke(
-        app, ["logs", "grep", "fooErr", "--since", "30m", "--json"]
-    )
+    result = runner.invoke(app, ["logs", "grep", "fooErr", "--since", "30m", "--json"])
     assert result.exit_code == 0
     doc = json.loads(result.stdout)
     args = doc["data"]["args"]
@@ -224,9 +210,7 @@ def test_logs_system_show_priority_maps_to_nspredicate_on_macos(
     runner: CliRunner, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _force_macos(monkeypatch)
-    result = runner.invoke(
-        app, ["logs", "system", "show", "--priority", "error", "--json"]
-    )
+    result = runner.invoke(app, ["logs", "system", "show", "--priority", "error", "--json"])
     assert result.exit_code == 0
     doc = json.loads(result.stdout)
     args = doc["data"]["args"]
@@ -238,9 +222,7 @@ def test_logs_system_show_priority_maps_to_minus_p_on_linux(
     runner: CliRunner, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _force_linux(monkeypatch)
-    result = runner.invoke(
-        app, ["logs", "system", "show", "--priority", "err", "--json"]
-    )
+    result = runner.invoke(app, ["logs", "system", "show", "--priority", "err", "--json"])
     assert result.exit_code == 0
     doc = json.loads(result.stdout)
     args = doc["data"]["args"]

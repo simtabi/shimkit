@@ -99,9 +99,7 @@ def keys_generate(
     code = (
         GpgManager.create()
         .boot()
-        .keys_generate(
-            name, email, key_type=key_type, expiry=expiry, dry_run=dry_run
-        )
+        .keys_generate(name, email, key_type=key_type, expiry=expiry, dry_run=dry_run)
     )
     raise typer.Exit(code)
 
@@ -109,9 +107,7 @@ def keys_generate(
 @keys_app.command("export")
 def keys_export(
     key_id: str = typer.Argument(..., help="Key ID, fingerprint, or UID substring."),
-    dest: str = typer.Option(
-        None, "--dest", help="Write to PATH instead of stdout."
-    ),
+    dest: str = typer.Option(None, "--dest", help="Write to PATH instead of stdout."),
     dry_run: bool = DRY_RUN,
 ) -> None:
     """Export an ASCII-armoured public key."""
@@ -139,9 +135,7 @@ def agent_status(json_out: bool = JSON_OUT) -> None:
 
 # ─── git-signing ──────────────────────────────────────────────────────
 
-git_signing_app = typer.Typer(
-    name="git-signing", help="Inspect / configure git commit signing."
-)
+git_signing_app = typer.Typer(name="git-signing", help="Inspect / configure git commit signing.")
 gpg_app.add_typer(git_signing_app)
 
 
@@ -177,9 +171,5 @@ def git_signing_configure(
     ):
         UI.info("Cancelled. Pass --yes to skip the prompt or rerun with --dry-run.")
         raise typer.Exit(1)
-    code = (
-        GpgManager.create()
-        .boot()
-        .git_signing_configure(key_id, scope=scope, dry_run=dry_run)
-    )
+    code = GpgManager.create().boot().git_signing_configure(key_id, scope=scope, dry_run=dry_run)
     raise typer.Exit(code)

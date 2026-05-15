@@ -35,6 +35,54 @@ pip install --user shimkit            # not yet — PyPI publishing pending
 brew install simtabi/tap/shimkit      # not yet — tap depends on PyPI
 ```
 
+## Version requirements
+
+shimkit shells out to a handful of external binaries (docker, git,
+gpg, nginx, ...). The minimum versions live in the JSON config
+under `tools.versions`:
+
+| Tool   | Minimum | Used by                                            |
+|--------|--------:|----------------------------------------------------|
+| docker | 20.10   | `docker-clean`, `db`, `stack`                      |
+| nginx  | 1.20    | `web nginx vhost apply` (host path)                |
+| git    | 2.30    | `gpg git-signing`                                  |
+| gpg    | 2.2     | `gpg keys / agent / git-signing`                   |
+| python | 3.10    | shimkit itself (enforced at install by `pyproject`)|
+
+A missing or out-of-range tool causes the relevant subcommand's
+`boot()` to exit with code **69 (EX_UNAVAILABLE)** and a
+platform-specific install hint (`brew install <pkg>` on macOS;
+`apt-get install <pkg>` on Linux).
+
+Check the live state with `shimkit doctor`:
+
+```
+$ shimkit doctor
+…
+versions
+  docker     28.5.2     ok
+  nginx      1.27.2     ok
+  git        2.51.0     ok
+  gpg        2.4.9      ok
+  python     3.12.7     ok
+```
+
+Override per-tool in `~/.config/shimkit/shimkit.json`:
+
+```json
+{
+  "tools": {
+    "versions": {
+      "docker": {"min": "24.0", "max": "<26.0"},
+      "nginx":  {"min": "1.18"}
+    }
+  }
+}
+```
+
+Full spec:
+[`.design/version-constraints-spec.md`](../.design/version-constraints-spec.md).
+
 ## Optional dependency extras
 
 The base `shimkit` install is lean. The `java` and `shell` tools work

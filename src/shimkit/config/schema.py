@@ -229,6 +229,102 @@ class HostsConfig(_StrictModel):
     managed_block_marker: str = "# === shimkit-managed ==="
 
 
+class LempConfig(_StrictModel):
+    """`shimkit stack lemp` — three-container LEMP recipe."""
+
+    nginx_image: str = "nginx:1.27-alpine"
+    php_fpm_image: str = "php:8.3-fpm"
+    default_port: int = Field(default=18080, ge=1, le=65535)
+    # One of `tools.db.engines.<engine>` — picks which DB to spin up.
+    default_db: str = "mysql"
+
+
+class StackConfig(_StrictModel):
+    """`shimkit stack *` — multi-container app recipes."""
+
+    default_project: str = "shimkit-dev"
+    lemp: LempConfig = Field(default_factory=LempConfig)
+
+
+class WebNginxConfig(_StrictModel):
+    """`shimkit web nginx` — vhost generator + (opt-in) host apply."""
+
+    sites_available_dir: str = "/etc/nginx/sites-available"
+    sites_enabled_dir: str = "/etc/nginx/sites-enabled"
+    reload_cmd: list[str] = Field(default_factory=lambda: ["nginx", "-s", "reload"])
+    apply_severe_token: str = "APPLY-VHOST"
+    remove_severe_token: str = "REMOVE-VHOST"
+    default_php_version: str = "8.3"
+    default_flavor: str = "static"
+    # Marker comment inserted at the top of generated vhost files so
+    # `vhost list` / `vhost remove` can identify shimkit-managed
+    # configs.
+    managed_marker: str = "# managed-by: shimkit"
+
+
+class WebConfig(_StrictModel):
+    """Parent for the `shimkit web *` family of tools."""
+
+    nginx: WebNginxConfig = Field(default_factory=WebNginxConfig)
+
+
+class DbEngineEntry(_StrictModel):
+    """Per-engine container settings — image + default port."""
+
+    image: str
+    default_port: int = Field(ge=1, le=65535)
+
+
+class DbConfig(_StrictModel):
+    """`shimkit db` — container-first database orchestration."""
+
+    default_volume_root: str = "~/.shimkit/data/db"
+    default_bind_host: str = "127.0.0.1"
+    default_id: str = "dev"
+    # Default password for the engine admin user. Used when --password
+    # isn't passed; the random-per-container path uses this as the
+    # fallback when secret-generation fails.
+    default_password: str = "shimkit-dev"
+    reset_severe_token: str = "RESET-DB"
+    engines: dict[str, DbEngineEntry] = Field(
+        default_factory=lambda: {
+            "mysql": DbEngineEntry(image="mysql:8.0", default_port=13306),
+            "mariadb": DbEngineEntry(image="mariadb:10.11", default_port=13307),
+            "postgres": DbEngineEntry(image="postgres:16", default_port=15432),
+            "mongo": DbEngineEntry(image="mongo:7", default_port=17017),
+            "phpmyadmin": DbEngineEntry(image="phpmyadmin:5", default_port=18080),
+        }
+    )
+
+
+class VersionConstraint(_StrictModel):
+    """User-declarable acceptable-range for one external tool.
+
+    `min` / `max` accept either a bare version (interpreted as `>=`
+    / `<=`) or an explicit specifier (e.g. ``"<25.0"``). `preferred`
+    is informational only.
+    """
+
+    min: str | None = None
+    max: str | None = None
+    preferred: str | None = None
+
+
+class VersionsConfig(_StrictModel):
+    """Per-tool version constraints. Every field optional.
+
+    Adding a new entry requires the detector also being registered in
+    :mod:`shimkit.core.version`; an entry without a detector is
+    silently ignored.
+    """
+
+    docker: VersionConstraint = Field(default_factory=VersionConstraint)
+    nginx: VersionConstraint = Field(default_factory=VersionConstraint)
+    git: VersionConstraint = Field(default_factory=VersionConstraint)
+    gpg: VersionConstraint = Field(default_factory=VersionConstraint)
+    python: VersionConstraint = Field(default_factory=VersionConstraint)
+
+
 class ToolsConfig(_StrictModel):
     java: JavaConfig
     shell: ShellToolConfig
@@ -241,6 +337,10 @@ class ToolsConfig(_StrictModel):
     env: EnvConfig = Field(default_factory=EnvConfig)
     gpg: GpgConfig = Field(default_factory=GpgConfig)
     logs: LogsConfig = Field(default_factory=LogsConfig)
+    db: DbConfig = Field(default_factory=DbConfig)
+    stack: StackConfig = Field(default_factory=StackConfig)
+    web: WebConfig = Field(default_factory=WebConfig)
+    versions: VersionsConfig = Field(default_factory=VersionsConfig)
 
 
 class PackageManagerEntry(_StrictModel):

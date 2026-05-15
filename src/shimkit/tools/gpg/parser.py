@@ -23,7 +23,7 @@ from .models import GpgKey
 
 # Map gpg's numeric algo IDs to friendly names. Reference: doc/DETAILS.
 _ALGO_NAMES: dict[int, str] = {
-    1: "rsa",     # rsa-encrypt-or-sign
+    1: "rsa",  # rsa-encrypt-or-sign
     17: "dsa",
     18: "ecdh",
     19: "ecdsa",

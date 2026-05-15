@@ -53,12 +53,8 @@ def _root(
 
 @logs_app.command("tail")
 def tail(
-    lines: int = typer.Option(
-        None, "--lines", "-n", min=1, max=100_000, help="Lines to show."
-    ),
-    follow: bool = typer.Option(
-        False, "--follow", "-f", help="Stream new entries as they arrive."
-    ),
+    lines: int = typer.Option(None, "--lines", "-n", min=1, max=100_000, help="Lines to show."),
+    follow: bool = typer.Option(False, "--follow", "-f", help="Stream new entries as they arrive."),
     predicate: str = typer.Option(
         None,
         "--predicate",
@@ -101,19 +97,13 @@ def grep_cmd(
         "--since",
         help="macOS: `--last` arg (e.g. `1h`, `30m`). Linux: journalctl `--since` (e.g. `1 hour ago`).",
     ),
-    unit: str = typer.Option(
-        None, "--unit", "-u", help="Linux only: filter to one systemd unit."
-    ),
+    unit: str = typer.Option(None, "--unit", "-u", help="Linux only: filter to one systemd unit."),
     json_out: bool = JSON_OUT,
 ) -> None:
     """Search log history for PATTERN."""
     from .manager import LogsManager
 
-    code = (
-        LogsManager.create()
-        .boot()
-        .grep(pattern, since=since, unit=unit, json_out=json_out)
-    )
+    code = LogsManager.create().boot().grep(pattern, since=since, unit=unit, json_out=json_out)
     raise typer.Exit(code)
 
 
@@ -132,17 +122,13 @@ def system_show(
             "Linux: journalctl priority arg (emerg|alert|crit|err|warning|notice|info|debug)."
         ),
     ),
-    lines: int = typer.Option(
-        None, "--lines", "-n", min=1, max=100_000
-    ),
+    lines: int = typer.Option(None, "--lines", "-n", min=1, max=100_000),
     json_out: bool = JSON_OUT,
 ) -> None:
     """Show recent system log lines filtered by priority."""
     from .manager import LogsManager
 
     code = (
-        LogsManager.create()
-        .boot()
-        .system_show(priority=priority, lines=lines, json_out=json_out)
+        LogsManager.create().boot().system_show(priority=priority, lines=lines, json_out=json_out)
     )
     raise typer.Exit(code)

@@ -53,12 +53,32 @@ class DockerCleanManager:
     def create(cls) -> DockerCleanManager:
         return cls()
 
-    def boot(self, *, require_daemon: bool = True) -> DockerCleanManager:
+    def boot(self, *, require_daemon: bool = True, force: bool = False) -> DockerCleanManager:
+        from shimkit.core import version as _vc
+
         self._platform = Platform.detect()
         if not (self._platform.is_macos or self._platform.is_linux):
             UI.error(f"shimkit docker-clean: unsupported platform {self._platform.system}.")
             sys.exit(EX_UNAVAILABLE)
         if not _require_optional_extras():
+            sys.exit(EX_UNAVAILABLE)
+        # Preflight the docker binary version constraint. Lifts the
+        # generic "not found" path to a structured remediation hint
+        # sourced from `tools.versions.docker` + the platform-specific
+        # install command.
+        try:
+            _vc.preflight(("docker",), force=force)
+        except _vc.VersionViolationError as exc:
+            for r in exc.results:
+                if r.status is _vc.Status.MISSING:
+                    UI.error("`docker` is not on PATH.")
+                elif r.status is _vc.Status.OUT_OF_RANGE and r.tool_version:
+                    UI.error(
+                        f"docker {r.tool_version.raw} is out of range — "
+                        f"shimkit docker-clean requires {r.constraint.min or '<any>'}+."
+                    )
+                if r.remediation:
+                    UI.dim(f"  → {r.remediation}")
             sys.exit(EX_UNAVAILABLE)
         self._client = client.get_client()
         if self._client is None and require_daemon:

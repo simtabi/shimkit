@@ -144,6 +144,48 @@
     "logs": {
       "default_lines": 100,
       "max_grep_lines": 5000
+    },
+    "db": {
+      "default_volume_root": "~/.shimkit/data/db",
+      "default_bind_host": "127.0.0.1",
+      "default_id": "dev",
+      "default_password": "shimkit-dev",
+      "reset_severe_token": "RESET-DB",
+      "engines": {
+        "mysql":      {"image": "mysql:8.0",     "default_port": 13306},
+        "mariadb":    {"image": "mariadb:10.11", "default_port": 13307},
+        "postgres":   {"image": "postgres:16",   "default_port": 15432},
+        "mongo":      {"image": "mongo:7",       "default_port": 17017},
+        "phpmyadmin": {"image": "phpmyadmin:5",  "default_port": 18080}
+      }
+    },
+    "stack": {
+      "default_project": "shimkit-dev",
+      "lemp": {
+        "nginx_image": "nginx:1.27-alpine",
+        "php_fpm_image": "php:8.3-fpm",
+        "default_port": 18080,
+        "default_db": "mysql"
+      }
+    },
+    "web": {
+      "nginx": {
+        "sites_available_dir": "/etc/nginx/sites-available",
+        "sites_enabled_dir": "/etc/nginx/sites-enabled",
+        "reload_cmd": ["nginx", "-s", "reload"],
+        "apply_severe_token": "APPLY-VHOST",
+        "remove_severe_token": "REMOVE-VHOST",
+        "default_php_version": "8.3",
+        "default_flavor": "static",
+        "managed_marker": "# managed-by: shimkit"
+      }
+    },
+    "versions": {
+      "docker": {"min": "20.10"},
+      "nginx":  {"min": "1.20"},
+      "git":    {"min": "2.30"},
+      "gpg":    {"min": "2.2"},
+      "python": {"min": "3.10", "preferred": "3.12"}
     }
   },
   "package_managers": {

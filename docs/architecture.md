@@ -4,6 +4,18 @@ shimkit is a collection of developer tools that share a small set of
 primitives. Every tool is built the same way: orchestrator class,
 non-interactive methods, optional menu loop, Typer commands.
 
+> **Deep reference.** This page is the quick tour. The
+> [`.design/`](../.design/) directory has the full architecture
+> documents:
+>
+> - [`architecture-current.md`](../.design/architecture-current.md) —
+>   pre-v0.5.0 snapshot.
+> - [`architecture-target.md`](../.design/architecture-target.md) —
+>   v0.5.0 layout with the new `db` / `stack` / `web` sub-trees and
+>   the two new core primitives (`core/version`, `core/docker`).
+> - [`version-constraints-spec.md`](../.design/version-constraints-spec.md) —
+>   how tool-version checks work.
+
 ## Layout
 
 ```

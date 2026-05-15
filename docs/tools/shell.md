@@ -175,3 +175,35 @@ pointing at `config.package_managers.preference_order`.
   apk / zypper in config order
 - **WSL** / Docker / LXC: same as native Linux
 - **Windows** (native): not supported
+
+## `shimkit shell colors` — 256-color palette diagnostic
+
+Read-only. Useful when a new terminal theme makes shimkit's help
+output illegible and you want to see what your terminal actually
+paints for each ANSI index.
+
+```bash
+shimkit shell colors            # render all 256 cells
+shimkit shell colors --json     # structured palette dump
+```
+
+Three sections:
+
+- **16** — the basic + bright ANSI colors (indices 0-15). Theme-
+  defined; the JSON dump returns `null` for `rgb`.
+- **216** — the 6x6x6 color cube (indices 16-231) with Xterm's
+  specified RGB steps `{0, 95, 135, 175, 215, 255}`.
+- **24** — the grayscale ramp (indices 232-255).
+
+`--json` returns one entry per index:
+
+```json
+{
+  "index": 16,
+  "section": "cube",
+  "rgb": [0, 0, 0]
+}
+```
+
+Implementation: `src/shimkit/tools/shell/colors.py`. Pure
+`shimkit.core.UI` output (no third-party deps).

@@ -25,9 +25,7 @@ _KNOWN_KEY_NAMES = (
     "id_dsa",
 )
 
-_AGENT_KEY_RE = re.compile(
-    r"^(?P<type>\S+)\s+(?P<key>\S+)(?:\s+(?P<comment>.+))?$"
-)
+_AGENT_KEY_RE = re.compile(r"^(?P<type>\S+)\s+(?P<key>\S+)(?:\s+(?P<comment>.+))?$")
 
 
 def list_keys(ssh_dir: Path) -> list[KeyEntry]:
@@ -46,12 +44,18 @@ def list_keys(ssh_dir: Path) -> list[KeyEntry]:
         if entry.suffix == ".pub":
             continue
         if entry.name in _KNOWN_KEY_NAMES or _looks_like_private_key(entry):
-            pub = entry.with_suffix(entry.suffix + ".pub") if entry.suffix else (
-                entry.parent / f"{entry.name}.pub"
+            pub = (
+                entry.with_suffix(entry.suffix + ".pub")
+                if entry.suffix
+                else (entry.parent / f"{entry.name}.pub")
             )
-            key_type, comment = _read_pub_metadata(pub) if pub.is_file() else (
-                _key_type_from_name(entry.name),
-                None,
+            key_type, comment = (
+                _read_pub_metadata(pub)
+                if pub.is_file()
+                else (
+                    _key_type_from_name(entry.name),
+                    None,
+                )
             )
             found.append(
                 KeyEntry(
