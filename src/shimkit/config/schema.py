@@ -163,6 +163,20 @@ class PortsConfig(_StrictModel):
     system_pid_threshold: int = Field(default=100, ge=1, le=65535)
 
 
+class HostsConfig(_StrictModel):
+    """/etc/hosts editor — `shimkit hosts`."""
+
+    hosts_path: str = "/etc/hosts"
+    apply_list_severe_token: str = "APPLY-LIST"
+    # Cap the size of a single `apply-list` call so a bad URL doesn't
+    # explode /etc/hosts. Tunable for power users who DO want huge
+    # ad-block lists; default is conservative.
+    max_entries_per_apply: int = Field(default=5000, ge=1, le=1_000_000)
+    # Marker we insert above shimkit-managed entries so future runs can
+    # find and update them without disturbing user-authored lines.
+    managed_block_marker: str = "# === shimkit-managed ==="
+
+
 class ToolsConfig(_StrictModel):
     java: JavaConfig
     shell: ShellToolConfig
@@ -170,6 +184,7 @@ class ToolsConfig(_StrictModel):
     adguard: AdGuardConfig = Field(default_factory=AdGuardConfig)
     docker_clean: DockerCleanConfig = Field(default_factory=DockerCleanConfig)
     ports: PortsConfig = Field(default_factory=PortsConfig)
+    hosts: HostsConfig = Field(default_factory=HostsConfig)
 
 
 class PackageManagerEntry(_StrictModel):

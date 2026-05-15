@@ -17,6 +17,7 @@ from shimkit.core import UI
 from shimkit.tools.adguard.commands import adguard_app
 from shimkit.tools.dns.commands import dns_app
 from shimkit.tools.docker_clean.commands import docker_clean_app
+from shimkit.tools.hosts.commands import hosts_app
 from shimkit.tools.java.commands import java_app
 from shimkit.tools.ports.commands import ports_app
 from shimkit.tools.shell.commands import shell_app
@@ -36,6 +37,7 @@ app.add_typer(dns_app)
 app.add_typer(adguard_app)
 app.add_typer(docker_clean_app)
 app.add_typer(ports_app)
+app.add_typer(hosts_app)
 
 
 # --- config -----------------------------------------------------------------

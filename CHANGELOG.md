@@ -18,6 +18,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   uses `CommandRunner` only. Adds 19 tests (parser fixtures for
   both `lsof -F pcnuP` and `ss -tulnpH` output, plus CLI/manager
   coverage). [`docs/tools/ports.md`](docs/tools/ports.md).
+- `shimkit hosts` — `/etc/hosts` editor with atomic-write +
+  timestamped backups. `show`, `add IP NAME`, `remove NAME`,
+  `block DOMAIN` / `unblock DOMAIN` aliases, `apply-list SOURCE`
+  (SEVERE — `--confirm APPLY-LIST`), `rollback`. Pure parser
+  (`editor.py`) is text-in/model-out and unit-testable; manager
+  follows the same `sudo install` → bind-mount-fallback pattern
+  as `adguard.resolv.write_resolv_static`. URL fetch via stdlib
+  `urllib.request` — no extra deps. Adds 20 tests (parser
+  round-trip, IP validator, idempotent add, severe-token gate,
+  cap enforcement, rollback restore).
+  [`docs/tools/hosts.md`](docs/tools/hosts.md).
 
 ## [0.2.3] — 2026-05-14
 

@@ -114,6 +114,12 @@
       "default_signal": "TERM",
       "init_pid_severe_token": "KILL-INIT",
       "system_pid_threshold": 100
+    },
+    "hosts": {
+      "hosts_path": "/etc/hosts",
+      "apply_list_severe_token": "APPLY-LIST",
+      "max_entries_per_apply": 5000,
+      "managed_block_marker": "# === shimkit-managed ==="
     }
   },
   "package_managers": {
