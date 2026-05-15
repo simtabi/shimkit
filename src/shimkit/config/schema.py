@@ -324,6 +324,7 @@ class VersionsConfig(_StrictModel):
     gpg: VersionConstraint = Field(default_factory=VersionConstraint)
     python: VersionConstraint = Field(default_factory=VersionConstraint)
     php: VersionConstraint = Field(default_factory=VersionConstraint)
+    openssl: VersionConstraint = Field(default_factory=VersionConstraint)
 
 
 class FrameworkLaravelConfig(_StrictModel):
@@ -348,6 +349,29 @@ class FrameworkConfig(_StrictModel):
     """Parent for the `shimkit framework *` family of tools."""
 
     laravel: FrameworkLaravelConfig = Field(default_factory=FrameworkLaravelConfig)
+
+
+class TlsConfig(_StrictModel):
+    """`shimkit tls` — TLS cert lifecycle via container-first certbot."""
+
+    # Volume root for /etc/letsencrypt content. Persists across renewals.
+    data_dir: str = "~/.shimkit/data/tls"
+    # Certbot image to run one-shot. Pin to a known-good version rather
+    # than `:latest` so a registry-side image change can't break renewals
+    # silently.
+    certbot_image: str = "certbot/certbot:v3.0.1"
+    # Default ACME challenge method. Only `webroot` is wired today;
+    # `dns-cloudflare` etc. land as opt-in extras in a later release.
+    default_method: Literal["webroot"] = "webroot"
+    # ACME account email. Required by Let's Encrypt for issuance unless
+    # `--register-unsafely-without-email` is passed (we don't expose
+    # that flag). User config overrides per-install.
+    default_email: str | None = None
+    # Default cron schedule for `tls cron-install`. 03:17 daily — well
+    # outside business hours and offset from on-the-hour cron herd.
+    renewal_schedule: str = "17 3 * * *"
+    # SEVERE-tier token for `tls revoke`.
+    revoke_severe_token: str = "REVOKE-TLS"
 
 
 class CronConfig(_StrictModel):
@@ -379,6 +403,7 @@ class ToolsConfig(_StrictModel):
     stack: StackConfig = Field(default_factory=StackConfig)
     web: WebConfig = Field(default_factory=WebConfig)
     cron: CronConfig = Field(default_factory=CronConfig)
+    tls: TlsConfig = Field(default_factory=TlsConfig)
     framework: FrameworkConfig = Field(default_factory=FrameworkConfig)
     versions: VersionsConfig = Field(default_factory=VersionsConfig)
 

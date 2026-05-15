@@ -20,6 +20,7 @@ shimkit
   db            Container-first databases (5 engines).
   stack         Multi-container app recipes (LEMP today).
   web           Web-server tooling (nginx vhost generator).
+  tls           TLS cert lifecycle via container-first certbot.
   framework     Framework-specific helpers (Laravel today).
   config        Inspect and edit shimkit configuration.
   doctor        Print system diagnostics useful for bug reports.
@@ -92,6 +93,11 @@ behaviour: [`docs/installation.md`](docs/installation.md).
   LEMP recipe (db + php-fpm + nginx). Bind-mounts `$cwd` at
   `/srv/app`. `up` / `down` / `status` / `logs` / `exec`. Multiple
   projects side-by-side via `--project`.
+- **[`shimkit tls`](docs/tools/tls.md)** — TLS cert lifecycle
+  helper via container-first certbot. `request` / `list` /
+  `status` / `renew` / `revoke` (SEVERE) / `cron-install`. State
+  persists under `~/.shimkit/data/tls/`; pair with `shimkit cron`
+  for daily renewals.
 - `shimkit shell colors` — 256-color ANSI palette diagnostic.
 
 ### Framework recipes
@@ -170,6 +176,7 @@ The repo root has the short version. The long version lives under
 | `shimkit db` deep-dive | [`docs/tools/db.md`](docs/tools/db.md) |
 | `shimkit stack` deep-dive | [`docs/tools/stack.md`](docs/tools/stack.md) |
 | `shimkit web nginx` deep-dive | [`docs/tools/web.md`](docs/tools/web.md) |
+| `shimkit tls` deep-dive | [`docs/tools/tls.md`](docs/tools/tls.md) |
 | `shimkit framework laravel` deep-dive | [`docs/tools/framework-laravel.md`](docs/tools/framework-laravel.md) |
 
 Project files:

@@ -6,6 +6,42 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-05-15
+
+### Added
+
+- `shimkit tls` — TLS cert lifecycle helper via container-first
+  certbot. Six commands: `request -d D [-d D2 ...] --email E
+  --webroot PATH [--staging]` (MODERATE — issuance via webroot
+  ACME challenge); `list [--json]` and `status DOMAIN [--json]`
+  (read-only enumeration with expiry parsing); `renew [-d
+  DOMAIN] [--force-renewal]` (MODERATE — defaults to all due);
+  `revoke -d DOMAIN --confirm REVOKE-TLS` (SEVERE); `cron-install
+  [--schedule S]` (MODERATE — installs daily `shimkit tls renew`
+  via `shimkit cron`). Replaces the ubuntu/ source script's
+  ad-hoc letsencrypt setup with a container-first lifecycle.
+  Persists `/etc/letsencrypt/` state at
+  `~/.shimkit/data/tls/etc-letsencrypt/` so account + cert
+  history survive container exits. Default image
+  `certbot/certbot:v3.0.1` (pinned, configurable). Cert expiry
+  parsed by shelling out to host `openssl x509 -enddate`;
+  `tools.versions.openssl` floor at `1.1`. Adds 48 tests (561 →
+  609 total). One of the deferred v0.5+ candidates from the
+  ubuntu migration's validation report. No new optional
+  dependency extras (reuses `[docker-clean]`'s `docker` package).
+  [`docs/tools/tls.md`](docs/tools/tls.md).
+
+### Changed
+
+- `core/docker.DockerEnv` gains `run_oneshot(image, command,
+  ...)` — detached-then-waited container run that captures exit
+  code + stdout + stderr and auto-removes the container on exit.
+  Used by `shimkit tls` for certbot invocations; available to
+  any future tool that needs one-shot container semantics.
+- `core/version.py` registers an `openssl` detector (parses both
+  `OpenSSL` and `LibreSSL` version strings — macOS ships
+  LibreSSL by default).
+
 ## [0.7.1] — 2026-05-15
 
 ### Fixed

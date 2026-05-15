@@ -185,6 +185,14 @@
       "backup_dir": "~/.shimkit/data/cron",
       "max_managed_entries": 200
     },
+    "tls": {
+      "data_dir": "~/.shimkit/data/tls",
+      "certbot_image": "certbot/certbot:v3.0.1",
+      "default_method": "webroot",
+      "default_email": null,
+      "renewal_schedule": "17 3 * * *",
+      "revoke_severe_token": "REVOKE-TLS"
+    },
     "framework": {
       "laravel": {
         "web_group": "www-data",
@@ -200,7 +208,8 @@
       "git":    {"min": "2.30"},
       "gpg":    {"min": "2.2"},
       "python": {"min": "3.10", "preferred": "3.12"},
-      "php":    {"min": "8.1"}
+      "php":    {"min": "8.1"},
+      "openssl":{"min": "1.1"}
     }
   },
   "package_managers": {

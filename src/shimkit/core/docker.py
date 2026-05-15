@@ -1,4 +1,4 @@
-"""``DockerEnv`` — shimkit's single chokepoint for the docker-py SDK.
+"""DockerEnv -- shimkit's single chokepoint for the docker-py SDK.
 
 Tools that need to drive containers (`shimkit db`, `shimkit stack`,
 and eventually `shimkit docker-clean` when it migrates) go through
@@ -30,6 +30,7 @@ Examples
 
 from __future__ import annotations
 
+import contextlib
 import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -232,6 +233,61 @@ class DockerEnv:
             return False
         c.remove(force=force)
         return True
+
+    def run_oneshot(
+        self,
+        image: str,
+        *,
+        command: list[str],
+        name: str | None = None,
+        env: Mapping[str, str] | None = None,
+        volumes: Mapping[str, Mapping[str, str]] | None = None,
+        labels: Mapping[str, str] | None = None,
+        wait_timeout: int = 600,
+    ) -> ExecOutcome:
+        """Run a container to completion and return its outcome.
+
+        Detached + waited rather than ``detach=False`` so we get both the
+        exit code and demuxed stdout/stderr — `containers.run(detach=False)`
+        returns a single bytes blob and raises ContainerError on non-zero
+        exit, which is harder to surface cleanly to UI.
+
+        The container is removed on exit (success or failure) so a long
+        loop of one-shots doesn't accumulate dead containers. Image-pull
+        is implicit — docker-py pulls if the image isn't local.
+        """
+        from docker.errors import APIError, ImageNotFound
+
+        labels_full = {**(labels or {}), "shimkit.tool": _scope_from(name or "")}
+        try:
+            c = self.client.containers.run(
+                image,
+                command=command,
+                name=name,
+                detach=True,
+                environment=dict(env) if env else None,
+                volumes={k: dict(v) for k, v in volumes.items()} if volumes else None,
+                labels=labels_full,
+            )
+        except ImageNotFound:
+            return ExecOutcome(exit_code=125, stdout="", stderr=f"image not found: {image}")
+        except APIError as exc:
+            return ExecOutcome(exit_code=125, stdout="", stderr=str(exc))
+
+        try:
+            result = c.wait(timeout=wait_timeout)
+            exit_code = int(result.get("StatusCode", 1)) if isinstance(result, dict) else 1
+            stdout_b = c.logs(stdout=True, stderr=False) or b""
+            stderr_b = c.logs(stdout=False, stderr=True) or b""
+        finally:
+            with contextlib.suppress(APIError):
+                c.remove(force=True)
+
+        return ExecOutcome(
+            exit_code=exit_code,
+            stdout=stdout_b.decode("utf-8", errors="replace"),
+            stderr=stderr_b.decode("utf-8", errors="replace"),
+        )
 
     def exec(
         self,

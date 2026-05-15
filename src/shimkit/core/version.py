@@ -210,6 +210,12 @@ _DETECTORS: dict[str, Detector] = {
         # `php -v` first line: "PHP 8.3.10 (cli) (built: ...)"
         parse=lambda out, _err: _re_match(r"^PHP ([\d.]+)", out),
     ),
+    "openssl": Detector(
+        argv=["openssl", "version"],
+        # `openssl version`: "OpenSSL 3.2.1 30 Jan 2024 (Library: OpenSSL 3.2.1 30 Jan 2024)"
+        # LibreSSL on macOS: "LibreSSL 3.3.6" (no "OpenSSL" prefix)
+        parse=lambda out, _err: _re_match(r"(?:Open|Libre)SSL ([\d.]+)", out),
+    ),
 }
 
 
@@ -390,5 +396,9 @@ _REMEDIATION_TABLE: dict[str, dict[str, str]] = {
     "php": {
         "macos": "brew install php",
         "linux": "apt-get install php-cli  # or distro equivalent",
+    },
+    "openssl": {
+        "macos": "openssl ships with macOS (LibreSSL); `brew install openssl@3` for the OpenSSL build",
+        "linux": "apt-get install openssl  # or distro equivalent",
     },
 }

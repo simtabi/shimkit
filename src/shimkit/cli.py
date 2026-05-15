@@ -29,6 +29,7 @@ from shimkit.tools.ports.commands import ports_app
 from shimkit.tools.shell.commands import shell_app
 from shimkit.tools.ssh.commands import ssh_app
 from shimkit.tools.stack.commands import stack_app
+from shimkit.tools.tls.commands import tls_app
 from shimkit.tools.web.commands import web_app
 
 app = typer.Typer(
@@ -55,6 +56,7 @@ app.add_typer(db_app)
 app.add_typer(stack_app)
 app.add_typer(web_app)
 app.add_typer(cron_app)
+app.add_typer(tls_app)
 app.add_typer(framework_app)
 
 
