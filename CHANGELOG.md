@@ -6,6 +6,48 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.12.0] — 2026-05-15
+
+### Changed
+
+- `docs/shipping-checklist.md` — refreshed to reflect post-v0.11.0
+  state. Was stuck at v0.1.0 references; now tracks the current
+  blockers (Phase 2.4 `pypi` GitHub Environment + Phase 4.1/4.2
+  PyPI trusted-publisher) and marks completed items including
+  v0.10.0's coverage push and v0.12.0's codecov + attestation
+  additions. Phase 3 (Homebrew tap) explicitly marked abandoned.
+- `docs/plans/known-issues.md` — removed two entries now resolved:
+  the v0.2.0 "coverage gap to 85%" (hit in v0.10.0) and the
+  "Optional: gh attestation verify smoke test" (added to
+  release.yml in this release).
+- `.design/plans/validation-report.md` — "Follow-up TODOs
+  (post-v0.5.0)" rewritten as a closeout showing every item now
+  shipped (cron → v0.6, framework laravel → v0.7, tls → v0.8,
+  `--on-host` for db → v0.9, coverage → v0.10).
+- `docs/README.md` Tools section — expanded from 5 listed tools to
+  all 18 currently shipped, grouped into host tools / server-class
+  (Docker-first) / framework recipes.
+
+### Added
+
+- `.github/workflows/ci.yml` uploads coverage to codecov.io
+  (`codecov/codecov-action@v5`). Only the Ubuntu 3.12 cell uploads
+  to avoid double-counting; OIDC token-less upload for public
+  repos. Coverage floor raised from 65% to 80%.
+- `.github/workflows/release.yml` `verify-attestation` job —
+  downloads the published wheel + sdist after `github-release` and
+  runs `gh attestation verify` against each. Catches a
+  misconfiguration of the publish flow. Documented as optional in
+  known-issues.md before v0.12.0; tracked there with a "low
+  priority" tag.
+
+### Notes
+
+Doc-only release plus two small CI additions. No source code
+changes. CI floor moved from 65% to 80% because we're at 85% line
+coverage as of v0.10.0; 80% leaves margin for platform-gated test
+skips on macOS / Python-version cells.
+
 ## [0.11.0] — 2026-05-15
 
 ### Added

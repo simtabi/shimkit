@@ -122,19 +122,22 @@ dissolve under the Docker-first redesign:
 - C5 (`curl ... | sudo bash`) — N/A; node lives inside the
   php/node official images.
 
-### Follow-up TODOs (post-v0.5.0)
+### Follow-up TODOs (post-v0.5.0) — all shipped
 
-- **v0.6.x** `shimkit tls / certbot` — TLS issuance with DNS-01
-  challenge for container mode.
-- **v0.6.x** `shimkit cron add/list/remove` — generic, not
-  Laravel-shaped.
-- **v0.6.x** `shimkit framework laravel` — Laravel-specific
-  helpers (`perms`, `.env` scaffolder, artisan wrappers).
-- **v0.7.x** `--on-host` mode for `db` / `stack` — explicit opt-in
-  paths that re-implement the apt-install paths SAFELY (apparmor
-  preserved, bind-address sane, modern `signed-by` repos).
-- **deferred** Coverage push toward 85% (currently 67%); not a
-  v0.5.0 blocker per `docs/plans/known-issues.md`.
+Closeout note added in v0.12.0:
+
+- ✅ **v0.6.0** `shimkit cron add/list/remove` — generic
+  user-crontab editor. [Release notes](../../docs/release-notes/v0.6.0.md).
+- ✅ **v0.7.0** / v0.7.1 `shimkit framework laravel` — `perms` /
+  `env` / `cron-install` / `artisan`.
+  [Release notes](../../docs/release-notes/v0.7.0.md).
+- ✅ **v0.8.0** `shimkit tls / certbot` — webroot DNS-01 deferred
+  to v0.13.0. [Release notes](../../docs/release-notes/v0.8.0.md).
+- ✅ **v0.9.0** `--on-host` mode for `db`. Not for `stack` — that
+  recipe is intrinsically multi-container.
+  [Release notes](../../docs/release-notes/v0.9.0.md).
+- ✅ **v0.10.0** Coverage push 74% → 85% (+397 tests).
+  [Release notes](../../docs/release-notes/v0.10.0.md).
 
 ## Phase 7 plan (gated on approval)
 

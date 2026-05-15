@@ -32,7 +32,22 @@ jobs:
       - name: Type-check
         run: mypy src/shimkit
       - name: Tests
-        run: pytest -q --cov=shimkit --cov-report=term --cov-fail-under=65
+        run: |
+          pytest -q --cov=shimkit \
+            --cov-report=term \
+            --cov-report=xml:coverage.xml \
+            --cov-fail-under=80
+      - name: Upload coverage to Codecov
+        # Only upload from one matrix cell to avoid double-counting.
+        # Ubuntu 3.12 is the canonical row; macOS / other Pythons
+        # produce identical coverage modulo platform-gated tests.
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.xml
+          flags: unit
+          # Public repos use OIDC token-less upload; no secret required.
+          fail_ci_if_error: false
 
   security:
     runs-on: ubuntu-latest

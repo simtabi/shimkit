@@ -114,41 +114,6 @@ issue with the `nmcli general info` output and the contents of
 
 ---
 
-## Coverage gap to 85% — deferred
-
-**Current:** 66% line coverage (CI floor 65%).
-**Target:** 85% (per the v0.2.0 brief).
-**Gap:** ~19 percentage points, mostly in:
-
-- Interactive `Manager.run()` menu loops (`tools/{java,shell,dns,adguard,docker_clean}/manager.py`) — questionary-based, hard to test without deep `Menu` mocking that breaks when the menu UX evolves.
-- Destructive code paths (`step_nuclear` in `dns/fixer.py`) — by design
-  exercised only in manual smoke.
-- The full `adguard fix` mutating path on real `/etc/*` — covered by
-  the `adguard-mutating-integration` CI job, not by unit tests.
-
-Pushing closer to 85% means ~80–100 mock-heavy tests of declining
-marginal value. Recommend revisiting if `v0.3.0` adds significant
-new logic in the affected paths.
-
----
-
-## Optional: `gh attestation verify` smoke test
-
-The release workflow signs the wheel and sdist with
-`actions/attest-build-provenance@v3`. We don't currently have a CI
-job that **verifies** those attestations after publish (the action
-publishes them; nothing reads them back).
-
-Low priority — Sigstore's transparency log is the authoritative
-record. A post-publish verify job would catch a misconfiguration of
-the publish flow, but the bug shape is rare.
-
-If added: a `verify-release` job that runs after `github-release`,
-fetching the published artifacts and running `gh attestation verify`
-against them.
-
----
-
 ## Lifecycle of this file
 
 Entries land here when:

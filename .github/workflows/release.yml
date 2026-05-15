@@ -135,3 +135,39 @@ jobs:
             dist/*.whl
             dist/*.tar.gz
             dist/shimkit-sbom.spdx.json
+
+  # Smoke-verify the attestation on the published artifacts. This
+  # catches a misconfiguration of the publish flow — `actions/attest-
+  # build-provenance` publishes attestations to Sigstore's
+  # transparency log; this job reads them back via `gh attestation
+  # verify` and asserts they match the artifacts attached to the
+  # release. Tracked as optional in known-issues.md before v0.12.0.
+  verify-attestation:
+    needs: github-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      attestations: read
+    steps:
+      - uses: actions/checkout@v6
+      - name: Download release artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p dist
+          gh release download "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern '*.whl' \
+            --pattern '*.tar.gz' \
+            --dir dist/
+          ls -la dist/
+      - name: Verify attestation on wheel + sdist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for artifact in dist/*.whl dist/*.tar.gz; do
+            echo "::group::Verify $artifact"
+            gh attestation verify "$artifact" \
+              --owner "${GITHUB_REPOSITORY%%/*}"
+            echo "::endgroup::"
+          done

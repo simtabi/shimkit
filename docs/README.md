@@ -24,9 +24,37 @@ shimkit is a collection. Each tool gets its own page:
   fixer (Linux). API-first, ruamel.yaml fallback.
 - **[`shimkit docker-clean`](tools/docker-clean.md)** — Docker resource
   cleanup (Linux + macOS + WSL). docker-py SDK + buildx-aware prune.
+- **[`shimkit ports`](tools/ports.md)** — TCP/UDP port owner lookup +
+  kill. lsof on macOS, ss on Linux.
+- **[`shimkit hosts`](tools/hosts.md)** — `/etc/hosts` editor with
+  atomic write + timestamped backups.
+- **[`shimkit ssh`](tools/ssh.md)** — SSH key + agent + known_hosts
+  + perms hygiene.
+- **[`shimkit env`](tools/env.md)** — `.env` viewer + scaffolder
+  with default-deny secret redaction.
+- **[`shimkit gpg`](tools/gpg.md)** — GPG key + git-signing hygiene.
+- **[`shimkit logs`](tools/logs.md)** — System log tail / grep
+  (macOS `log show`, Linux `journalctl`). Read-only.
+- **[`shimkit cron`](tools/cron.md)** — User-crontab editor. Atomic
+  write + backup-on-mutate; only touches shimkit-marker-tagged
+  entries.
+
+### Server-class tools (Docker-first; opt-in to host install)
+
+- **[`shimkit db`](tools/db.md)** — Container-first databases
+  (mysql/mariadb/postgres/mongo/phpmyadmin). `--on-host` mode for
+  mysql/mariadb/postgres manages existing host installs.
+- **[`shimkit stack lemp`](tools/stack.md)** — Three-container LEMP
+  recipe (db + php-fpm + nginx). Bind-mounts `$cwd` at `/srv/app`.
+- **[`shimkit web nginx vhost`](tools/web.md)** — Hardened nginx
+  vhost generator. File-only by default; `apply` and `remove` are
+  SEVERE-tier.
 - **[`shimkit tls`](tools/tls.md)** — TLS cert lifecycle via
   container-first certbot. request / list / status / renew /
   revoke (SEVERE) / cron-install.
+
+### Framework recipes
+
 - **[`shimkit framework laravel`](tools/framework-laravel.md)** —
   Laravel helpers: perms, `.env` scaffold, scheduler cron-install,
   artisan passthrough (host or LEMP container).
@@ -63,6 +91,10 @@ Top-level utilities (not tools):
 
 Per-version, user-facing summaries (newest first):
 
+- **[`v0.12.0`](release-notes/v0.12.0.md)** — stale-doc cleanup +
+  codecov upload + `gh attestation verify` smoke. No code changes.
+- **[`v0.11.0`](release-notes/v0.11.0.md)** — docs consolidation +
+  PyPI workflow restored. No code changes.
 - **[`v0.10.0`](release-notes/v0.10.0.md)** — coverage push 74% → 85%
   (+397 tests). No code changes.
 - **[`v0.9.0`](release-notes/v0.9.0.md)** — `shimkit db --on-host`
