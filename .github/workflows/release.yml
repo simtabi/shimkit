@@ -74,13 +74,50 @@ jobs:
           name: dist
           path: dist/
 
-  # PyPI publishing is deliberately disabled. Distribution for v0.2.x
-  # is via the GitHub Release page's wheel + sdist. To re-enable PyPI,
-  # restore the publish-pypi + bump-homebrew-tap jobs from git history
-  # and configure trusted publishing at
-  # https://pypi.org/manage/account/publishing/ (Owner=simtabi,
-  # Repository=shimkit, Workflow=release.yml, Environment=pypi,
-  # PyPI Project Name=shimkit).
+  # PyPI publishing — restored in v0.11.0 after sitting deferred from
+  # v0.5.0 through v0.10.0 (six releases shipped to GitHub Releases
+  # only). The job runs in the `pypi` GitHub Environment so trusted
+  # publishing (OIDC) can sign the upload without long-lived tokens.
+  #
+  # PREREQUISITES (one-time, on the user's side):
+  #   1. https://pypi.org/manage/account/publishing/ → add a pending
+  #      publisher: Owner=simtabi, Repository=shimkit,
+  #      Workflow=release.yml, Environment=pypi,
+  #      PyPI Project Name=shimkit
+  #   2. GitHub repo Settings → Environments → New environment "pypi".
+  #      No secrets required; OIDC provides credentials at runtime.
+  #
+  # If either step is missing the upload fails with `invalid-publisher`.
+  # See docs/release.md for the full restoration recipe.
+  publish-pypi:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - name: Stage wheel + sdist only for PyPI
+        # The SBOM lives in dist/ for GitHub Release upload but PyPI
+        # rejects unknown artifacts. Copy just *.whl + *.tar.gz into
+        # a separate dir.
+        run: |
+          mkdir -p dist-pypi
+          cp dist/*.whl dist-pypi/
+          cp dist/*.tar.gz dist-pypi/
+          ls -la dist-pypi/
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist-pypi/
+          # We already attest provenance in the build job above.
+          attestations: false
+          # Re-runs against an existing tag (workflow_dispatch path)
+          # would otherwise fail when the version is already on PyPI.
+          skip-existing: true
 
   github-release:
     needs: build

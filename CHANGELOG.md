@@ -6,6 +6,41 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.11.0] — 2026-05-15
+
+### Added
+
+- `docs/release-notes/v0.5.0.md` through `v0.10.0.md` — per-version
+  user-facing release notes. Previously only v0.2.0 had one.
+  v0.7.1 has a thin stub pointing at v0.7.0.
+- `docs/release.md` — PyPI trusted-publisher setup section
+  (one-time, by a maintainer with PyPI write access).
+
+### Changed
+
+- `.github/workflows/release.yml` — restored the `publish-pypi`
+  job using `pypa/gh-action-pypi-publish` with OIDC trusted
+  publishing. Runs in parallel with `github-release` after `build`
+  so a PyPI outage doesn't block the GitHub Release. Stages
+  wheel + sdist into `dist-pypi/` so the SBOM JSON (which PyPI
+  rejects) stays out of the upload.
+- `docs/architecture.md` — extended the `core/` directory listing
+  with `docker.py`, `host_service.py`, `version.py` (added across
+  v0.5-v0.9). Extended the `tools/` listing with the eight new
+  tools shipped since v0.4. Added an "Adding a new tool" guidance
+  block: which primitive to reach for by tool kind, sub-app
+  parent convention (framework laravel, web nginx).
+- `docs/README.md` — release-notes index lists v0.10 → v0.5.0
+  newest-first plus the v0.7.1 patch.
+
+### Notes
+
+This is a **doc-only release**. No source code changes. PyPI
+publishing for v0.11.0 itself requires the user to complete the
+trusted-publisher setup on PyPI first (see `docs/release.md`);
+the workflow will succeed for `github-release` and fail at
+`publish-pypi` with `invalid-publisher` otherwise.
+
 ## [0.10.0] — 2026-05-15
 
 ### Tests

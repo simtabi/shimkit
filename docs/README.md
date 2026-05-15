@@ -61,8 +61,27 @@ Top-level utilities (not tools):
 
 ## Release notes
 
-Per-version, user-facing summaries:
+Per-version, user-facing summaries (newest first):
 
+- **[`v0.10.0`](release-notes/v0.10.0.md)** — coverage push 74% → 85%
+  (+397 tests). No code changes.
+- **[`v0.9.0`](release-notes/v0.9.0.md)** — `shimkit db --on-host`
+  for mysql/mariadb/postgres. Manages existing host installs;
+  refuses to install packages (the audit-completion bit).
+- **[`v0.8.0`](release-notes/v0.8.0.md)** — `shimkit tls` (certbot
+  container-first cert lifecycle). State at
+  `~/.shimkit/data/tls/`; webroot ACME; daily renewal cron.
+- **[`v0.7.1`](release-notes/v0.7.1.md)** — version-drift recovery
+  for v0.7.0.
+- **[`v0.7.0`](release-notes/v0.7.0.md)** — `shimkit framework
+  laravel` (perms / env / cron-install / artisan). First framework
+  recipe under the new `framework` parent.
+- **[`v0.6.0`](release-notes/v0.6.0.md)** — `shimkit cron` (generic
+  user-crontab editor). Atomic write + backup-on-mutate.
+- **[`v0.5.0`](release-notes/v0.5.0.md)** — ubuntu/ migration:
+  three new sub-trees (`db`/`stack`/`web`), two new core
+  primitives (`core/docker`, `core/version`), 152 new tests. Five
+  Critical audit flags dissolved by Docker-first design.
 - **[`v0.2.0`](release-notes/v0.2.0.md)** — three new tools (`dns`,
   `adguard`, `docker-clean`); uniform CLI surface across all new
   subcommands; argv-list PM templates; container hardening + SBOM

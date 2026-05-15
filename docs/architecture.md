@@ -12,7 +12,9 @@ non-interactive methods, optional menu loop, Typer commands.
 >   pre-v0.5.0 snapshot.
 > - [`architecture-target.md`](../.design/architecture-target.md) —
 >   v0.5.0 layout with the new `db` / `stack` / `web` sub-trees and
->   the two new core primitives (`core/version`, `core/docker`).
+>   two new core primitives (`core/version`, `core/docker`). v0.6+
+>   additions (cron, framework, tls, host_service) follow the same
+>   patterns and slot into the same tree.
 > - [`version-constraints-spec.md`](../.design/version-constraints-spec.md) —
 >   how tool-version checks work.
 
@@ -46,12 +48,41 @@ src/shimkit/
     cli_flags.py      Shared Typer Option defaults so every tool's
                       subcommands have identical --dry-run/--json/
                       --quiet/--verbose/--log-file/--timeout semantics
+    docker.py         DockerEnv — single chokepoint for the docker-py
+                      SDK. Standardises container naming
+                      (shimkit-<scope>-<kind>-<id>) + volume layout.
+                      Refuses deletion outside ~/.shimkit/data/.
+                      Added in v0.5.0; gained run_oneshot() in v0.8.0.
+    host_service.py   HostService — cross-platform service-manager
+                      facade. SystemdHost (Linux) + BrewServicesHost
+                      (macOS). Added in v0.9.0 for `shimkit db
+                      --on-host`; available to any future tool that
+                      manages host daemons.
+    version.py        Tool-version detection + constraint enforcement.
+                      One source of truth (tools.versions registry)
+                      consulted at three points: install docs, runtime
+                      preflight, `shimkit doctor`. Eight built-in
+                      detectors: docker, nginx, git, gpg, python,
+                      php (v0.7), openssl (v0.8).
   tools/
     java/             OpenJDK manager (macOS + Linux)
-    shell/            Shell upgrader (bash/zsh/fish/ksh)
+    shell/            Shell upgrader (bash/zsh/fish/ksh) + colors
     dns/              macOS DNS resolver recovery (port of fixdns.sh)
     adguard/          AdGuard Home port-conflict fixer (Linux)
     docker_clean/     Docker resource cleanup (Linux + macOS + WSL)
+    ports/            TCP/UDP port owner lookup + kill (v0.3.0)
+    hosts/            /etc/hosts editor with atomic write (v0.3.0)
+    ssh/              SSH keys + agent + perms hygiene (v0.3.0)
+    env/              .env viewer + scaffolder, secret redaction (v0.4.0)
+    gpg/              GPG keys + git-signing config (v0.4.0)
+    logs/             System log tail/grep (macOS + Linux) (v0.4.0)
+    db/               Container-first databases (5 engines) (v0.5.0)
+                      + --on-host mode (v0.9.0)
+    stack/            Multi-container app recipes (LEMP today) (v0.5.0)
+    web/nginx/        Hardened nginx vhost generator (v0.5.0)
+    cron/             Generic user-crontab editor (v0.6.0)
+    tls/              TLS cert lifecycle via certbot container (v0.8.0)
+    framework/        Framework-specific helpers (Laravel today) (v0.7.0)
 ```
 
 ## The five load-bearing rules
@@ -220,6 +251,37 @@ ShimkitConfig instance (frozen pydantic v2)
    - CLI `--help` lists subcommands
    - At least one subcommand's exit-code contract
 5. Add `docs/tools/<name>.md` and link it from `docs/README.md`.
+6. Add a CHANGELOG entry under `[Unreleased]`.
+
+### Choosing the right primitives
+
+By tool kind:
+
+| Tool kind | Use |
+|-----------|-----|
+| Pure host shell-outs | `CommandRunner` + `Platform` (java, shell, dns) |
+| Container orchestration | `DockerEnv` + `Platform`, preflight via `version.preflight(("docker",))` (db, stack, web, tls) |
+| Manages a host daemon | `HostService.detect(platform)` (db --on-host) |
+| Reads/writes a system file | atomic-write pattern: tempfile + `sudo install`, with a backup-on-mutate sidecar (hosts, web/nginx vhost apply, cron) |
+| Wraps another shimkit tool | Import its `Manager` directly (framework laravel cron-install → cron) |
+
+### Sub-app parents
+
+Some tools have a sub-app parent (e.g. `framework laravel`, `web
+nginx vhost`). The convention:
+
+```
+tools/<parent>/
+  __init__.py
+  commands.py       Parent Typer app — registers children
+  <child>/
+    __init__.py
+    manager.py
+    commands.py     Child Typer app
+```
+
+Sub-apps inherit the same five rules. Each child remains independently
+testable, and the parent is mostly a Typer-glue file.
 
 A tool joins shimkit only if it shares ≥ 2 of `Platform` / `Shell` /
 `PackageManager` / `UI` / `Menu`. Otherwise it's a separate package.

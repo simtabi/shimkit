@@ -3,12 +3,16 @@
 Releases are **tag-driven**. Push a `vX.Y.Z` tag, GitHub Actions does
 the rest.
 
-> **Current channels (as of v0.2.2):** GHCR container + GitHub
-> Release wheel. PyPI publishing is **deferred** — the
-> `publish-pypi` and `bump-homebrew-tap` jobs are removed from
-> `release.yml`. The "Phase 4 · PyPI" section of
-> [`shipping-checklist.md`](shipping-checklist.md) documents how to
-> re-enable them.
+> **Current channels (as of v0.11.0):** GitHub Release wheel + sdist
+> + SBOM, AND PyPI (when the trusted-publisher config below is in
+> place). PyPI publishing was deferred between v0.5.0 and v0.10.0
+> and restored in v0.11.0; the first PyPI upload happens on the
+> next tag after the trusted-publisher prerequisites are in place.
+>
+> The Homebrew tap path and the GHCR container were removed
+> earlier — Homebrew tap is in `shipping-checklist.md` Phase 5
+> if anyone wants to re-add it; the GHCR container was always
+> meant as a testing artifact, not a distribution channel.
 
 For the one-time PyPI / npm / Docker setup (trusted publishers,
 environments, tokens), this repo follows the standard
@@ -55,6 +59,7 @@ push tag v*
     ▼
 ┌── guard ──────────────────────────────────────────────────────┐
 │  tag matches pyproject.toml::project.version?                 │
+│  CHANGELOG has [X.Y.Z] or [Unreleased] section?               │
 │  fail with annotation otherwise                               │
 └───────────────────────────────────────────────────────────────┘
     │
@@ -65,18 +70,48 @@ push tag v*
 │  actions/attest-build-provenance over the wheel + sdist      │
 │  upload artifact: dist/                                      │
 └───────────────────────────────────────────────────────────────┘
+    │       │
+    │       └──► publish-pypi ──── trusted-publishing (OIDC)
+    │                              upload wheel + sdist to PyPI
+    │                              (skip-existing: true for reruns)
     │
-    └──► github-release ─── creates the GH Release with wheel +
-                            sdist + SBOM attached.
+    └──► github-release ────────── create the GH Release with
+                                   wheel + sdist + SBOM attached.
 ```
 
-As of v0.2.2 the release pipeline ships **only** the GitHub Release
-artifact set. The `publish-pypi`, `publish-ghcr`, and
-`bump-homebrew-tap` jobs that previously fanned out from `build`
-were removed: PyPI publishing is deferred ([Phase 4 of
-shipping-checklist.md](shipping-checklist.md)), and the GHCR /
-Dockerfile path was always meant as a testing artifact rather than
-a distribution channel (see `prompt.md`'s install-method list).
+`publish-pypi` and `github-release` run in parallel after `build`
+— a PyPI outage doesn't block the GitHub Release upload, and vice
+versa.
+
+### PyPI trusted-publisher setup
+
+Required once per project, by a maintainer with PyPI write access:
+
+1. **PyPI side** — log in, then visit
+   <https://pypi.org/manage/account/publishing/> and add a pending
+   publisher with:
+
+   | Field | Value |
+   |-------|-------|
+   | PyPI Project Name | `shimkit` |
+   | Owner | `simtabi` |
+   | Repository name | `shimkit` |
+   | Workflow filename | `release.yml` |
+   | Environment name | `pypi` |
+
+2. **GitHub side** — Settings → Environments → New environment
+   named `pypi`. No secrets required; OIDC provides credentials
+   at runtime. Optionally add a Required Reviewer rule if you
+   want a human gate before the upload.
+
+3. **First release after setup** — tag and push as normal. The
+   `publish-pypi` job will pick up the trusted-publisher config
+   automatically.
+
+If either side is missing, the workflow fails at the `publish-pypi`
+step with `invalid-publisher`. The `github-release` job still
+succeeds, so you can fix the PyPI side at your leisure and re-run
+the workflow against the same tag via `workflow_dispatch`.
 
 ## Verifying a release
 
