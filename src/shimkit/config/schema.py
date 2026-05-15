@@ -229,6 +229,28 @@ class HostsConfig(_StrictModel):
     managed_block_marker: str = "# === shimkit-managed ==="
 
 
+class WebNginxConfig(_StrictModel):
+    """`shimkit web nginx` — vhost generator + (opt-in) host apply."""
+
+    sites_available_dir: str = "/etc/nginx/sites-available"
+    sites_enabled_dir: str = "/etc/nginx/sites-enabled"
+    reload_cmd: list[str] = Field(default_factory=lambda: ["nginx", "-s", "reload"])
+    apply_severe_token: str = "APPLY-VHOST"
+    remove_severe_token: str = "REMOVE-VHOST"
+    default_php_version: str = "8.3"
+    default_flavor: str = "static"
+    # Marker comment inserted at the top of generated vhost files so
+    # `vhost list` / `vhost remove` can identify shimkit-managed
+    # configs.
+    managed_marker: str = "# managed-by: shimkit"
+
+
+class WebConfig(_StrictModel):
+    """Parent for the `shimkit web *` family of tools."""
+
+    nginx: WebNginxConfig = Field(default_factory=WebNginxConfig)
+
+
 class DbEngineEntry(_StrictModel):
     """Per-engine container settings — image + default port."""
 
@@ -299,6 +321,7 @@ class ToolsConfig(_StrictModel):
     gpg: GpgConfig = Field(default_factory=GpgConfig)
     logs: LogsConfig = Field(default_factory=LogsConfig)
     db: DbConfig = Field(default_factory=DbConfig)
+    web: WebConfig = Field(default_factory=WebConfig)
     versions: VersionsConfig = Field(default_factory=VersionsConfig)
 
 

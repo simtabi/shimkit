@@ -26,6 +26,7 @@ from shimkit.tools.logs.commands import logs_app
 from shimkit.tools.ports.commands import ports_app
 from shimkit.tools.shell.commands import shell_app
 from shimkit.tools.ssh.commands import ssh_app
+from shimkit.tools.web.commands import web_app
 
 app = typer.Typer(
     name="shimkit",
@@ -48,6 +49,7 @@ app.add_typer(env_app)
 app.add_typer(gpg_app)
 app.add_typer(logs_app)
 app.add_typer(db_app)
+app.add_typer(web_app)
 
 
 # --- config -----------------------------------------------------------------

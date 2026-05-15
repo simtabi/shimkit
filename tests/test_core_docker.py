@@ -70,9 +70,7 @@ def test_volume_path_under_home_data_root() -> None:
 
 
 def test_volume_path_with_custom_id() -> None:
-    assert (
-        DockerEnv.volume_path("postgres", "feature-x").name == "postgres-feature-x"
-    )
+    assert DockerEnv.volume_path("postgres", "feature-x").name == "postgres-feature-x"
 
 
 def test_scope_from_name() -> None:

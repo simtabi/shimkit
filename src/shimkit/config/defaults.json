@@ -159,6 +159,18 @@
         "phpmyadmin": {"image": "phpmyadmin:5",  "default_port": 18080}
       }
     },
+    "web": {
+      "nginx": {
+        "sites_available_dir": "/etc/nginx/sites-available",
+        "sites_enabled_dir": "/etc/nginx/sites-enabled",
+        "reload_cmd": ["nginx", "-s", "reload"],
+        "apply_severe_token": "APPLY-VHOST",
+        "remove_severe_token": "REMOVE-VHOST",
+        "default_php_version": "8.3",
+        "default_flavor": "static",
+        "managed_marker": "# managed-by: shimkit"
+      }
+    },
     "versions": {
       "docker": {"min": "20.10"},
       "nginx":  {"min": "1.20"},
