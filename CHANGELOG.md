@@ -6,6 +6,29 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-05-15
+
+### Added
+
+- `shimkit framework laravel` — Laravel-specific helpers under a
+  new `framework` parent sub-app (future siblings: `symfony`,
+  `rails`, `django`, `nextjs`). Four commands: `perms PATH
+  [--group G]` (MODERATE — cross-distro group detection via
+  `getent` on Linux, `dscl` on macOS; chgrp skipped when the group
+  doesn't exist on the host); `env PATH [--name N] [--env E] [--db
+  D]` (MODERATE — scaffolds `.env` with a generated `APP_KEY`,
+  default DB settings target `shimkit db` containers, refuses to
+  overwrite an existing file); `cron-install PATH` (MODERATE —
+  wraps `shimkit cron add` with the Laravel-shaped `php artisan
+  schedule:run` invocation); `artisan -- <args>` (host execution
+  by default, `--in-container` routes through `shimkit stack
+  lemp`). Replaces the legacy `add:laravel-perms.sh` and laravel-
+  flavored `add:cron.sh` scripts. Adds `php` to the version
+  detector registry (`tools.versions.php`, default min `8.1`).
+  Adds 33 tests (561 total) and `cwd` to the `CommandRunner.run`
+  chokepoint.
+  [`docs/tools/framework-laravel.md`](docs/tools/framework-laravel.md).
+
 ## [0.6.0] — 2026-05-15
 
 ### Added

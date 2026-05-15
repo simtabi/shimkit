@@ -205,6 +205,11 @@ _DETECTORS: dict[str, Detector] = {
         argv=[sys.executable, "--version"],
         parse=lambda out, err: _re_match(r"Python ([\d.]+)", out or err),
     ),
+    "php": Detector(
+        argv=["php", "-v"],
+        # `php -v` first line: "PHP 8.3.10 (cli) (built: ...)"
+        parse=lambda out, _err: _re_match(r"^PHP ([\d.]+)", out),
+    ),
 }
 
 
@@ -381,5 +386,9 @@ _REMEDIATION_TABLE: dict[str, dict[str, str]] = {
     "python": {
         "macos": "brew install python@3.12",
         "linux": "apt-get install python3.12  # or distro equivalent",
+    },
+    "php": {
+        "macos": "brew install php",
+        "linux": "apt-get install php-cli  # or distro equivalent",
     },
 }

@@ -24,6 +24,9 @@ shimkit is a collection. Each tool gets its own page:
   fixer (Linux). API-first, ruamel.yaml fallback.
 - **[`shimkit docker-clean`](tools/docker-clean.md)** — Docker resource
   cleanup (Linux + macOS + WSL). docker-py SDK + buildx-aware prune.
+- **[`shimkit framework laravel`](tools/framework-laravel.md)** —
+  Laravel helpers: perms, `.env` scaffold, scheduler cron-install,
+  artisan passthrough (host or LEMP container).
 
 Top-level utilities (not tools):
 

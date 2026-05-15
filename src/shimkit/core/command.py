@@ -45,6 +45,7 @@ class CommandRunner:
         env: Mapping[str, str] | None = None,
         executable: str | None = None,
         capture_output: bool = True,
+        cwd: str | None = None,
     ) -> CommandResult:
         """Execute a command and return a CommandResult.
 
@@ -66,6 +67,7 @@ class CommandRunner:
                 shell=shell,  # nosec B602
                 env=dict(env) if env is not None else None,
                 executable=executable,
+                cwd=cwd,
             )
             return CommandResult(r.returncode, r.stdout or "", r.stderr or "")
         except subprocess.CalledProcessError as e:

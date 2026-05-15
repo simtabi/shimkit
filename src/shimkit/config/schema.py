@@ -323,6 +323,31 @@ class VersionsConfig(_StrictModel):
     git: VersionConstraint = Field(default_factory=VersionConstraint)
     gpg: VersionConstraint = Field(default_factory=VersionConstraint)
     python: VersionConstraint = Field(default_factory=VersionConstraint)
+    php: VersionConstraint = Field(default_factory=VersionConstraint)
+
+
+class FrameworkLaravelConfig(_StrictModel):
+    """`shimkit framework laravel` — Laravel-specific helpers."""
+
+    # Cross-distro group name. Override if your nginx/php-fpm runs
+    # under a different group (apache on RHEL, _www on macOS, ...).
+    web_group: str = "www-data"
+    # Modes applied by `framework laravel perms`.
+    file_mode: str = "664"
+    dir_mode: str = "775"
+    writable_dirs: list[str] = Field(
+        default_factory=lambda: ["storage", "bootstrap/cache"]
+    )
+    # Default schedule for `cron-install` — Laravel scheduler runs
+    # every minute; the application's own kernel decides what to do
+    # within that tick.
+    default_cron_schedule: str = "* * * * *"
+
+
+class FrameworkConfig(_StrictModel):
+    """Parent for the `shimkit framework *` family of tools."""
+
+    laravel: FrameworkLaravelConfig = Field(default_factory=FrameworkLaravelConfig)
 
 
 class CronConfig(_StrictModel):
@@ -354,6 +379,7 @@ class ToolsConfig(_StrictModel):
     stack: StackConfig = Field(default_factory=StackConfig)
     web: WebConfig = Field(default_factory=WebConfig)
     cron: CronConfig = Field(default_factory=CronConfig)
+    framework: FrameworkConfig = Field(default_factory=FrameworkConfig)
     versions: VersionsConfig = Field(default_factory=VersionsConfig)
 
 

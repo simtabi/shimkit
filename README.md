@@ -20,6 +20,7 @@ shimkit
   db            Container-first databases (5 engines).
   stack         Multi-container app recipes (LEMP today).
   web           Web-server tooling (nginx vhost generator).
+  framework     Framework-specific helpers (Laravel today).
   config        Inspect and edit shimkit configuration.
   doctor        Print system diagnostics useful for bug reports.
   self-update   Update shimkit itself to the latest release.
@@ -93,6 +94,15 @@ behaviour: [`docs/installation.md`](docs/installation.md).
   projects side-by-side via `--project`.
 - `shimkit shell colors` — 256-color ANSI palette diagnostic.
 
+### Framework recipes
+
+- **[`shimkit framework laravel`](docs/tools/framework-laravel.md)** —
+  Laravel-specific helpers: `perms` (cross-distro storage +
+  bootstrap/cache fixer), `env` (.env scaffold with generated
+  APP_KEY), `cron-install` (wraps `shimkit cron` with `php artisan
+  schedule:run`), and `artisan` (host or LEMP-container
+  passthrough).
+
 Plus three utilities:
 
 - `shimkit config` — inspect, edit, validate user configuration
@@ -160,6 +170,7 @@ The repo root has the short version. The long version lives under
 | `shimkit db` deep-dive | [`docs/tools/db.md`](docs/tools/db.md) |
 | `shimkit stack` deep-dive | [`docs/tools/stack.md`](docs/tools/stack.md) |
 | `shimkit web nginx` deep-dive | [`docs/tools/web.md`](docs/tools/web.md) |
+| `shimkit framework laravel` deep-dive | [`docs/tools/framework-laravel.md`](docs/tools/framework-laravel.md) |
 
 Project files:
 

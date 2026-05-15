@@ -20,6 +20,7 @@ from shimkit.tools.db.commands import db_app
 from shimkit.tools.dns.commands import dns_app
 from shimkit.tools.docker_clean.commands import docker_clean_app
 from shimkit.tools.env.commands import env_app
+from shimkit.tools.framework.commands import framework_app
 from shimkit.tools.gpg.commands import gpg_app
 from shimkit.tools.hosts.commands import hosts_app
 from shimkit.tools.java.commands import java_app
@@ -54,6 +55,7 @@ app.add_typer(db_app)
 app.add_typer(stack_app)
 app.add_typer(web_app)
 app.add_typer(cron_app)
+app.add_typer(framework_app)
 
 
 # --- config -----------------------------------------------------------------

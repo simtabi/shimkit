@@ -185,12 +185,22 @@
       "backup_dir": "~/.shimkit/data/cron",
       "max_managed_entries": 200
     },
+    "framework": {
+      "laravel": {
+        "web_group": "www-data",
+        "file_mode": "664",
+        "dir_mode": "775",
+        "writable_dirs": ["storage", "bootstrap/cache"],
+        "default_cron_schedule": "* * * * *"
+      }
+    },
     "versions": {
       "docker": {"min": "20.10"},
       "nginx":  {"min": "1.20"},
       "git":    {"min": "2.30"},
       "gpg":    {"min": "2.2"},
-      "python": {"min": "3.10", "preferred": "3.12"}
+      "python": {"min": "3.10", "preferred": "3.12"},
+      "php":    {"min": "8.1"}
     }
   },
   "package_managers": {
