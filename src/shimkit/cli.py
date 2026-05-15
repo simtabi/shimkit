@@ -21,6 +21,7 @@ from shimkit.tools.hosts.commands import hosts_app
 from shimkit.tools.java.commands import java_app
 from shimkit.tools.ports.commands import ports_app
 from shimkit.tools.shell.commands import shell_app
+from shimkit.tools.ssh.commands import ssh_app
 
 app = typer.Typer(
     name="shimkit",
@@ -38,6 +39,7 @@ app.add_typer(adguard_app)
 app.add_typer(docker_clean_app)
 app.add_typer(ports_app)
 app.add_typer(hosts_app)
+app.add_typer(ssh_app)
 
 
 # --- config -----------------------------------------------------------------

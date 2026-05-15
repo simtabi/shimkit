@@ -6,8 +6,27 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-05-15
+
+Three new host-machine dev-workflow tools, each shipped under the
+existing five architecture rules (CommandRunner chokepoint, UI
+chokepoint, config-driven values, builder pattern, fluent self).
+Test count 252 → 295. No new optional dependency extras — all
+three use only baseline binaries that ship with the OS.
+
 ### Added
 
+- `shimkit ssh` — SSH key + agent + known_hosts + perms hygiene.
+  `keys list/generate/rotate`, `agent status/add`,
+  `known-hosts audit/prune`, `perms audit/fix`, `config show
+  [HOST]`. No third-party deps; passphrases stay in `ssh-keygen`'s
+  TTY prompt (never logged or captured). Permission matrix is
+  config-driven (`tools.ssh.perms`); audit flags only laxer-than-
+  expected modes — stricter modes pass. 23 tests covering scanner
+  units (list_keys / parse_agent_keys /
+  find_known_host_duplicates / audit_perms), every CLI subcommand,
+  dry-run no-op assertions, and the moderate-prompt refusal under
+  `--no-input`. [`docs/tools/ssh.md`](docs/tools/ssh.md).
 - `shimkit ports` — cross-platform TCP/UDP port owner inspector +
   killer. `shimkit ports show [PORT]` lists every listening socket
   via `lsof` on macOS or `ss` on Linux; `shimkit ports kill PORT`

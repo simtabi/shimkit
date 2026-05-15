@@ -120,6 +120,18 @@
       "apply_list_severe_token": "APPLY-LIST",
       "max_entries_per_apply": 5000,
       "managed_block_marker": "# === shimkit-managed ==="
+    },
+    "ssh": {
+      "ssh_dir": "~/.ssh",
+      "default_key_type": "ed25519",
+      "perms": {
+        "dir": "700",
+        "private_key": "600",
+        "public_key": "644",
+        "config": "644",
+        "known_hosts": "644",
+        "authorized_keys": "644"
+      }
     }
   },
   "package_managers": {

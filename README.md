@@ -47,6 +47,10 @@ behaviour: [`docs/installation.md`](docs/installation.md).
 - **[`shimkit hosts`](docs/tools/hosts.md)** — `/etc/hosts` editor
   with atomic-write + timestamped backups. add / remove / block /
   unblock / apply-list (severe) / rollback. macOS + Linux.
+- **[`shimkit ssh`](docs/tools/ssh.md)** — SSH key + agent +
+  known_hosts + perms hygiene. keys list/generate/rotate, agent
+  status/add, known-hosts audit/prune, perms audit/fix, config
+  show. No third-party deps; passphrases handled by ssh-keygen.
 
 Plus three utilities:
 

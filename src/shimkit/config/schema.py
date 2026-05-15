@@ -163,6 +163,25 @@ class PortsConfig(_StrictModel):
     system_pid_threshold: int = Field(default=100, ge=1, le=65535)
 
 
+class SshPermsConfig(_StrictModel):
+    """File-mode matrix for `shimkit ssh perms`."""
+
+    dir: str = "700"
+    private_key: str = "600"
+    public_key: str = "644"
+    config: str = "644"
+    known_hosts: str = "644"
+    authorized_keys: str = "644"
+
+
+class SshConfig(_StrictModel):
+    """SSH key + agent + perms hygiene — `shimkit ssh`."""
+
+    ssh_dir: str = "~/.ssh"
+    default_key_type: str = "ed25519"
+    perms: SshPermsConfig = Field(default_factory=SshPermsConfig)
+
+
 class HostsConfig(_StrictModel):
     """/etc/hosts editor — `shimkit hosts`."""
 
@@ -185,6 +204,7 @@ class ToolsConfig(_StrictModel):
     docker_clean: DockerCleanConfig = Field(default_factory=DockerCleanConfig)
     ports: PortsConfig = Field(default_factory=PortsConfig)
     hosts: HostsConfig = Field(default_factory=HostsConfig)
+    ssh: SshConfig = Field(default_factory=SshConfig)
 
 
 class PackageManagerEntry(_StrictModel):
