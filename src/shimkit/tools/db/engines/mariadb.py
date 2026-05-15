@@ -37,3 +37,11 @@ class MariaDB(Engine):
             "--all-databases",
             "--single-transaction",
         ]
+
+    def supports_on_host(self) -> bool:
+        return True
+
+    def host_shell_argv(self, *, password: str) -> list[str]:
+        if password:
+            return ["mariadb", "-h", "127.0.0.1", "-uroot", f"-p{password}"]
+        return ["mariadb", "-h", "127.0.0.1", "-uroot", "-p"]

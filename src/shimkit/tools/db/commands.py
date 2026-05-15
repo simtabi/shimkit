@@ -127,6 +127,12 @@ def _register_engine(name: str) -> typer.Typer:
             max=65535,
             help="phpmyadmin only: backing-DB port (default 13306).",
         ),
+        on_host: bool = typer.Option(
+            False,
+            "--on-host",
+            help="Manage an already-installed host engine via systemd/brew services "
+            "instead of a container. Available on mysql/mariadb/postgres only.",
+        ),
         json_out: bool = JSON_OUT,
         dry_run: bool = DRY_RUN,
         yes: bool = YES,
@@ -134,19 +140,21 @@ def _register_engine(name: str) -> typer.Typer:
     ) -> None:
         from .manager import DbManager
 
+        verb = "Start the host service for" if on_host else "Start a"
         if not dry_run and not Menu.prompt_for_change(
-            f"Start a {name} container",
+            f"{verb} {name}",
             yes=yes,
             force=force,
             no_input=UI.is_no_input(),
         ):
             UI.info("Cancelled. Pass --yes to skip the prompt or rerun with --dry-run.")
             raise typer.Exit(1)
-        code = (
-            DbManager.create()
-            .boot(force=force)
-            .for_engine(name)
-            .up(
+        manager = DbManager.create().boot(force=force, on_host=on_host)
+        bound = manager.for_engine(name)
+        if on_host:
+            code = bound.up_on_host(json_out=json_out, dry_run=dry_run)
+        else:
+            code = bound.up(
                 id_=id_,
                 host_port=host_port,
                 bind_host=bind_host,
@@ -158,12 +166,16 @@ def _register_engine(name: str) -> typer.Typer:
                 json_out=json_out,
                 dry_run=dry_run,
             )
-        )
         raise typer.Exit(code)
 
     @app.command("down")
     def down_cmd(
         id_: str = typer.Option(None, "--name"),
+        on_host: bool = typer.Option(
+            False,
+            "--on-host",
+            help="Stop the host service for this engine instead of a container.",
+        ),
         json_out: bool = JSON_OUT,
         dry_run: bool = DRY_RUN,
         yes: bool = YES,
@@ -171,30 +183,42 @@ def _register_engine(name: str) -> typer.Typer:
     ) -> None:
         from .manager import DbManager
 
+        verb = "Stop the host service for" if on_host else "Stop + remove the"
         if not dry_run and not Menu.prompt_for_change(
-            f"Stop + remove the {name} container",
+            f"{verb} {name}{'' if on_host else ' container'}",
             yes=yes,
             force=force,
             no_input=UI.is_no_input(),
         ):
             UI.info("Cancelled. Pass --yes to skip the prompt or rerun with --dry-run.")
             raise typer.Exit(1)
-        code = (
-            DbManager.create()
-            .boot(force=force)
-            .for_engine(name)
-            .down(id_=id_, json_out=json_out, dry_run=dry_run)
-        )
+        manager = DbManager.create().boot(force=force, on_host=on_host)
+        bound = manager.for_engine(name)
+        if on_host:
+            code = bound.down_on_host(json_out=json_out, dry_run=dry_run)
+        else:
+            code = bound.down(id_=id_, json_out=json_out, dry_run=dry_run)
         raise typer.Exit(code)
 
     @app.command("shell")
     def shell_cmd(
         id_: str = typer.Option(None, "--name"),
         password: str = typer.Option(None, "--password"),
+        on_host: bool = typer.Option(
+            False,
+            "--on-host",
+            help="Connect via the host CLI to a host-installed engine instead "
+            "of `docker exec` into a container.",
+        ),
     ) -> None:
         from .manager import DbManager
 
-        code = DbManager.create().boot().for_engine(name).shell(id_=id_, password=password)
+        manager = DbManager.create().boot(on_host=on_host)
+        bound = manager.for_engine(name)
+        if on_host:
+            code = bound.shell_on_host(password=password)
+        else:
+            code = bound.shell(id_=id_, password=password)
         raise typer.Exit(code)
 
     @app.command("dump")
@@ -242,11 +266,21 @@ def _register_engine(name: str) -> typer.Typer:
     @app.command("status")
     def status_cmd(
         id_: str = typer.Option(None, "--name"),
+        on_host: bool = typer.Option(
+            False,
+            "--on-host",
+            help="Report state of the host service instead of a container.",
+        ),
         json_out: bool = JSON_OUT,
     ) -> None:
         from .manager import DbManager
 
-        code = DbManager.create().boot().for_engine(name).status(id_=id_, json_out=json_out)
+        manager = DbManager.create().boot(on_host=on_host)
+        bound = manager.for_engine(name)
+        if on_host:
+            code = bound.status_on_host(json_out=json_out)
+        else:
+            code = bound.status(id_=id_, json_out=json_out)
         raise typer.Exit(code)
 
     return app

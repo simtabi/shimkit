@@ -37,3 +37,12 @@ class MySQL(Engine):
             "--single-transaction",
             "--quick",
         ]
+
+    def supports_on_host(self) -> bool:
+        return True
+
+    def host_shell_argv(self, *, password: str) -> list[str]:
+        if password:
+            return ["mysql", "-h", "127.0.0.1", "-uroot", f"-p{password}"]
+        # No password -> let mysql client prompt interactively.
+        return ["mysql", "-h", "127.0.0.1", "-uroot", "-p"]

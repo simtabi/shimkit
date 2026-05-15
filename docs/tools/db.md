@@ -28,7 +28,42 @@ Universal flags (before the subcommand): `--quiet`, `--verbose`,
 `--log-file PATH`, `--no-color`, `--color`, `--no-input`.
 Per-command flags (after the subcommand): `--json`, `--dry-run`,
 `--yes`, `--force`, `--name <id>`, `--port N`, `--bind HOST`,
-`--volume PATH`, `--ephemeral`, `--password PWD`, `--confirm TOKEN`.
+`--volume PATH`, `--ephemeral`, `--password PWD`, `--confirm TOKEN`,
+`--on-host` (see below).
+
+## --on-host (opt-out from container-first)
+
+The default path is containers — that's how shimkit dissolves
+the security flags from the original ubuntu provisioning scripts
+(0.0.0.0 binds, deprecated apt-key, etc). If you've installed
+mysql / mariadb / postgres on the host yourself (via apt, brew,
+dnf), pass `--on-host` to manage *that* engine rather than a
+container.
+
+| `--on-host` command | What it does |
+|---------------------|--------------|
+| `shimkit db <engine> up --on-host`        | `systemctl start <service>` (Linux) / `brew services start <name>` (macOS). |
+| `shimkit db <engine> down --on-host`      | `systemctl stop <service>` / `brew services stop <name>`. |
+| `shimkit db <engine> status --on-host`    | Reports `running` / `stopped` / `missing`. |
+| `shimkit db <engine> shell --on-host`     | `mysql -h 127.0.0.1 -uroot -p…` (or `psql`) directly against the host install. |
+
+Limits:
+
+- **mysql / mariadb / postgres only.** `mongo` and `phpmyadmin`
+  reject `--on-host` (mongo's host packaging surface is messy
+  and out of scope; phpmyadmin has no host install). Use the
+  container path for those.
+- **`shimkit` never installs the package.** If `mysql` (or
+  `mariadb`, `psql`) isn't on PATH, the command refuses — install
+  via your package manager first. This is deliberate: the
+  install-on-host scripts in the original ubuntu source had
+  five Critical security flags (0.0.0.0 binds, deprecated
+  apt-key, curl|sh), and shimkit's redesign explicitly avoids
+  reproducing them.
+- Service names live in config (`tools.db.host_services.<engine>.{service_linux,service_macos}`).
+  Override per-install if your distro or homebrew formula
+  diverges from the defaults (e.g. `postgresql@16` on macOS,
+  `postgresql` on Debian).
 
 ## Engines
 

@@ -157,6 +157,11 @@
         "postgres":   {"image": "postgres:16",   "default_port": 15432},
         "mongo":      {"image": "mongo:7",       "default_port": 17017},
         "phpmyadmin": {"image": "phpmyadmin:5",  "default_port": 18080}
+      },
+      "host_services": {
+        "mysql":    {"service_linux": "mysql",      "service_macos": "mysql"},
+        "mariadb":  {"service_linux": "mariadb",    "service_macos": "mariadb"},
+        "postgres": {"service_linux": "postgresql", "service_macos": "postgresql@16"}
       }
     },
     "stack": {

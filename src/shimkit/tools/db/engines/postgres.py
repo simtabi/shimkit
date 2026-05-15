@@ -31,3 +31,13 @@ class Postgres(Engine):
 
     def dump_argv(self, *, password: str) -> list[str]:
         return ["pg_dumpall", "-U", "postgres", "--clean"]
+
+    def supports_on_host(self) -> bool:
+        return True
+
+    def host_client_binary(self) -> str:
+        return "psql"
+
+    def host_shell_argv(self, *, password: str) -> list[str]:
+        # psql reads PGPASSWORD from env; the manager sets it before exec.
+        return ["psql", "-h", "127.0.0.1", "-U", "postgres"]

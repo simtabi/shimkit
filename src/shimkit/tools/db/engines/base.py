@@ -103,3 +103,29 @@ class Engine:
         container (e.g. ``phpmyadmin`` needs a backing DB).
         """
         return False
+
+    # ---- --on-host mode -------------------------------------------------
+
+    def supports_on_host(self) -> bool:
+        """Whether this engine has a host-install path that `--on-host`
+        manages. mongo + phpmyadmin both return False — mongo's host
+        packaging is intentionally out of scope; phpmyadmin has no
+        host install at all.
+        """
+        return False
+
+    def host_client_binary(self) -> str:
+        """Host-side client binary for `--on-host shell` (e.g. ``mysql``,
+        ``psql``). Defaults to the engine name; override when the engine
+        and its CLI differ.
+        """
+        return self.name
+
+    def host_shell_argv(self, *, password: str) -> list[str]:
+        """argv for `--on-host shell`. Connects to localhost on the
+        default port — same flag shape as the in-container shell, just
+        targeting 127.0.0.1 rather than a docker exec.
+        """
+        raise UnsupportedEngineOperationError(
+            f"engine {self.name!r} has no --on-host shell"
+        )

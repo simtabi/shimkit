@@ -275,6 +275,18 @@ class DbEngineEntry(_StrictModel):
     default_port: int = Field(ge=1, le=65535)
 
 
+class DbHostServiceEntry(_StrictModel):
+    """Per-engine service-name mapping for `--on-host` mode.
+
+    Linux assumes systemd unit names; macOS assumes the literal
+    `brew services` formula name. Override per-install when your
+    distro or formula uses a different name.
+    """
+
+    service_linux: str
+    service_macos: str
+
+
 class DbConfig(_StrictModel):
     """`shimkit db` — container-first database orchestration."""
 
@@ -293,6 +305,20 @@ class DbConfig(_StrictModel):
             "postgres": DbEngineEntry(image="postgres:16", default_port=15432),
             "mongo": DbEngineEntry(image="mongo:7", default_port=17017),
             "phpmyadmin": DbEngineEntry(image="phpmyadmin:5", default_port=18080),
+        }
+    )
+    # Per-engine service names used when --on-host is passed. Engines
+    # absent from this map cannot be managed --on-host (mongo and
+    # phpmyadmin are intentionally absent — phpmyadmin has no host
+    # install, mongo's host packaging surface is messy and falls
+    # outside shimkit's `db --on-host` scope).
+    host_services: dict[str, DbHostServiceEntry] = Field(
+        default_factory=lambda: {
+            "mysql": DbHostServiceEntry(service_linux="mysql", service_macos="mysql"),
+            "mariadb": DbHostServiceEntry(service_linux="mariadb", service_macos="mariadb"),
+            "postgres": DbHostServiceEntry(
+                service_linux="postgresql", service_macos="postgresql@16"
+            ),
         }
     )
 

@@ -6,6 +6,68 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-05-15
+
+### Added
+
+- `shimkit db <engine> ... --on-host` — opt-out from container-
+  first. When `--on-host` is passed, `up` / `down` / `status` /
+  `shell` route through `HostService` (systemd on Linux, `brew
+  services` on macOS) and manage an already-installed host
+  engine rather than a container. Available for mysql / mariadb
+  / postgres; mongo and phpmyadmin are intentionally
+  container-only (mongo's host-packaging surface is messy;
+  phpmyadmin has no host install).
+
+  **shimkit does NOT install packages in --on-host mode** — if
+  the engine's client (`mysql`/`mariadb`/`psql`) isn't on PATH,
+  the command refuses with a clear remediation. This is the
+  redesign's core safety promise: the original ubuntu scripts
+  had five Critical security flags from install-on-host
+  patterns (0.0.0.0 binds, deprecated apt-key, curl|sh) and
+  shimkit's `--on-host` mode explicitly avoids reproducing
+  them.
+
+- `shimkit.core.HostService` — new abstraction with
+  `SystemdHost` (Linux) and `BrewServicesHost` (macOS) concrete
+  backends. `HostService.detect(platform)` returns the right
+  one or `None` for unsupported systems. Exposes `state()` /
+  `start()` / `stop()` returning a typed `HostServiceResult`.
+  Pairs with the existing `Systemd` facade — the new class is
+  the cross-platform layer above it.
+
+- `tools.db.host_services` config block — per-engine service-
+  name mapping for Linux + macOS. Defaults: `mysql` →
+  `mysql` (both), `mariadb` → `mariadb` (both), `postgres` →
+  `postgresql` on Linux / `postgresql@16` on macOS. Override
+  per-install in user config when your distro or homebrew
+  formula diverges.
+
+- `Engine.supports_on_host()` / `Engine.host_shell_argv()` /
+  `Engine.host_client_binary()` — three new methods on the
+  engine ABC. Mysql / mariadb / postgres override
+  `supports_on_host=True` and provide host-side argv targeting
+  `127.0.0.1`; mongo / phpmyadmin keep the default `False`.
+
+### Changed
+
+- `DbManager.boot(on_host=True)` — skips the docker preflight
+  entirely when the caller is using `--on-host`. Container-mode
+  methods now assert `self._env is not None` at entry; this
+  prevents a stray `up()` call on an on-host manager from
+  blowing up with `AttributeError` on a None DockerEnv.
+
+### Tests
+
+- 21 new tests in `tests/test_tools_db_on_host.py` (609 → 630
+  total). Boot semantics (on_host skips docker preflight;
+  default still runs it), refusals (mongo / phpmyadmin /
+  missing-binary / unsupported-platform), up / down / status
+  happy paths on both Linux and macOS service-name resolution,
+  dry-run no-op, failed start propagates exit 1, shell
+  routes through CommandRunner with PGPASSWORD for postgres,
+  engine driver layer correctness.
+
 ## [0.8.0] — 2026-05-15
 
 ### Added

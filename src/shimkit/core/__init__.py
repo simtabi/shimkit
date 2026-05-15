@@ -10,6 +10,13 @@ Every tool builds on these:
 
 from .command import CommandResult, CommandRunner, has_sudo_cached, is_root, sudo_prefix
 from .docker import DockerEnv, DockerNotAvailableError, ExecOutcome
+from .host_service import (
+    BrewServicesHost,
+    HostService,
+    HostServiceResult,
+    ServiceState,
+    SystemdHost,
+)
 from .json_event import Event, emit_json
 from .log import attach_file_handler, get_logger, set_verbose
 from .menu import AskResult, FallbackMenu, Menu
@@ -30,6 +37,7 @@ from .version import (
 __all__ = [
     "UI",
     "AskResult",
+    "BrewServicesHost",
     "CommandResult",
     "CommandRunner",
     "Detector",
@@ -38,14 +46,18 @@ __all__ = [
     "Event",
     "ExecOutcome",
     "FallbackMenu",
+    "HostService",
+    "HostServiceResult",
     "Menu",
     "PackageManager",
     "Platform",
     "Result",
+    "ServiceState",
     "Shell",
     "ShellConfigWriter",
     "Status",
     "Systemd",
+    "SystemdHost",
     "ToolVersion",
     "UnitState",
     "VersionConstraint",
