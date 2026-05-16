@@ -6,6 +6,60 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.14.0] — 2026-05-16
+
+### Added
+
+- `shimkit framework symfony` — sibling framework recipe under the
+  existing `framework` parent. Four commands:
+  - `perms PATH [--group G]` (MODERATE) — cross-distro group
+    detection (same chain as Laravel: `getent` / `dscl` / `grp`);
+    targets `var/` rather than Laravel's `storage` +
+    `bootstrap/cache`.
+  - `env PATH [--name N] [--env E] [--db D]` (MODERATE) —
+    scaffolds `.env.local` with a generated `APP_SECRET`
+    (hex(32) — Symfony's documented form). Refuses to overwrite
+    an existing file. `DATABASE_URL` targets shimkit dev DBs
+    by default; supports mysql / mariadb / postgres.
+  - `cache-clear PATH [--env E]` — wraps `php bin/console
+    cache:clear --env <env>`. Defaults to `dev`.
+  - `console -- <args>` — passthrough to `php bin/console`. Host
+    execution by default; `--in-container` routes through
+    `shimkit stack lemp`.
+
+  Symfony has no built-in scheduler like Laravel's
+  `schedule:run`, so there's no `cron-install` command —
+  application-specific cron entries go via `shimkit cron add`
+  directly.
+
+- `tools.framework.symfony` config block with the same shape as
+  `tools.framework.laravel` plus a `default_env` field (`dev` /
+  `test` / `prod`).
+
+### Tests
+
+- 26 new tests in `tests/test_tools_framework_symfony.py` (1044 →
+  1070 total). Platform gating, perms (path refusal / dry-run /
+  var/ targeting / chgrp skip on missing group / --group override
+  / failed-step JSON output), env scaffold (overwrite refusal /
+  APP_SECRET 64-hex-char shape / default APP_ENV / `--env`
+  override / DATABASE_URL for all three DB engines including
+  serverVersion query parameter / dry-run no-write / uniqueness
+  across two scaffolds), console (host happy path runs `php
+  bin/console` / missing-php exits 69 / no-args refusal / missing-
+  bin/console refusal / --in-container delegates to StackManager),
+  cache-clear (runs console with --env flag), command surface
+  (framework --help lists symfony alongside laravel; symfony
+  --help lists all four subcommands).
+
+### Notes
+
+Second framework recipe under the `framework` parent. Future
+siblings (`rails`, `django`, `nextjs`) follow the same pattern.
+
+Gates: pytest 1070 passed, ruff clean, mypy strict clean. No new
+optional dependency extras.
+
 ## [0.13.0] — 2026-05-16
 
 ### Added

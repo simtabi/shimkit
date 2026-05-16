@@ -207,6 +207,13 @@
         "dir_mode": "775",
         "writable_dirs": ["storage", "bootstrap/cache"],
         "default_cron_schedule": "* * * * *"
+      },
+      "symfony": {
+        "web_group": "www-data",
+        "file_mode": "664",
+        "dir_mode": "775",
+        "writable_dirs": ["var"],
+        "default_env": "dev"
       }
     },
     "versions": {

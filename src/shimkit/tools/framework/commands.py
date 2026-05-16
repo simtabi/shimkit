@@ -1,8 +1,8 @@
 """Typer parent app for ``shimkit framework``.
 
-Today there's one child (``laravel``); future siblings (``symfony``,
-``rails``, ``django``, ``nextjs``) slot in under the same parent
-without disturbing the existing surface.
+Today: ``laravel`` (v0.7.0) and ``symfony`` (v0.14.0). Future
+siblings (``rails``, ``django``, ``nextjs``) slot in under the
+same parent without disturbing the existing surface.
 """
 
 from __future__ import annotations
@@ -12,19 +12,21 @@ import typer
 from shimkit.core import UI
 
 from .laravel.commands import laravel_app
+from .symfony.commands import symfony_app
 
 framework_app = typer.Typer(
     name="framework",
-    help="Framework-specific helpers (Laravel today; more recipes welcome).",
+    help="Framework-specific helpers (Laravel + Symfony today; more recipes welcome).",
     no_args_is_help=False,
 )
 
 framework_app.add_typer(laravel_app)
+framework_app.add_typer(symfony_app)
 
 
 @framework_app.callback(invoke_without_command=True)
 def _root(ctx: typer.Context) -> None:
     if ctx.invoked_subcommand is None:
         UI.header("shimkit framework")
-        UI.line("Frameworks: laravel")
-        UI.line("Run `shimkit framework laravel --help` for details.")
+        UI.line("Frameworks: laravel, symfony")
+        UI.line("Run `shimkit framework <name> --help` for details.")

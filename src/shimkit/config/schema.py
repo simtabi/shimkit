@@ -371,10 +371,27 @@ class FrameworkLaravelConfig(_StrictModel):
     default_cron_schedule: str = "* * * * *"
 
 
+class FrameworkSymfonyConfig(_StrictModel):
+    """`shimkit framework symfony` — Symfony-specific helpers (v0.14.0+)."""
+
+    # Same cross-distro pattern as Laravel; override per-host when
+    # nginx/php-fpm runs as a non-default group.
+    web_group: str = "www-data"
+    file_mode: str = "664"
+    dir_mode: str = "775"
+    # Symfony's writable tree. `var/` covers cache/, log/, sessions/.
+    # Public apps with a non-default `public/` symlink can extend.
+    writable_dirs: list[str] = Field(default_factory=lambda: ["var"])
+    # APP_ENV value to seed in `.env.local`. Symfony's three
+    # well-known envs are `dev` / `test` / `prod`.
+    default_env: str = "dev"
+
+
 class FrameworkConfig(_StrictModel):
     """Parent for the `shimkit framework *` family of tools."""
 
     laravel: FrameworkLaravelConfig = Field(default_factory=FrameworkLaravelConfig)
+    symfony: FrameworkSymfonyConfig = Field(default_factory=FrameworkSymfonyConfig)
 
 
 class TlsConfig(_StrictModel):

@@ -58,6 +58,9 @@ shimkit is a collection. Each tool gets its own page:
 - **[`shimkit framework laravel`](tools/framework-laravel.md)** —
   Laravel helpers: perms, `.env` scaffold, scheduler cron-install,
   artisan passthrough (host or LEMP container).
+- **[`shimkit framework symfony`](tools/framework-symfony.md)** —
+  Symfony helpers: perms (`var/`), `.env.local` scaffold with
+  `APP_SECRET`, cache-clear, `bin/console` passthrough.
 
 Top-level utilities (not tools):
 
@@ -91,6 +94,8 @@ Top-level utilities (not tools):
 
 Per-version, user-facing summaries (newest first):
 
+- **[`v0.14.0`](release-notes/v0.14.0.md)** — `shimkit framework
+  symfony` sibling recipe under the `framework` parent.
 - **[`v0.13.0`](release-notes/v0.13.0.md)** — `shimkit tls --method
   dns-cloudflare` for DNS-01 + wildcard certs.
 - **[`v0.12.0`](release-notes/v0.12.0.md)** — stale-doc cleanup +
