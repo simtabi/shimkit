@@ -6,6 +6,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- `docs/plans/future-additions.md` — captures the naturally-
+  extensible surface (more TLS DNS-01 providers, more framework
+  recipes, more db engines) with concrete patterns but no
+  current user demand. Documents the bar to graduate an item
+  ("someone is asking for it" — not "it would be nice to
+  have"). Also captures the **rejected** `--on-host` for
+  `stack lemp` with the reasoning. Linked from docs/README.md
+  Development section.
+
 ## [0.18.0] — 2026-05-16
 
 ### Changed

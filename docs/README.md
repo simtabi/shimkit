@@ -93,6 +93,10 @@ Top-level utilities (not tools):
 - **[Known issues + pending items](plans/known-issues.md)** — checks
   that exist in our scope but can't be automated (and why), coverage
   deferrals, and aspirational follow-ups without owners.
+- **[Future additions](plans/future-additions.md)** — naturally-
+  extensible surface (more TLS DNS-01 providers, more framework
+  recipes, more db engines) with concrete patterns but no current
+  user demand. Move items out when someone asks.
 
 ## Release notes
 
