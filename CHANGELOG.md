@@ -14,8 +14,23 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   current user demand. Documents the bar to graduate an item
   ("someone is asking for it" — not "it would be nice to
   have"). Also captures the **rejected** `--on-host` for
-  `stack lemp` with the reasoning. Linked from docs/README.md
-  Development section.
+  `stack lemp` with the reasoning.
+- `docs/plans/shipping-audit.md` — comprehensive shipped-vs-
+  pending walk through every plan / design spec / doc in the
+  repo. Migration W1-W9 (all shipped), feature-gap-analysis
+  defer list (all shipped + 1 rejected with rationale),
+  validation-report TODOs (all closed out), cleanup-2026-05-14
+  deferrals (both shipped in v0.10 / v0.12), shipping-checklist
+  phases (all in-code items shipped). Captures the two **user-
+  side actions** that aren't deferrals: PyPI trusted-publisher
+  config + branch protection on `main`. Includes step-by-step
+  for each plus the retroactive PyPI re-upload recipe for the
+  10+ pending tags (v0.11.0 through v0.18.0). Documents the 16
+  permanent skips with rationale (NM real-link-event check +
+  the 15 ubuntu-source Skip items). Concludes "the plans tree
+  is drained — no item is silently orphaned."
+
+Both files linked from docs/README.md Development section.
 
 ## [0.18.0] — 2026-05-16
 

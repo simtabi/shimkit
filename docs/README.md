@@ -97,6 +97,12 @@ Top-level utilities (not tools):
   extensible surface (more TLS DNS-01 providers, more framework
   recipes, more db engines) with concrete patterns but no current
   user demand. Move items out when someone asks.
+- **[Shipping audit (2026-05-16)](plans/shipping-audit.md)** —
+  comprehensive shipped-vs-pending walk through every plan, design
+  spec, and doc. Captures the two **user-side actions** still
+  outstanding (PyPI trusted-publisher + branch protection),
+  documents permanent skips, and cross-references everything
+  else.
 
 ## Release notes
 
