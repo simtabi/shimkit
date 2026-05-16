@@ -215,6 +215,13 @@
         "dir_mode": "775",
         "writable_dirs": ["var"],
         "default_env": "dev"
+      },
+      "django": {
+        "web_group": "www-data",
+        "file_mode": "664",
+        "dir_mode": "775",
+        "writable_dirs": ["media", "staticfiles"],
+        "default_debug": true
       }
     },
     "versions": {

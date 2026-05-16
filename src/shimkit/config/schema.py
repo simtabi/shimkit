@@ -388,11 +388,32 @@ class FrameworkSymfonyConfig(_StrictModel):
     default_env: str = "dev"
 
 
+class FrameworkDjangoConfig(_StrictModel):
+    """`shimkit framework django` — Django-specific helpers (v0.16.0+)."""
+
+    # Cross-distro group; same default as Laravel + Symfony. macOS
+    # users typically override to `staff` or skip via `--group`.
+    web_group: str = "www-data"
+    file_mode: str = "664"
+    dir_mode: str = "775"
+    # Django's two writable trees in standard project layouts.
+    # `media/` (user uploads) is always project-relative; `staticfiles/`
+    # is the collectstatic target — may not exist on a fresh project.
+    writable_dirs: list[str] = Field(
+        default_factory=lambda: ["media", "staticfiles"]
+    )
+    # `DEBUG=` value to seed in `.env`. `True` for dev (default),
+    # `False` for prod — though prod env should override via real
+    # secrets management, not this scaffolder.
+    default_debug: bool = True
+
+
 class FrameworkConfig(_StrictModel):
     """Parent for the `shimkit framework *` family of tools."""
 
     laravel: FrameworkLaravelConfig = Field(default_factory=FrameworkLaravelConfig)
     symfony: FrameworkSymfonyConfig = Field(default_factory=FrameworkSymfonyConfig)
+    django: FrameworkDjangoConfig = Field(default_factory=FrameworkDjangoConfig)
 
 
 class TlsConfig(_StrictModel):

@@ -6,6 +6,56 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.16.0] — 2026-05-16
+
+### Added
+
+- **`shimkit framework django`** — third framework recipe.
+  Modelled on Laravel + Symfony with Django-specific
+  conventions:
+  - `perms PATH [--group G]` (MODERATE) — fixes `media/` +
+    `staticfiles/` permissions.
+  - `env PATH [--name N] [--debug/--no-debug] [--db D]` (MODERATE)
+    — scaffolds `.env` with `SECRET_KEY` (Django's 50-char
+    alphabet) + `DATABASE_URL` (dj-database-url / django-environ
+    convention). Refuses to overwrite. Default DB is **postgres**
+    (Django's most common pairing); mysql + mariadb also
+    supported.
+  - `migrate PATH` — sugar for `manage migrate --no-input`.
+  - `manage -- <args>` — passthrough to `python manage.py`.
+    Host or `--in-container` via `shimkit stack lemp`.
+- `tools.framework.django` config block with `web_group`,
+  `file_mode`, `dir_mode`, `writable_dirs`, and `default_debug`.
+
+### Tests
+
+- 30 new tests in `tests/test_tools_framework_django.py` (1086 →
+  1116 total). _generate_secret_key (length / Django alphabet /
+  uniqueness across 100 calls), platform gating, perms (path
+  refusal / dry-run / media + staticfiles targeting / chgrp skip
+  on missing group / missing-writable warning / failed-step JSON),
+  env (overwrite refusal / SECRET_KEY shape + DATABASE_URL
+  postgres default / DEBUG True default / --no-debug flag /
+  DATABASE_URL mysql + mariadb / ALLOWED_HOSTS + EMAIL_BACKEND
+  present / Redis hint commented-out / dry-run no-write /
+  uniqueness across two scaffolds), manage (host happy path /
+  missing-python exits 69 / no-args refusal / missing-manage.py
+  refusal / --in-container delegates to StackManager), migrate
+  (wraps manage migrate --no-input), command surface (framework
+  --help lists django; django --help lists all four
+  subcommands).
+
+### Notes
+
+Third framework recipe. Same shape pattern as Laravel + Symfony:
+perms / env / passthrough + one framework-specific shortcut
+(`migrate` for Django, `cache-clear` for Symfony,
+`cron-install` for Laravel). No cron-install for Django —
+same reason as Symfony, no built-in scheduler.
+
+Gates: pytest 1116 passed, ruff clean, mypy strict clean. No new
+optional dependency extras.
+
 ## [0.15.0] — 2026-05-16
 
 ### Added

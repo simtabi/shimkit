@@ -61,6 +61,10 @@ shimkit is a collection. Each tool gets its own page:
 - **[`shimkit framework symfony`](tools/framework-symfony.md)** —
   Symfony helpers: perms (`var/`), `.env.local` scaffold with
   `APP_SECRET`, cache-clear, `bin/console` passthrough.
+- **[`shimkit framework django`](tools/framework-django.md)** —
+  Django helpers: perms (`media/` + `staticfiles/`), `.env`
+  scaffold with `SECRET_KEY` + django-environ-style
+  `DATABASE_URL`, migrate, `manage.py` passthrough.
 
 Top-level utilities (not tools):
 
@@ -94,6 +98,8 @@ Top-level utilities (not tools):
 
 Per-version, user-facing summaries (newest first):
 
+- **[`v0.16.0`](release-notes/v0.16.0.md)** — `shimkit framework
+  django` third framework recipe.
 - **[`v0.15.0`](release-notes/v0.15.0.md)** — `shimkit db redis`
   sixth engine. `Engine.up_command()` for argv-passed config.
 - **[`v0.14.0`](release-notes/v0.14.0.md)** — `shimkit framework
