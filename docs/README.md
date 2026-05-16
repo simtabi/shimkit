@@ -108,6 +108,9 @@ Top-level utilities (not tools):
 
 Per-version, user-facing summaries (newest first):
 
+- **[`v0.19.0`](release-notes/v0.19.0.md)** — plans-tree audit.
+  Two new plans docs: `future-additions.md` (no-demand items) +
+  `shipping-audit.md` (comprehensive shipped-vs-pending walk).
 - **[`v0.18.0`](release-notes/v0.18.0.md)** — doc-sync pass.
   README + architecture + onboarding + cron tool doc + JSON schema
   brought current with v0.17.0 reality.

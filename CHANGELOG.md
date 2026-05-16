@@ -6,6 +6,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.19.0] — 2026-05-16
+
 ### Added
 
 - `docs/plans/future-additions.md` — captures the naturally-
@@ -31,6 +33,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   is drained — no item is silently orphaned."
 
 Both files linked from docs/README.md Development section.
+
+### Notes
+
+Doc-only release. No source-code changes. The two plans docs were
+already pushed to `main` as chores ahead of this release; v0.19.0
+tags the existing tree and ships a release-notes entry so the
+docs index has a clear "this is the version where the audit
+landed" pointer.
+
+Gates: pytest 1130 passed, ruff clean, mypy strict clean.
 
 ## [0.18.0] — 2026-05-16
 
