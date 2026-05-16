@@ -163,5 +163,8 @@ The source ubuntu `add:cron.sh` was Laravel-specific (hardcoded
 `php artisan schedule:run`). `shimkit cron` is the generic
 host-side editor — bring your own schedule and command. Application
 frameworks can layer on top by passing their schedule + command
-through this surface; that's a v0.7+ candidate (`shimkit framework
-laravel cron-install`).
+through this surface — `shimkit framework laravel cron-install`
+(v0.7.0) does exactly that, wrapping `php artisan schedule:run`.
+Symfony + Django framework recipes (v0.14.0+ / v0.16.0) don't
+ship cron-install commands since neither framework has a built-in
+scheduler; users compose with `shimkit cron add` directly.

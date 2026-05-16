@@ -111,6 +111,120 @@
       "title": "BrewConfig",
       "type": "object"
     },
+    "CronConfig": {
+      "additionalProperties": false,
+      "description": "`shimkit cron` — generic user-crontab editor.",
+      "properties": {
+        "managed_prefix": {
+          "default": "# shimkit:",
+          "title": "Managed Prefix",
+          "type": "string"
+        },
+        "backup_dir": {
+          "default": "~/.shimkit/data/cron",
+          "title": "Backup Dir",
+          "type": "string"
+        },
+        "max_managed_entries": {
+          "default": 200,
+          "maximum": 10000,
+          "minimum": 1,
+          "title": "Max Managed Entries",
+          "type": "integer"
+        }
+      },
+      "title": "CronConfig",
+      "type": "object"
+    },
+    "DbConfig": {
+      "additionalProperties": false,
+      "description": "`shimkit db` — container-first database orchestration.",
+      "properties": {
+        "default_volume_root": {
+          "default": "~/.shimkit/data/db",
+          "title": "Default Volume Root",
+          "type": "string"
+        },
+        "default_bind_host": {
+          "default": "127.0.0.1",
+          "title": "Default Bind Host",
+          "type": "string"
+        },
+        "default_id": {
+          "default": "dev",
+          "title": "Default Id",
+          "type": "string"
+        },
+        "default_password": {
+          "default": "shimkit-dev",
+          "title": "Default Password",
+          "type": "string"
+        },
+        "reset_severe_token": {
+          "default": "RESET-DB",
+          "title": "Reset Severe Token",
+          "type": "string"
+        },
+        "engines": {
+          "additionalProperties": {
+            "$ref": "#/$defs/DbEngineEntry"
+          },
+          "title": "Engines",
+          "type": "object"
+        },
+        "host_services": {
+          "additionalProperties": {
+            "$ref": "#/$defs/DbHostServiceEntry"
+          },
+          "title": "Host Services",
+          "type": "object"
+        }
+      },
+      "title": "DbConfig",
+      "type": "object"
+    },
+    "DbEngineEntry": {
+      "additionalProperties": false,
+      "description": "Per-engine container settings — image + default port.",
+      "properties": {
+        "image": {
+          "title": "Image",
+          "type": "string"
+        },
+        "default_port": {
+          "maximum": 65535,
+          "minimum": 1,
+          "title": "Default Port",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "image",
+        "default_port"
+      ],
+      "title": "DbEngineEntry",
+      "type": "object"
+    },
+    "DbHostServiceEntry": {
+      "additionalProperties": false,
+      "description": "Per-engine service-name mapping for `--on-host` mode.\n\nLinux assumes systemd unit names; macOS assumes the literal\n`brew services` formula name. Override per-install when your\ndistro or formula uses a different name.",
+      "properties": {
+        "service_linux": {
+          "title": "Service Linux",
+          "type": "string"
+        },
+        "service_macos": {
+          "title": "Service Macos",
+          "type": "string"
+        }
+      },
+      "required": [
+        "service_linux",
+        "service_macos"
+      ],
+      "title": "DbHostServiceEntry",
+      "type": "object"
+    },
     "DnsConfig": {
       "additionalProperties": false,
       "description": "macOS DNS recovery tool — `shimkit dns`.",
@@ -188,6 +302,196 @@
         }
       },
       "title": "DockerCleanConfig",
+      "type": "object"
+    },
+    "EnvConfig": {
+      "additionalProperties": false,
+      "description": "`.env` viewer + scaffolder — `shimkit env`.",
+      "properties": {
+        "redact_pattern": {
+          "default": "password|passwd|pwd|secret|token|api[_-]?key|authorization|key|credential",
+          "title": "Redact Pattern",
+          "type": "string"
+        },
+        "default_search_paths": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Default Search Paths",
+          "type": "array"
+        }
+      },
+      "title": "EnvConfig",
+      "type": "object"
+    },
+    "FrameworkConfig": {
+      "additionalProperties": false,
+      "description": "Parent for the `shimkit framework *` family of tools.",
+      "properties": {
+        "laravel": {
+          "$ref": "#/$defs/FrameworkLaravelConfig"
+        },
+        "symfony": {
+          "$ref": "#/$defs/FrameworkSymfonyConfig"
+        },
+        "django": {
+          "$ref": "#/$defs/FrameworkDjangoConfig"
+        }
+      },
+      "title": "FrameworkConfig",
+      "type": "object"
+    },
+    "FrameworkDjangoConfig": {
+      "additionalProperties": false,
+      "description": "`shimkit framework django` — Django-specific helpers (v0.16.0+).",
+      "properties": {
+        "web_group": {
+          "default": "www-data",
+          "title": "Web Group",
+          "type": "string"
+        },
+        "file_mode": {
+          "default": "664",
+          "title": "File Mode",
+          "type": "string"
+        },
+        "dir_mode": {
+          "default": "775",
+          "title": "Dir Mode",
+          "type": "string"
+        },
+        "writable_dirs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Writable Dirs",
+          "type": "array"
+        },
+        "default_debug": {
+          "default": true,
+          "title": "Default Debug",
+          "type": "boolean"
+        }
+      },
+      "title": "FrameworkDjangoConfig",
+      "type": "object"
+    },
+    "FrameworkLaravelConfig": {
+      "additionalProperties": false,
+      "description": "`shimkit framework laravel` — Laravel-specific helpers.",
+      "properties": {
+        "web_group": {
+          "default": "www-data",
+          "title": "Web Group",
+          "type": "string"
+        },
+        "file_mode": {
+          "default": "664",
+          "title": "File Mode",
+          "type": "string"
+        },
+        "dir_mode": {
+          "default": "775",
+          "title": "Dir Mode",
+          "type": "string"
+        },
+        "writable_dirs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Writable Dirs",
+          "type": "array"
+        },
+        "default_cron_schedule": {
+          "default": "* * * * *",
+          "title": "Default Cron Schedule",
+          "type": "string"
+        }
+      },
+      "title": "FrameworkLaravelConfig",
+      "type": "object"
+    },
+    "FrameworkSymfonyConfig": {
+      "additionalProperties": false,
+      "description": "`shimkit framework symfony` — Symfony-specific helpers (v0.14.0+).",
+      "properties": {
+        "web_group": {
+          "default": "www-data",
+          "title": "Web Group",
+          "type": "string"
+        },
+        "file_mode": {
+          "default": "664",
+          "title": "File Mode",
+          "type": "string"
+        },
+        "dir_mode": {
+          "default": "775",
+          "title": "Dir Mode",
+          "type": "string"
+        },
+        "writable_dirs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Writable Dirs",
+          "type": "array"
+        },
+        "default_env": {
+          "default": "dev",
+          "title": "Default Env",
+          "type": "string"
+        }
+      },
+      "title": "FrameworkSymfonyConfig",
+      "type": "object"
+    },
+    "GpgConfig": {
+      "additionalProperties": false,
+      "description": "GPG key + git-signing hygiene — `shimkit gpg`.",
+      "properties": {
+        "default_key_type": {
+          "default": "ed25519",
+          "title": "Default Key Type",
+          "type": "string"
+        },
+        "default_key_expiry": {
+          "default": "1y",
+          "title": "Default Key Expiry",
+          "type": "string"
+        }
+      },
+      "title": "GpgConfig",
+      "type": "object"
+    },
+    "HostsConfig": {
+      "additionalProperties": false,
+      "description": "/etc/hosts editor — `shimkit hosts`.",
+      "properties": {
+        "hosts_path": {
+          "default": "/etc/hosts",
+          "title": "Hosts Path",
+          "type": "string"
+        },
+        "apply_list_severe_token": {
+          "default": "APPLY-LIST",
+          "title": "Apply List Severe Token",
+          "type": "string"
+        },
+        "max_entries_per_apply": {
+          "default": 5000,
+          "maximum": 1000000,
+          "minimum": 1,
+          "title": "Max Entries Per Apply",
+          "type": "integer"
+        },
+        "managed_block_marker": {
+          "default": "# === shimkit-managed ===",
+          "title": "Managed Block Marker",
+          "type": "string"
+        }
+      },
+      "title": "HostsConfig",
       "type": "object"
     },
     "JavaConfig": {
@@ -301,6 +605,58 @@
       "title": "JavaVersionEntry",
       "type": "object"
     },
+    "LempConfig": {
+      "additionalProperties": false,
+      "description": "`shimkit stack lemp` — three-container LEMP recipe.",
+      "properties": {
+        "nginx_image": {
+          "default": "nginx:1.27-alpine",
+          "title": "Nginx Image",
+          "type": "string"
+        },
+        "php_fpm_image": {
+          "default": "php:8.3-fpm",
+          "title": "Php Fpm Image",
+          "type": "string"
+        },
+        "default_port": {
+          "default": 18080,
+          "maximum": 65535,
+          "minimum": 1,
+          "title": "Default Port",
+          "type": "integer"
+        },
+        "default_db": {
+          "default": "mysql",
+          "title": "Default Db",
+          "type": "string"
+        }
+      },
+      "title": "LempConfig",
+      "type": "object"
+    },
+    "LogsConfig": {
+      "additionalProperties": false,
+      "description": "System-log tail/grep — `shimkit logs`.",
+      "properties": {
+        "default_lines": {
+          "default": 100,
+          "maximum": 100000,
+          "minimum": 1,
+          "title": "Default Lines",
+          "type": "integer"
+        },
+        "max_grep_lines": {
+          "default": 5000,
+          "maximum": 1000000,
+          "minimum": 1,
+          "title": "Max Grep Lines",
+          "type": "integer"
+        }
+      },
+      "title": "LogsConfig",
+      "type": "object"
+    },
     "PackageManagerEntry": {
       "additionalProperties": false,
       "properties": {
@@ -392,6 +748,31 @@
       "title": "PackageManagersConfig",
       "type": "object"
     },
+    "PortsConfig": {
+      "additionalProperties": false,
+      "description": "Port owner inspection + killer — `shimkit ports`.",
+      "properties": {
+        "default_signal": {
+          "default": "TERM",
+          "title": "Default Signal",
+          "type": "string"
+        },
+        "init_pid_severe_token": {
+          "default": "KILL-INIT",
+          "title": "Init Pid Severe Token",
+          "type": "string"
+        },
+        "system_pid_threshold": {
+          "default": 100,
+          "maximum": 65535,
+          "minimum": 1,
+          "title": "System Pid Threshold",
+          "type": "integer"
+        }
+      },
+      "title": "PortsConfig",
+      "type": "object"
+    },
     "SelfUpdateConfig": {
       "additionalProperties": false,
       "properties": {
@@ -467,6 +848,155 @@
       "title": "ShellToolConfig",
       "type": "object"
     },
+    "SshConfig": {
+      "additionalProperties": false,
+      "description": "SSH key + agent + perms hygiene — `shimkit ssh`.",
+      "properties": {
+        "ssh_dir": {
+          "default": "~/.ssh",
+          "title": "Ssh Dir",
+          "type": "string"
+        },
+        "default_key_type": {
+          "default": "ed25519",
+          "title": "Default Key Type",
+          "type": "string"
+        },
+        "perms": {
+          "$ref": "#/$defs/SshPermsConfig"
+        }
+      },
+      "title": "SshConfig",
+      "type": "object"
+    },
+    "SshPermsConfig": {
+      "additionalProperties": false,
+      "description": "File-mode matrix for `shimkit ssh perms`.",
+      "properties": {
+        "dir": {
+          "default": "700",
+          "title": "Dir",
+          "type": "string"
+        },
+        "private_key": {
+          "default": "600",
+          "title": "Private Key",
+          "type": "string"
+        },
+        "public_key": {
+          "default": "644",
+          "title": "Public Key",
+          "type": "string"
+        },
+        "config": {
+          "default": "644",
+          "title": "Config",
+          "type": "string"
+        },
+        "known_hosts": {
+          "default": "644",
+          "title": "Known Hosts",
+          "type": "string"
+        },
+        "authorized_keys": {
+          "default": "644",
+          "title": "Authorized Keys",
+          "type": "string"
+        }
+      },
+      "title": "SshPermsConfig",
+      "type": "object"
+    },
+    "StackConfig": {
+      "additionalProperties": false,
+      "description": "`shimkit stack *` — multi-container app recipes.",
+      "properties": {
+        "default_project": {
+          "default": "shimkit-dev",
+          "title": "Default Project",
+          "type": "string"
+        },
+        "lemp": {
+          "$ref": "#/$defs/LempConfig"
+        }
+      },
+      "title": "StackConfig",
+      "type": "object"
+    },
+    "TlsConfig": {
+      "additionalProperties": false,
+      "description": "`shimkit tls` — TLS cert lifecycle via container-first certbot.",
+      "properties": {
+        "data_dir": {
+          "default": "~/.shimkit/data/tls",
+          "title": "Data Dir",
+          "type": "string"
+        },
+        "certbot_image": {
+          "default": "certbot/certbot:v3.0.1",
+          "title": "Certbot Image",
+          "type": "string"
+        },
+        "certbot_dns_cloudflare_image": {
+          "default": "certbot/dns-cloudflare:v3.0.1",
+          "title": "Certbot Dns Cloudflare Image",
+          "type": "string"
+        },
+        "certbot_dns_route53_image": {
+          "default": "certbot/dns-route53:v3.0.1",
+          "title": "Certbot Dns Route53 Image",
+          "type": "string"
+        },
+        "default_method": {
+          "default": "webroot",
+          "enum": [
+            "webroot",
+            "dns-cloudflare",
+            "dns-route53"
+          ],
+          "title": "Default Method",
+          "type": "string"
+        },
+        "cloudflare_propagation_seconds": {
+          "default": 60,
+          "maximum": 600,
+          "minimum": 0,
+          "title": "Cloudflare Propagation Seconds",
+          "type": "integer"
+        },
+        "route53_propagation_seconds": {
+          "default": 60,
+          "maximum": 600,
+          "minimum": 0,
+          "title": "Route53 Propagation Seconds",
+          "type": "integer"
+        },
+        "default_email": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Default Email"
+        },
+        "renewal_schedule": {
+          "default": "17 3 * * *",
+          "title": "Renewal Schedule",
+          "type": "string"
+        },
+        "revoke_severe_token": {
+          "default": "REVOKE-TLS",
+          "title": "Revoke Severe Token",
+          "type": "string"
+        }
+      },
+      "title": "TlsConfig",
+      "type": "object"
+    },
     "ToolsConfig": {
       "additionalProperties": false,
       "properties": {
@@ -484,6 +1014,45 @@
         },
         "docker_clean": {
           "$ref": "#/$defs/DockerCleanConfig"
+        },
+        "ports": {
+          "$ref": "#/$defs/PortsConfig"
+        },
+        "hosts": {
+          "$ref": "#/$defs/HostsConfig"
+        },
+        "ssh": {
+          "$ref": "#/$defs/SshConfig"
+        },
+        "env": {
+          "$ref": "#/$defs/EnvConfig"
+        },
+        "gpg": {
+          "$ref": "#/$defs/GpgConfig"
+        },
+        "logs": {
+          "$ref": "#/$defs/LogsConfig"
+        },
+        "db": {
+          "$ref": "#/$defs/DbConfig"
+        },
+        "stack": {
+          "$ref": "#/$defs/StackConfig"
+        },
+        "web": {
+          "$ref": "#/$defs/WebConfig"
+        },
+        "cron": {
+          "$ref": "#/$defs/CronConfig"
+        },
+        "tls": {
+          "$ref": "#/$defs/TlsConfig"
+        },
+        "framework": {
+          "$ref": "#/$defs/FrameworkConfig"
+        },
+        "versions": {
+          "$ref": "#/$defs/VersionsConfig"
         }
       },
       "required": [
@@ -513,6 +1082,140 @@
         }
       },
       "title": "UIConfig",
+      "type": "object"
+    },
+    "VersionConstraint": {
+      "additionalProperties": false,
+      "description": "User-declarable acceptable-range for one external tool.\n\n`min` / `max` accept either a bare version (interpreted as `>=`\n/ `<=`) or an explicit specifier (e.g. ``\"<25.0\"``). `preferred`\nis informational only.",
+      "properties": {
+        "min": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min"
+        },
+        "max": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max"
+        },
+        "preferred": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Preferred"
+        }
+      },
+      "title": "VersionConstraint",
+      "type": "object"
+    },
+    "VersionsConfig": {
+      "additionalProperties": false,
+      "description": "Per-tool version constraints. Every field optional.\n\nAdding a new entry requires the detector also being registered in\n:mod:`shimkit.core.version`; an entry without a detector is\nsilently ignored.",
+      "properties": {
+        "docker": {
+          "$ref": "#/$defs/VersionConstraint"
+        },
+        "nginx": {
+          "$ref": "#/$defs/VersionConstraint"
+        },
+        "git": {
+          "$ref": "#/$defs/VersionConstraint"
+        },
+        "gpg": {
+          "$ref": "#/$defs/VersionConstraint"
+        },
+        "python": {
+          "$ref": "#/$defs/VersionConstraint"
+        },
+        "php": {
+          "$ref": "#/$defs/VersionConstraint"
+        },
+        "openssl": {
+          "$ref": "#/$defs/VersionConstraint"
+        }
+      },
+      "title": "VersionsConfig",
+      "type": "object"
+    },
+    "WebConfig": {
+      "additionalProperties": false,
+      "description": "Parent for the `shimkit web *` family of tools.",
+      "properties": {
+        "nginx": {
+          "$ref": "#/$defs/WebNginxConfig"
+        }
+      },
+      "title": "WebConfig",
+      "type": "object"
+    },
+    "WebNginxConfig": {
+      "additionalProperties": false,
+      "description": "`shimkit web nginx` — vhost generator + (opt-in) host apply.",
+      "properties": {
+        "sites_available_dir": {
+          "default": "/etc/nginx/sites-available",
+          "title": "Sites Available Dir",
+          "type": "string"
+        },
+        "sites_enabled_dir": {
+          "default": "/etc/nginx/sites-enabled",
+          "title": "Sites Enabled Dir",
+          "type": "string"
+        },
+        "reload_cmd": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reload Cmd",
+          "type": "array"
+        },
+        "apply_severe_token": {
+          "default": "APPLY-VHOST",
+          "title": "Apply Severe Token",
+          "type": "string"
+        },
+        "remove_severe_token": {
+          "default": "REMOVE-VHOST",
+          "title": "Remove Severe Token",
+          "type": "string"
+        },
+        "default_php_version": {
+          "default": "8.3",
+          "title": "Default Php Version",
+          "type": "string"
+        },
+        "default_flavor": {
+          "default": "static",
+          "title": "Default Flavor",
+          "type": "string"
+        },
+        "managed_marker": {
+          "default": "# managed-by: shimkit",
+          "title": "Managed Marker",
+          "type": "string"
+        }
+      },
+      "title": "WebNginxConfig",
       "type": "object"
     }
   },

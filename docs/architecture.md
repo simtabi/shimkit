@@ -76,13 +76,15 @@ src/shimkit/
     env/              .env viewer + scaffolder, secret redaction (v0.4.0)
     gpg/              GPG keys + git-signing config (v0.4.0)
     logs/             System log tail/grep (macOS + Linux) (v0.4.0)
-    db/               Container-first databases (5 engines) (v0.5.0)
-                      + --on-host mode (v0.9.0)
+    db/               Container-first databases (6 engines) (v0.5.0)
+                      + --on-host mode (v0.9.0) + redis engine (v0.15.0)
     stack/            Multi-container app recipes (LEMP today) (v0.5.0)
     web/nginx/        Hardened nginx vhost generator (v0.5.0)
     cron/             Generic user-crontab editor (v0.6.0)
     tls/              TLS cert lifecycle via certbot container (v0.8.0)
-    framework/        Framework-specific helpers (Laravel today) (v0.7.0)
+                      + dns-cloudflare (v0.13.0) + dns-route53 (v0.17.0)
+    framework/        Framework recipes: laravel (v0.7.0),
+                      symfony (v0.14.0), django (v0.16.0)
 ```
 
 ## The five load-bearing rules

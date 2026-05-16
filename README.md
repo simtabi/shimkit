@@ -17,11 +17,11 @@ shimkit
   gpg           GPG key + git-signing hygiene.
   logs          System log tail / grep.
   cron          Manage shimkit-tagged entries in the user crontab.
-  db            Container-first databases (5 engines).
+  db            Container-first databases (6 engines).
   stack         Multi-container app recipes (LEMP today).
   web           Web-server tooling (nginx vhost generator).
   tls           TLS cert lifecycle via container-first certbot.
-  framework     Framework-specific helpers (Laravel today).
+  framework     Framework-specific helpers (Laravel + Symfony + Django).
   config        Inspect and edit shimkit configuration.
   doctor        Print system diagnostics useful for bug reports.
   self-update   Update shimkit itself to the latest release.
@@ -83,8 +83,9 @@ behaviour: [`docs/installation.md`](docs/installation.md).
 ### Server-class tools (Docker-first; opt-in to host install)
 
 - **[`shimkit db`](docs/tools/db.md)** — container-first databases
-  (mysql / mariadb / postgres / mongo / phpmyadmin). `up` / `down`
-  / `shell` / `dump` / `reset` (SEVERE) / `status` / `ls`. No
+  (mysql / mariadb / postgres / mongo / redis / phpmyadmin). `up`
+  / `down` / `shell` / `dump` / `reset` (SEVERE) / `status` / `ls`
+  + `--on-host` mode for mysql/mariadb/postgres. No
   host-install path; the container is the source of truth.
 - **[`shimkit web nginx vhost`](docs/tools/web.md)** — hardened
   nginx vhost generator. File-only by default; `apply` and
@@ -95,9 +96,10 @@ behaviour: [`docs/installation.md`](docs/installation.md).
   projects side-by-side via `--project`.
 - **[`shimkit tls`](docs/tools/tls.md)** — TLS cert lifecycle
   helper via container-first certbot. `request` / `list` /
-  `status` / `renew` / `revoke` (SEVERE) / `cron-install`. State
-  persists under `~/.shimkit/data/tls/`; pair with `shimkit cron`
-  for daily renewals.
+  `status` / `renew` / `revoke` (SEVERE) / `cron-install`. Three
+  ACME methods: webroot (HTTP-01), dns-cloudflare, dns-route53
+  (DNS-01 — wildcards). State persists under
+  `~/.shimkit/data/tls/`; pair with `shimkit cron` for daily renewals.
 - `shimkit shell colors` — 256-color ANSI palette diagnostic.
 
 ### Framework recipes
@@ -108,6 +110,14 @@ behaviour: [`docs/installation.md`](docs/installation.md).
   APP_KEY), `cron-install` (wraps `shimkit cron` with `php artisan
   schedule:run`), and `artisan` (host or LEMP-container
   passthrough).
+- **[`shimkit framework symfony`](docs/tools/framework-symfony.md)** —
+  Symfony helpers: `perms` (`var/`), `env` (`.env.local` scaffold
+  with `APP_SECRET`), `cache-clear`, and `bin/console`
+  passthrough.
+- **[`shimkit framework django`](docs/tools/framework-django.md)** —
+  Django helpers: `perms` (`media/` + `staticfiles/`), `env` (.env
+  scaffold with `SECRET_KEY` + django-environ-style
+  `DATABASE_URL`), `migrate`, and `manage.py` passthrough.
 
 Plus three utilities:
 
@@ -178,6 +188,8 @@ The repo root has the short version. The long version lives under
 | `shimkit web nginx` deep-dive | [`docs/tools/web.md`](docs/tools/web.md) |
 | `shimkit tls` deep-dive | [`docs/tools/tls.md`](docs/tools/tls.md) |
 | `shimkit framework laravel` deep-dive | [`docs/tools/framework-laravel.md`](docs/tools/framework-laravel.md) |
+| `shimkit framework symfony` deep-dive | [`docs/tools/framework-symfony.md`](docs/tools/framework-symfony.md) |
+| `shimkit framework django` deep-dive | [`docs/tools/framework-django.md`](docs/tools/framework-django.md) |
 
 Project files:
 

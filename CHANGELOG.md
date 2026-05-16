@@ -6,6 +6,46 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.18.0] — 2026-05-16
+
+### Changed
+
+- `README.md` — synced to v0.17.0 reality:
+  - `db` description: 5 engines → 6 engines (mysql / mariadb /
+    postgres / mongo / redis / phpmyadmin) + `--on-host` mode
+    note for the three SQL engines.
+  - `tls` description: webroot-only → three ACME methods
+    (webroot / dns-cloudflare / dns-route53).
+  - Top-level help-text panel: `framework` description widened
+    from "Laravel today" to "Laravel + Symfony + Django".
+  - Framework recipes section: added Symfony + Django bullets
+    alongside Laravel.
+  - Documentation table: added Symfony + Django deep-dive rows.
+- `docs/architecture.md` — `core/` and `tools/` directory
+  listings refreshed to mention v0.6-v0.17 additions inline
+  (redis engine in db/, dns-cloudflare + dns-route53 in tls/,
+  symfony + django alongside laravel in framework/).
+- `docs/onboarding.md` — sub-app tree diagram expanded from 5
+  tools to all 18 currently registered, with a parenthetical
+  for `framework`'s three sibling recipes.
+- `docs/tools/cron.md` — "Charter notes" section: the
+  "v0.7+ candidate" line is now a "v0.7.0 shipped" note
+  pointing at Laravel's cron-install; mentions Symfony + Django
+  don't ship cron-install (no built-in scheduler).
+- `config/shimkit.schema.json` — regenerated from the pydantic
+  schema. Now includes redis engine, framework.symfony +
+  framework.django blocks, tls.certbot_dns_route53_image +
+  route53_propagation_seconds fields, db.host_services map.
+
+### Notes
+
+Doc-only release. No source-code changes. The schema-regen
+output is committed alongside the pydantic source so external
+JSON-schema consumers see the current shape without needing to
+run the regen command themselves.
+
+Gates: pytest 1130 passed, ruff clean, mypy strict clean.
+
 ## [0.17.0] — 2026-05-16
 
 ### Added

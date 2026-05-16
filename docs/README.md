@@ -98,6 +98,9 @@ Top-level utilities (not tools):
 
 Per-version, user-facing summaries (newest first):
 
+- **[`v0.18.0`](release-notes/v0.18.0.md)** — doc-sync pass.
+  README + architecture + onboarding + cron tool doc + JSON schema
+  brought current with v0.17.0 reality.
 - **[`v0.17.0`](release-notes/v0.17.0.md)** — `shimkit tls --method
   dns-route53` for AWS Route53 DNS-01.
 - **[`v0.16.0`](release-notes/v0.16.0.md)** — `shimkit framework

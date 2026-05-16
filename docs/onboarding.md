@@ -43,9 +43,21 @@ shimkit  (Typer dispatcher, src/shimkit/cli.py)
    │
    ├── java          ──► tools/java/        ┐
    ├── shell         ──► tools/shell/       │
-   ├── dns           ──► tools/dns/         │  every tool follows the
-   ├── adguard       ──► tools/adguard/     │  same manager / commands /
-   └── docker-clean  ──► tools/docker_clean/┘  models / helpers layout
+   ├── dns           ──► tools/dns/         │
+   ├── adguard       ──► tools/adguard/     │
+   ├── docker-clean  ──► tools/docker_clean/│
+   ├── ports         ──► tools/ports/       │
+   ├── hosts         ──► tools/hosts/       │
+   ├── ssh           ──► tools/ssh/         │  every tool follows the
+   ├── env           ──► tools/env/         │  same manager / commands /
+   ├── gpg           ──► tools/gpg/         │  models / helpers layout
+   ├── logs          ──► tools/logs/        │
+   ├── cron          ──► tools/cron/        │
+   ├── db            ──► tools/db/          │
+   ├── stack         ──► tools/stack/       │
+   ├── web           ──► tools/web/         │
+   ├── tls           ──► tools/tls/         │
+   └── framework     ──► tools/framework/   ┘  (laravel, symfony, django)
                               │
                               └─► shimkit.core (shared primitives)
                                   │
