@@ -428,13 +428,18 @@ class TlsConfig(_StrictModel):
     # Certbot image with the dns-cloudflare plugin pre-installed.
     # Used when `--method dns-cloudflare` is passed.
     certbot_dns_cloudflare_image: str = "certbot/dns-cloudflare:v3.0.1"
+    # Certbot image with the dns-route53 plugin pre-installed
+    # (v0.17.0+).
+    certbot_dns_route53_image: str = "certbot/dns-route53:v3.0.1"
     # Default ACME challenge method. `webroot` (HTTP-01) is the
-    # original; `dns-cloudflare` (DNS-01) lands in v0.13.0 and is the
-    # path to wildcard certs.
-    default_method: Literal["webroot", "dns-cloudflare"] = "webroot"
-    # Cloudflare DNS propagation seconds. The plugin's recommended
-    # baseline; safe to lower on accounts with fast propagation.
+    # original; `dns-cloudflare` (DNS-01) landed in v0.13.0 +
+    # `dns-route53` in v0.17.0, both paths to wildcard certs.
+    default_method: Literal["webroot", "dns-cloudflare", "dns-route53"] = "webroot"
+    # DNS propagation seconds. Same knob for both Cloudflare and
+    # Route53 — actual real-world propagation usually 10-30s but
+    # 60s is the safe published default for both plugins.
     cloudflare_propagation_seconds: int = Field(default=60, ge=0, le=600)
+    route53_propagation_seconds: int = Field(default=60, ge=0, le=600)
     # ACME account email. Required by Let's Encrypt for issuance unless
     # `--register-unsafely-without-email` is passed (we don't expose
     # that flag). User config overrides per-install.

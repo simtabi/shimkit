@@ -95,7 +95,7 @@ class TlsManager:
         email: str | None,
         webroot: Path | None = None,
         credentials: Path | None = None,
-        method: Literal["webroot", "dns-cloudflare"] = "webroot",
+        method: Literal["webroot", "dns-cloudflare", "dns-route53"] = "webroot",
         staging: bool = False,
         dry_run: bool = False,
         json_out: bool = False,
@@ -128,11 +128,16 @@ class TlsManager:
                     "from it before running."
                 )
                 return EX_FAIL
-        elif method == "dns-cloudflare":
+        elif method in {"dns-cloudflare", "dns-route53"}:
+            creds_format = (
+                "dns_cloudflare_api_token = <token>"
+                if method == "dns-cloudflare"
+                else "AWS credentials file ([default]\\naws_access_key_id = ...\\naws_secret_access_key = ...)"
+            )
             if credentials is None:
                 UI.error(
-                    "--credentials is required for dns-cloudflare. Provide a "
-                    "file with `dns_cloudflare_api_token = <token>` (mode 0600)."
+                    f"--credentials is required for {method}. Provide a "
+                    f"file with `{creds_format}` (mode 0600)."
                 )
                 return EX_FAIL
             if not credentials.is_file():
@@ -151,11 +156,16 @@ class TlsManager:
                 )
                 return EX_FAIL
 
+        propagation_seconds = (
+            cfg.route53_propagation_seconds
+            if method == "dns-route53"
+            else cfg.cloudflare_propagation_seconds
+        )
         argv = certbot.request_argv(
             domains=domains,
             email=resolved_email,
             method=method,
-            propagation_seconds=cfg.cloudflare_propagation_seconds,
+            propagation_seconds=propagation_seconds,
             staging=staging,
             dry_run=dry_run,
         )
@@ -371,23 +381,28 @@ class TlsManager:
         command: list[str],
         webroot: Path | None = None,
         credentials: Path | None = None,
-        method: Literal["webroot", "dns-cloudflare"] = "webroot",
+        method: Literal["webroot", "dns-cloudflare", "dns-route53"] = "webroot",
         dry_run: bool,
     ) -> ExecOutcome:
         assert self._env is not None, "call boot() first"
         cfg = get_config().tools.tls
         if dry_run:
             return ExecOutcome(exit_code=0, stdout="(dry-run)\n", stderr="")
+        credentials_mount: Literal["cloudflare", "route53"] = (
+            "route53" if method == "dns-route53" else "cloudflare"
+        )
         volumes = certbot.container_volumes(
             data_dir=Path(cfg.data_dir),
             webroot=webroot,
             credentials=credentials,
+            credentials_mount=credentials_mount,
         )
-        image = (
-            cfg.certbot_dns_cloudflare_image
-            if method == "dns-cloudflare"
-            else cfg.certbot_image
-        )
+        if method == "dns-cloudflare":
+            image = cfg.certbot_dns_cloudflare_image
+        elif method == "dns-route53":
+            image = cfg.certbot_dns_route53_image
+        else:
+            image = cfg.certbot_image
         return self._env.run_oneshot(
             image,
             command=command,

@@ -195,8 +195,10 @@
       "data_dir": "~/.shimkit/data/tls",
       "certbot_image": "certbot/certbot:v3.0.1",
       "certbot_dns_cloudflare_image": "certbot/dns-cloudflare:v3.0.1",
+      "certbot_dns_route53_image": "certbot/dns-route53:v3.0.1",
       "default_method": "webroot",
       "cloudflare_propagation_seconds": 60,
+      "route53_propagation_seconds": 60,
       "default_email": null,
       "renewal_schedule": "17 3 * * *",
       "revoke_severe_token": "REVOKE-TLS"

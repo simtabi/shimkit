@@ -41,6 +41,43 @@ docker run --rm \
   [--staging]
 ```
 
+### DNS-route53 (DNS-01, v0.17.0+)
+
+`shimkit tls request --method dns-route53` runs:
+
+```
+docker run --rm \
+  -v ~/.shimkit/data/tls/etc-letsencrypt:/etc/letsencrypt \
+  -v ~/.shimkit/data/tls/var-lib-letsencrypt:/var/lib/letsencrypt \
+  -v <aws-credentials-file>:/root/.aws/credentials:ro \
+  certbot/dns-route53:v3.0.1 \
+  certonly --non-interactive --agree-tos \
+  --email ops@example.com \
+  --dns-route53 \
+  --dns-route53-propagation-seconds 60 \
+  -d example.com [-d '*.example.com'] \
+  [--staging]
+```
+
+**Required for wildcards on AWS-hosted domains.** The Route53
+plugin reads boto3's default credentials file —
+`/root/.aws/credentials` inside the container. shimkit mounts
+your local AWS credentials file directly at that path (different
+from Cloudflare's `--dns-cloudflare-credentials` flag).
+
+**Credentials file format** (standard AWS):
+
+```ini
+[default]
+aws_access_key_id = AKIAIOSFODNN7EXAMPLE
+aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+```
+
+The IAM key needs `route53:ChangeResourceRecordSets` and
+`route53:GetChange` on the hosted zone you're issuing for.
+
+**Mode 0600 required** (same check as Cloudflare).
+
 ### DNS-cloudflare (DNS-01, v0.13.0+)
 
 `shimkit tls request --method dns-cloudflare` runs:
@@ -207,11 +244,12 @@ in `tls list` / `tls status` (which shells out to `openssl x509
   punishing (5 failed validations / hour / hostname). Always
   pass `--staging` for first runs; the resulting cert isn't
   trusted but proves the webroot setup works.
-- **Webroot vs DNS-01.** Both are wired as of v0.13.0. Webroot
-  (HTTP-01) is the default; DNS-01 via Cloudflare is opt-in via
-  `--method dns-cloudflare` and is the **only** path to wildcard
-  certs. Other DNS providers (Route53, DigitalOcean, etc.) each
-  need their own credential surface and are deferred.
+- **Webroot vs DNS-01.** As of v0.17.0, three methods are wired:
+  webroot (HTTP-01, default), dns-cloudflare (DNS-01), and
+  dns-route53 (DNS-01). DNS-01 is the only path to wildcard
+  certs. Other DNS providers (DigitalOcean, Hurricane Electric,
+  etc.) each need their own credential surface and provider-
+  specific image — opt-in extras in a future release.
 - **No PyPI extra.** This tool reuses the `[docker-clean]`
   extra's `docker` package — no new install footprint.
 - **Renewal cadence.** Let's Encrypt certs are valid for 90 days;

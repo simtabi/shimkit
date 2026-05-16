@@ -89,11 +89,13 @@ def test_request_argv_webroot_unchanged_by_dns_addition() -> None:
 
 
 def test_request_argv_rejects_unknown_method() -> None:
+    # `dns-digitalocean` is not yet wired (v0.17.0 only adds
+    # cloudflare + route53). Other providers fail the method gate.
     with pytest.raises(ValueError):
         certbot.request_argv(
             domains=["a.com"],
             email="o@a.com",
-            method="dns-route53",  # type: ignore[arg-type]
+            method="dns-digitalocean",  # type: ignore[arg-type]
         )
 
 

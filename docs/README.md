@@ -98,6 +98,8 @@ Top-level utilities (not tools):
 
 Per-version, user-facing summaries (newest first):
 
+- **[`v0.17.0`](release-notes/v0.17.0.md)** — `shimkit tls --method
+  dns-route53` for AWS Route53 DNS-01.
 - **[`v0.16.0`](release-notes/v0.16.0.md)** — `shimkit framework
   django` third framework recipe.
 - **[`v0.15.0`](release-notes/v0.15.0.md)** — `shimkit db redis`

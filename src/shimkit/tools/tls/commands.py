@@ -67,8 +67,10 @@ def request(
     method: str = typer.Option(
         "webroot",
         "--method",
-        help="ACME challenge method: webroot (default, HTTP-01) or "
-        "dns-cloudflare (DNS-01; required for wildcard certs).",
+        help="ACME challenge method: webroot (default, HTTP-01), "
+        "dns-cloudflare (DNS-01 via Cloudflare API), or dns-route53 "
+        "(DNS-01 via AWS Route53). DNS-01 methods are required for "
+        "wildcard certs.",
     ),
     webroot: Path = typer.Option(
         None,
@@ -79,9 +81,10 @@ def request(
     credentials: Path = typer.Option(
         None,
         "--credentials",
-        help="Path to a Cloudflare credentials file (mode 0600). "
-        "Format: `dns_cloudflare_api_token = <token>`. "
-        "(dns-cloudflare method only).",
+        help="Path to a DNS-01 credentials file (mode 0600). For "
+        "dns-cloudflare: `dns_cloudflare_api_token = <token>`. For "
+        "dns-route53: a standard AWS credentials file with "
+        "[default] aws_access_key_id + aws_secret_access_key.",
     ),
     staging: bool = typer.Option(
         False,
@@ -95,7 +98,7 @@ def request(
 ) -> None:
     """Request a new TLS cert via certbot. MODERATE prompt.
 
-    Two challenge methods supported:
+    Three challenge methods supported:
 
     - ``--method webroot`` (default, HTTP-01) — requires nginx (or
       any webserver) to be serving the webroot at
@@ -103,6 +106,10 @@ def request(
     - ``--method dns-cloudflare`` (DNS-01) — required for wildcard
       certs (``*.example.com``). Requires a Cloudflare API token
       with `Zone:DNS:Edit` scope on the zone.
+    - ``--method dns-route53`` (DNS-01) — required for wildcard
+      certs on AWS Route53-hosted domains. Requires an AWS access
+      key with `Route53:ChangeResourceRecordSets` on the hosted
+      zone.
     """
     from .manager import TlsManager
 

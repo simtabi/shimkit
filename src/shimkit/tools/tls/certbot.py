@@ -11,7 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Literal
 
-Method = Literal["webroot", "dns-cloudflare"]
+Method = Literal["webroot", "dns-cloudflare", "dns-route53"]
 
 
 def request_argv(
@@ -35,10 +35,15 @@ def request_argv(
     file at ``credentials_in_container`` — `dns_cloudflare_api_token
     = <token>` (one line). Cloudflare propagation delays vary; 60s
     is a safe default that the Cloudflare plugin itself recommends.
+
+    The ``dns-route53`` method reads AWS credentials from
+    ``~/.aws/credentials`` inside the container (boto3 default).
+    No `--dns-route53-credentials` flag exists; the manager mounts
+    the user's AWS credentials file at ``/root/.aws/credentials``.
     """
     if not domains:
         raise ValueError("at least one domain is required")
-    if method not in {"webroot", "dns-cloudflare"}:
+    if method not in {"webroot", "dns-cloudflare", "dns-route53"}:
         raise ValueError(f"unsupported method: {method!r}")
 
     argv: list[str] = [
@@ -50,13 +55,21 @@ def request_argv(
     ]
     if method == "webroot":
         argv.extend(["--webroot", "-w", webroot_in_container])
-    else:  # dns-cloudflare
+    elif method == "dns-cloudflare":
         argv.extend(
             [
                 "--dns-cloudflare",
                 "--dns-cloudflare-credentials",
                 credentials_in_container,
                 "--dns-cloudflare-propagation-seconds",
+                str(propagation_seconds),
+            ]
+        )
+    else:  # dns-route53
+        argv.extend(
+            [
+                "--dns-route53",
+                "--dns-route53-propagation-seconds",
                 str(propagation_seconds),
             ]
         )
@@ -114,6 +127,7 @@ def container_volumes(
     data_dir: Path,
     webroot: Path | None = None,
     credentials: Path | None = None,
+    credentials_mount: Literal["cloudflare", "route53"] = "cloudflare",
 ) -> dict[str, dict[str, str]]:
     """Build the docker-py `volumes` dict for a certbot container run.
 
@@ -121,8 +135,19 @@ def container_volumes(
     cert tree survives the one-shot container's exit. When a
     webroot is supplied (issuance / renewal-webroot mode), bind it
     read-only at ``/webroot``. When DNS-01 credentials are supplied,
-    bind the parent dir read-only at ``/credentials`` — the file
-    must already have mode 0600 to satisfy certbot's strict check.
+    bind them read-only at the provider-specific path:
+
+    - ``credentials_mount="cloudflare"`` — the credentials file's
+      parent dir is bound at ``/credentials`` (the
+      ``--dns-cloudflare-credentials`` flag picks up the file by
+      its name under that dir).
+    - ``credentials_mount="route53"`` — the credentials file itself
+      is bound at ``/root/.aws/credentials`` (boto3's default
+      search path). The route53 plugin reads it directly; there's
+      no ``--dns-route53-credentials`` flag.
+
+    The credentials file must already have mode 0600 to satisfy
+    certbot's strict check.
     """
     volumes: dict[str, dict[str, str]] = {
         str((data_dir / "etc-letsencrypt").expanduser()): {
@@ -140,14 +165,21 @@ def container_volumes(
             "mode": "ro",
         }
     if credentials is not None:
-        # Mount the parent dir; certbot reads
-        # /credentials/<filename> per the request_argv default.
-        # The file's mode must be 0600 (caller's responsibility);
-        # the file content is just `dns_cloudflare_api_token = ...`.
-        volumes[str(credentials.expanduser().parent)] = {
-            "bind": "/credentials",
-            "mode": "ro",
-        }
+        if credentials_mount == "route53":
+            # boto3 reads ~/.aws/credentials by default; the
+            # container's ~ is /root. Mount the file directly so
+            # the credentials path inside is exactly that.
+            volumes[str(credentials.expanduser())] = {
+                "bind": "/root/.aws/credentials",
+                "mode": "ro",
+            }
+        else:
+            # Cloudflare: mount the parent dir; certbot reads
+            # /credentials/<filename> per the request_argv default.
+            volumes[str(credentials.expanduser().parent)] = {
+                "bind": "/credentials",
+                "mode": "ro",
+            }
     return volumes
 
 

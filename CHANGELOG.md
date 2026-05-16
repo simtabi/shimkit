@@ -6,6 +6,60 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.17.0] — 2026-05-16
+
+### Added
+
+- **`shimkit tls --method dns-route53`** — AWS Route53 DNS-01
+  alongside the v0.13.0 Cloudflare path. Uses the upstream
+  `certbot/dns-route53:v3.0.1` image (auto-selected when
+  `--method dns-route53` is passed).
+- `tools.tls.certbot_dns_route53_image` config field — pin the
+  Route53 plugin image independently.
+- `tools.tls.route53_propagation_seconds` config field — same
+  range (`[0, 600]`) as the Cloudflare equivalent. Default `60`.
+
+### Changed
+
+- `certbot.container_volumes` accepts a `credentials_mount`
+  parameter (`"cloudflare"` or `"route53"`). Cloudflare keeps the
+  v0.13.0 behaviour of mounting the credentials file's parent
+  directory at `/credentials`; Route53 mounts the file itself at
+  `/root/.aws/credentials` (boto3's default search path — no
+  `--dns-route53-credentials` flag exists).
+- `certbot.request_argv` accepts `method="dns-route53"`. Emits
+  `--dns-route53` + `--dns-route53-propagation-seconds`.
+- `TlsConfig.default_method` widened to include `"dns-route53"`.
+- `tls request` `--credentials` flag help text covers both
+  Cloudflare token format and AWS credentials file format.
+
+### Tests
+
+- 14 new tests in `tests/test_tools_tls_dns_route53.py` (1116 →
+  1130 total). Pure argv-builder shape (Route53 flags +
+  propagation + staging/dry-run; webroot + cloudflare paths
+  unaffected), container_volumes route53 mount target
+  (`/root/.aws/credentials` vs Cloudflare's `/credentials`),
+  manager validation (missing-credentials / missing-file /
+  loose-mode refusal / happy path picks dns-route53 image /
+  uses route53_propagation_seconds not cloudflare's / JSON
+  output includes method), config plumbing (route53 image +
+  propagation_seconds range validation).
+- Adjusted one Cloudflare test that previously used `dns-route53`
+  as the "unknown method" placeholder — now uses
+  `dns-digitalocean`.
+
+### Notes
+
+Second DNS-01 provider. Cloudflare + Route53 cover the two
+most-used providers in the ACME ecosystem. Other providers
+(DigitalOcean, Hurricane Electric, etc.) each need their own
+credential surface and provider-specific image — opt-in extras
+in a future release.
+
+Gates: pytest 1130 passed, ruff clean, mypy strict clean. No new
+optional dependency extras.
+
 ## [0.16.0] — 2026-05-16
 
 ### Added
