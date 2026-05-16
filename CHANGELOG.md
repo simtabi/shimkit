@@ -6,6 +6,57 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.15.0] — 2026-05-16
+
+### Added
+
+- **`shimkit db redis`** — sixth engine in the `db` registry.
+  Image `redis:7-alpine`, host port `:16379`, container port 6379.
+  AUTH via `--requirepass` (Redis's official image doesn't read
+  a `REDIS_PASSWORD` env var), AOF persistence on by default.
+- **`Engine.up_command(password)`** — new method on the engine
+  ABC. Default returns `None` (use image's default CMD). Redis
+  overrides to return `["redis-server", "--requirepass", PW,
+  "--appendonly", "yes"]`. Available to any future engine that
+  needs argv-passed config the image doesn't expose as env vars.
+- `Redis` engine driver in `tools/db/engines/redis.py`. Marks
+  `supports_dump=False` (Redis backups are volume-level RDB
+  snapshots, not logical dumps) and `supports_on_host=False`
+  (same charter as mongo / phpmyadmin — shimkit doesn't manage
+  host-installed Redis).
+
+### Changed
+
+- `stack lemp` rejects non-SQL backing DBs with a clearer error
+  (mongo / redis / phpmyadmin can run alongside via the per-
+  engine `shimkit db <engine> up` but don't fit the L-E-M-P role).
+- `DbManager._EngineBound.up` plumbs `Engine.up_command` through
+  to `docker run` via the new optional `command=` kwarg.
+
+### Tests
+
+- 16 new tests in `tests/test_tools_db_redis.py` (1070 → 1086
+  total). Registry membership + insertion order, pure engine
+  driver shape (environment_for_up empty / up_command argv /
+  shell_argv with --no-auth-warning / no-password fallback /
+  supports_dump=False / supports_on_host=False / data_dir /
+  container_port), manager plumbing (up passes command= through
+  docker.containers.run / dump refused / on-host refused),
+  config defaults present.
+- Adjusted two pre-existing tests that used `redis` as an "unknown
+  engine" placeholder (now a valid name).
+
+### Notes
+
+`shimkit db redis up` gives Laravel / Symfony / Django users a
+local Redis cache and queue backend without touching the host
+package manager. Pairs with the framework recipes — set
+`REDIS_URL=redis://default:shimkit-dev@127.0.0.1:16379/0` in
+your `.env` / `.env.local` / `settings.py`.
+
+Gates: pytest 1086 passed, ruff clean, mypy strict clean. No new
+optional dependency extras.
+
 ## [0.14.0] — 2026-05-16
 
 ### Added

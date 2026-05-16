@@ -94,6 +94,8 @@ Top-level utilities (not tools):
 
 Per-version, user-facing summaries (newest first):
 
+- **[`v0.15.0`](release-notes/v0.15.0.md)** — `shimkit db redis`
+  sixth engine. `Engine.up_command()` for argv-passed config.
 - **[`v0.14.0`](release-notes/v0.14.0.md)** — `shimkit framework
   symfony` sibling recipe under the `framework` parent.
 - **[`v0.13.0`](release-notes/v0.13.0.md)** — `shimkit tls --method

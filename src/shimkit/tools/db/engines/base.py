@@ -104,6 +104,16 @@ class Engine:
         """
         return False
 
+    def up_command(self, *, password: str) -> list[str] | None:
+        """Override the image's default ``CMD``.
+
+        Default is ``None`` — use the image's built-in entrypoint /
+        cmd. Engines that need argv-passed config (e.g. Redis's
+        ``--requirepass``, which isn't exposed as an env var by the
+        official image) override and return the full argv.
+        """
+        return None
+
     # ---- --on-host mode -------------------------------------------------
 
     def supports_on_host(self) -> bool:

@@ -156,6 +156,7 @@
         "mariadb":    {"image": "mariadb:10.11", "default_port": 13307},
         "postgres":   {"image": "postgres:16",   "default_port": 15432},
         "mongo":      {"image": "mongo:7",       "default_port": 17017},
+        "redis":      {"image": "redis:7-alpine","default_port": 16379},
         "phpmyadmin": {"image": "phpmyadmin:5",  "default_port": 18080}
       },
       "host_services": {

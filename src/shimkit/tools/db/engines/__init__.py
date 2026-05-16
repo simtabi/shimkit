@@ -16,6 +16,7 @@ from .mongo import Mongo
 from .mysql import MySQL
 from .phpmyadmin import PhpMyAdmin
 from .postgres import Postgres
+from .redis import Redis
 
 # Insertion order is preserved so `db ls` / help output is stable.
 REGISTRY: dict[str, Engine] = {
@@ -23,6 +24,7 @@ REGISTRY: dict[str, Engine] = {
     "mariadb": MariaDB(),
     "postgres": Postgres(),
     "mongo": Mongo(),
+    "redis": Redis(),
     "phpmyadmin": PhpMyAdmin(),
 }
 
@@ -42,6 +44,7 @@ __all__ = [
     "MySQL",
     "PhpMyAdmin",
     "Postgres",
+    "Redis",
     "UnsupportedEngineOperationError",
     "get",
 ]

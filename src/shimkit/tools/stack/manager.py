@@ -123,6 +123,18 @@ class _LempBound:
         if db_eng not in dcfg.engines:
             UI.error(f"Unknown db engine {db_eng!r}. Known: {', '.join(dcfg.engines)}.")
             return EX_FAIL
+        # The LEMP recipe targets SQL-class backing DBs. Other db
+        # engines (mongo, redis, phpmyadmin) can run alongside via
+        # `shimkit db <engine> up` but don't fit the L-E-M-P role.
+        lemp_backing_dbs = {"mysql", "mariadb", "postgres"}
+        if db_eng not in lemp_backing_dbs:
+            UI.error(
+                f"`stack lemp` only supports SQL backing DBs "
+                f"({', '.join(sorted(lemp_backing_dbs))}); got {db_eng!r}. "
+                f"Run `shimkit db {db_eng} up` separately to add a "
+                f"cache / non-relational backend."
+            )
+            return EX_FAIL
 
         try:
             actions = _lemp.up(

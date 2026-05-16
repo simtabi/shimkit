@@ -1,7 +1,7 @@
 # shimkit db
 
-Container-first database orchestration. Five engines today
-(`mysql`, `mariadb`, `postgres`, `mongo`, `phpmyadmin`); every one
+Container-first database orchestration. Six engines today
+(`mysql`, `mariadb`, `postgres`, `mongo`, `redis`, `phpmyadmin`); every one
 runs as a Docker container, bound to `127.0.0.1` by default,
 backed by a host volume at `~/.shimkit/data/db/<engine>-<id>/`.
 
@@ -73,11 +73,30 @@ Limits:
 | mariadb    | `mariadb:10.11`  | `:13307` | `3306`  | `root` |
 | postgres   | `postgres:16`    | `:15432` | `5432`  | `postgres` |
 | mongo      | `mongo:7`        | `:17017` | `27017` | `admin` |
+| redis      | `redis:7-alpine` | `:16379` | `6379`  | n/a (`--requirepass`) |
 | phpmyadmin | `phpmyadmin:5`   | `:18080` | `80`    | n/a (web UI) |
 
 Shimkit-prefixed host ports keep a system-installed engine
 (if any) from colliding. Override per-invocation with `--port` or
 project-wide via `tools.db.engines.<engine>.default_port`.
+
+### Redis (v0.15.0)
+
+Redis is the odd engine: no admin user, no SQL, no dump. The
+official `redis:7-alpine` image doesn't read a `REDIS_PASSWORD`
+env var, so shimkit configures AUTH by passing `--requirepass`
+as the container command. AOF persistence (`--appendonly yes`) is
+on by default — that's the recommended dev posture.
+
+- **`dump` is unsupported** — Redis backups are volume-level
+  (the `/data/dump.rdb` file inside the managed volume), not
+  logical dumps. Trigger one from the shell:
+  `shimkit db redis shell` then `SAVE` (synchronous) or `BGSAVE`
+  (background).
+- **`--on-host` is unsupported** — same reason as mongo /
+  phpmyadmin: shimkit doesn't install host packages. Users
+  wanting host Redis run `brew install redis` /
+  `apt install redis-server` themselves.
 
 Default bind is **`127.0.0.1`** (loopback only). Override with
 `--bind 0.0.0.0` if you really want to expose the port on the LAN —

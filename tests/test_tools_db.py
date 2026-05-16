@@ -277,10 +277,12 @@ def test_db_up_custom_id_changes_container_name(
 
 
 def test_db_up_for_unknown_engine_errors() -> None:
-    # The Typer registry only has the 5 engines; trying to invoke an
-    # unknown sub-app gives Typer's usage error.
+    # The Typer registry only knows the registered engines; an
+    # unknown sub-app name gives Typer's usage error. `redis` joined
+    # the registry in v0.15.0, so we use a name that's definitely
+    # not in the list.
     runner = CliRunner()
-    result = runner.invoke(app, ["db", "redis", "up"])
+    result = runner.invoke(app, ["db", "elasticsearch", "up"])
     assert result.exit_code == 2  # Typer usage error
 
 

@@ -304,6 +304,7 @@ class DbConfig(_StrictModel):
             "mariadb": DbEngineEntry(image="mariadb:10.11", default_port=13307),
             "postgres": DbEngineEntry(image="postgres:16", default_port=15432),
             "mongo": DbEngineEntry(image="mongo:7", default_port=17017),
+            "redis": DbEngineEntry(image="redis:7-alpine", default_port=16379),
             "phpmyadmin": DbEngineEntry(image="phpmyadmin:5", default_port=18080),
         }
     )

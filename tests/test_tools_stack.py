@@ -92,8 +92,10 @@ def test_safe_password_env_for_mysql() -> None:
 
 
 def test_safe_password_env_unknown_engine_raises() -> None:
+    # `elasticsearch` is not in the db engine registry, so
+    # _safe_password_env's lookup returns None and we raise.
     with pytest.raises(ValueError, match="Unknown db engine"):
-        lemp._safe_password_env("redis", "x")
+        lemp._safe_password_env("elasticsearch", "x")
 
 
 # ─── boot ──────────────────────────────────────────────────────────────

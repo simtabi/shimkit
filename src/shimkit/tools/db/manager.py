@@ -241,15 +241,18 @@ class _EngineBound:
                 return EX_OK
             if volume_path:
                 Path(volume_path).mkdir(parents=True, exist_ok=True)
-            self._env.run(
-                self._image,
-                name=name,
-                env=env,
-                ports=ports,
-                volumes=volumes,
-                extra_hosts=extra_hosts or None,
-                restart_policy={"Name": "unless-stopped"},
-            )
+            run_kwargs: dict[str, Any] = {
+                "name": name,
+                "env": env,
+                "ports": ports,
+                "volumes": volumes,
+                "extra_hosts": extra_hosts or None,
+                "restart_policy": {"Name": "unless-stopped"},
+            }
+            up_cmd = self._engine.up_command(password=pwd)
+            if up_cmd is not None:
+                run_kwargs["command"] = up_cmd
+            self._env.run(self._image, **run_kwargs)
             result = UpResult(
                 engine=self._engine.name,
                 container_name=name,
