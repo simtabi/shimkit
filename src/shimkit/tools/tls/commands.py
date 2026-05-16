@@ -64,8 +64,24 @@ def request(
         "--email",
         help="ACME account email (default: tools.tls.default_email).",
     ),
+    method: str = typer.Option(
+        "webroot",
+        "--method",
+        help="ACME challenge method: webroot (default, HTTP-01) or "
+        "dns-cloudflare (DNS-01; required for wildcard certs).",
+    ),
     webroot: Path = typer.Option(
-        ..., "--webroot", help="Local webroot served at /.well-known/acme-challenge/."
+        None,
+        "--webroot",
+        help="Local webroot served at /.well-known/acme-challenge/ "
+        "(webroot method only).",
+    ),
+    credentials: Path = typer.Option(
+        None,
+        "--credentials",
+        help="Path to a Cloudflare credentials file (mode 0600). "
+        "Format: `dns_cloudflare_api_token = <token>`. "
+        "(dns-cloudflare method only).",
     ),
     staging: bool = typer.Option(
         False,
@@ -77,10 +93,21 @@ def request(
     yes: bool = YES,
     force: bool = FORCE,
 ) -> None:
-    """Request a new TLS cert via certbot webroot. MODERATE prompt."""
+    """Request a new TLS cert via certbot. MODERATE prompt.
+
+    Two challenge methods supported:
+
+    - ``--method webroot`` (default, HTTP-01) — requires nginx (or
+      any webserver) to be serving the webroot at
+      ``/.well-known/acme-challenge/``.
+    - ``--method dns-cloudflare`` (DNS-01) — required for wildcard
+      certs (``*.example.com``). Requires a Cloudflare API token
+      with `Zone:DNS:Edit` scope on the zone.
+    """
     from .manager import TlsManager
 
-    summary = f"Request cert for {', '.join(domain)} (webroot: {webroot})"
+    method_label = f" via {method}" if method != "webroot" else ""
+    summary = f"Request cert for {', '.join(domain)}{method_label}"
     if not dry_run and not Menu.prompt_for_change(
         summary,
         yes=yes,
@@ -96,6 +123,8 @@ def request(
             domains=list(domain),
             email=email,
             webroot=webroot,
+            credentials=credentials,
+            method=method,  # type: ignore[arg-type]
             staging=staging,
             dry_run=dry_run,
             json_out=json_out,

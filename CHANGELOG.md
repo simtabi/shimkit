@@ -6,6 +6,61 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.13.0] — 2026-05-16
+
+### Added
+
+- `shimkit tls request --method dns-cloudflare` — DNS-01 ACME
+  challenge via Cloudflare. Required for wildcard certs (`*.example.com`).
+  Uses the upstream `certbot/dns-cloudflare:v3.0.1` image (auto-
+  selected when `--method dns-cloudflare` is passed; the webroot
+  method still uses `certbot/certbot:v3.0.1`).
+- `--credentials PATH` flag on `tls request`. Points at a file
+  containing `dns_cloudflare_api_token = <token>` (one line).
+  Manager refuses the file when mode isn't 0600 — certbot also
+  refuses, but shimkit catches it earlier with a clearer message.
+  Parent directory of the file is mounted at `/credentials`
+  inside the container read-only.
+- `tools.tls.certbot_dns_cloudflare_image` config field — pin the
+  DNS plugin image independently of the webroot image.
+- `tools.tls.cloudflare_propagation_seconds` config field —
+  default `60`, range `[0, 600]`. Lower it on accounts with fast
+  Cloudflare propagation; raise for slow zones.
+
+### Changed
+
+- `_is_valid_domain` accepts a leading `*.` for wildcard domains
+  (required by DNS-01). The rest of the domain validates as before.
+- `tls request` `--webroot` is now optional — required for the
+  webroot method but not for dns-cloudflare. The error message
+  guides the user to the right flag combination for each method.
+- `TlsConfig.default_method` widened from `Literal["webroot"]` to
+  `Literal["webroot", "dns-cloudflare"]`.
+
+### Tests
+
+- 17 new tests in `tests/test_tools_tls_dns_cloudflare.py` (1027 →
+  1044 total). Pure argv-builder shape (DNS flags + propagation +
+  staging/dry-run combos; webroot path unaffected), container_volumes
+  with + without credentials mount, manager validation
+  (missing-credentials refusal / missing-file refusal / loose-mode
+  refusal / happy path picks dns-cloudflare image and mounts
+  credentials parent dir / JSON output includes method), config
+  plumbing (cloudflare_propagation_seconds range validation).
+
+### Notes
+
+DNS-01 is the only ACME path that supports wildcard certs. The
+plugin image is ~70MB so the first `tls request --method
+dns-cloudflare` pulls it; subsequent runs are local.
+
+Cloudflare-only today. Other DNS providers (Route53,
+DigitalOcean, etc.) each need their own credential surface — opt-
+in extras in a future release.
+
+Gates: pytest 1044 passed, ruff clean, mypy strict clean. No new
+optional dependency extras (reuses `[docker-clean]`'s `docker`).
+
 ## [0.12.0] — 2026-05-15
 
 ### Changed

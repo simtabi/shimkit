@@ -382,13 +382,20 @@ class TlsConfig(_StrictModel):
 
     # Volume root for /etc/letsencrypt content. Persists across renewals.
     data_dir: str = "~/.shimkit/data/tls"
-    # Certbot image to run one-shot. Pin to a known-good version rather
-    # than `:latest` so a registry-side image change can't break renewals
-    # silently.
+    # Certbot image used for webroot challenges. Pin to a known-good
+    # version rather than `:latest` so a registry-side image change
+    # can't break renewals silently.
     certbot_image: str = "certbot/certbot:v3.0.1"
-    # Default ACME challenge method. Only `webroot` is wired today;
-    # `dns-cloudflare` etc. land as opt-in extras in a later release.
-    default_method: Literal["webroot"] = "webroot"
+    # Certbot image with the dns-cloudflare plugin pre-installed.
+    # Used when `--method dns-cloudflare` is passed.
+    certbot_dns_cloudflare_image: str = "certbot/dns-cloudflare:v3.0.1"
+    # Default ACME challenge method. `webroot` (HTTP-01) is the
+    # original; `dns-cloudflare` (DNS-01) lands in v0.13.0 and is the
+    # path to wildcard certs.
+    default_method: Literal["webroot", "dns-cloudflare"] = "webroot"
+    # Cloudflare DNS propagation seconds. The plugin's recommended
+    # baseline; safe to lower on accounts with fast propagation.
+    cloudflare_propagation_seconds: int = Field(default=60, ge=0, le=600)
     # ACME account email. Required by Let's Encrypt for issuance unless
     # `--register-unsafely-without-email` is passed (we don't expose
     # that flag). User config overrides per-install.

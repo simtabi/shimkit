@@ -24,7 +24,9 @@ flags after (`--json`, `--dry-run`, `--yes`, `--force`).
 
 ## How it works
 
-`shimkit tls request` runs:
+### Webroot (HTTP-01, default)
+
+`shimkit tls request --method webroot` runs:
 
 ```
 docker run --rm \
@@ -38,6 +40,45 @@ docker run --rm \
   -d example.com [-d www.example.com] \
   [--staging]
 ```
+
+### DNS-cloudflare (DNS-01, v0.13.0+)
+
+`shimkit tls request --method dns-cloudflare` runs:
+
+```
+docker run --rm \
+  -v ~/.shimkit/data/tls/etc-letsencrypt:/etc/letsencrypt \
+  -v ~/.shimkit/data/tls/var-lib-letsencrypt:/var/lib/letsencrypt \
+  -v <credentials-parent-dir>:/credentials:ro \
+  certbot/dns-cloudflare:v3.0.1 \
+  certonly --non-interactive --agree-tos \
+  --email ops@example.com \
+  --dns-cloudflare \
+  --dns-cloudflare-credentials /credentials/cloudflare.ini \
+  --dns-cloudflare-propagation-seconds 60 \
+  -d example.com [-d '*.example.com'] \
+  [--staging]
+```
+
+**Required for wildcards.** `*.example.com` certs only work via
+DNS-01. The Cloudflare plugin needs a Cloudflare API token with
+`Zone:DNS:Edit` scope on the zone you're issuing for.
+
+**Credentials file format** (one line):
+
+```ini
+dns_cloudflare_api_token = your-cloudflare-api-token-here
+```
+
+**Mode 0600 required.** certbot refuses any credentials file that's
+group- or world-readable; shimkit refuses up-front with a clear
+error before invoking the container. Run `chmod 600 cloudflare.ini`
+before passing it.
+
+The parent directory of the credentials file is mounted at
+`/credentials` inside the container, read-only. So
+`/secrets/cloudflare.ini` on the host becomes
+`/credentials/cloudflare.ini` inside.
 
 The webroot must already be served at
 `http://<domain>/.well-known/acme-challenge/` for the ACME challenge
@@ -68,8 +109,9 @@ renewal, so nginx never needs to be told a new cert path.
 ## Examples
 
 ```bash
-# Request a cert in staging first (recommended — Let's Encrypt
-# rate-limits production aggressively, but staging is forgiving).
+# Webroot (HTTP-01) — Request a cert in staging first (recommended —
+# Let's Encrypt rate-limits production aggressively, but staging is
+# forgiving).
 shimkit tls request --yes --staging \
     --email ops@example.com \
     --webroot /var/www/example \
@@ -80,6 +122,15 @@ shimkit tls request --yes \
     --email ops@example.com \
     --webroot /var/www/example \
     -d example.com -d www.example.com
+
+# DNS-cloudflare (DNS-01) — required for wildcards.
+echo 'dns_cloudflare_api_token = YOUR-TOKEN-HERE' > ~/.secrets/cloudflare.ini
+chmod 600 ~/.secrets/cloudflare.ini
+shimkit tls request --yes --staging \
+    --email ops@example.com \
+    --method dns-cloudflare \
+    --credentials ~/.secrets/cloudflare.ini \
+    -d example.com -d '*.example.com'
 
 # Enumerate local certs.
 shimkit tls list
@@ -156,10 +207,11 @@ in `tls list` / `tls status` (which shells out to `openssl x509
   punishing (5 failed validations / hour / hostname). Always
   pass `--staging` for first runs; the resulting cert isn't
   trusted but proves the webroot setup works.
-- **Webroot vs DNS-01.** Only webroot is wired today. DNS-01
-  (required for wildcard certs) lands as opt-in extras in a
-  future release — each provider needs its own credential
-  surface (`cloudflare`, `route53`, etc.).
+- **Webroot vs DNS-01.** Both are wired as of v0.13.0. Webroot
+  (HTTP-01) is the default; DNS-01 via Cloudflare is opt-in via
+  `--method dns-cloudflare` and is the **only** path to wildcard
+  certs. Other DNS providers (Route53, DigitalOcean, etc.) each
+  need their own credential surface and are deferred.
 - **No PyPI extra.** This tool reuses the `[docker-clean]`
   extra's `docker` package — no new install footprint.
 - **Renewal cadence.** Let's Encrypt certs are valid for 90 days;

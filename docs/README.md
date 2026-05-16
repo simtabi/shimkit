@@ -91,6 +91,8 @@ Top-level utilities (not tools):
 
 Per-version, user-facing summaries (newest first):
 
+- **[`v0.13.0`](release-notes/v0.13.0.md)** — `shimkit tls --method
+  dns-cloudflare` for DNS-01 + wildcard certs.
 - **[`v0.12.0`](release-notes/v0.12.0.md)** — stale-doc cleanup +
   codecov upload + `gh attestation verify` smoke. No code changes.
 - **[`v0.11.0`](release-notes/v0.11.0.md)** — docs consolidation +

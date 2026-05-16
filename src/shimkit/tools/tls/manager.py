@@ -93,8 +93,9 @@ class TlsManager:
         *,
         domains: list[str],
         email: str | None,
-        webroot: Path,
-        method: Literal["webroot"] = "webroot",
+        webroot: Path | None = None,
+        credentials: Path | None = None,
+        method: Literal["webroot", "dns-cloudflare"] = "webroot",
         staging: bool = False,
         dry_run: bool = False,
         json_out: bool = False,
@@ -114,24 +115,55 @@ class TlsManager:
                 "tools.tls.default_email in your user config."
             )
             return EX_FAIL
-        if not webroot.is_dir():
-            UI.error(
-                f"Webroot {webroot} does not exist. Create the directory "
-                "and ensure nginx serves /.well-known/acme-challenge/* "
-                "from it before running."
-            )
-            return EX_FAIL
+
+        # Per-method preflight.
+        if method == "webroot":
+            if webroot is None:
+                UI.error("--webroot is required for the webroot ACME method.")
+                return EX_FAIL
+            if not webroot.is_dir():
+                UI.error(
+                    f"Webroot {webroot} does not exist. Create the directory "
+                    "and ensure nginx serves /.well-known/acme-challenge/* "
+                    "from it before running."
+                )
+                return EX_FAIL
+        elif method == "dns-cloudflare":
+            if credentials is None:
+                UI.error(
+                    "--credentials is required for dns-cloudflare. Provide a "
+                    "file with `dns_cloudflare_api_token = <token>` (mode 0600)."
+                )
+                return EX_FAIL
+            if not credentials.is_file():
+                UI.error(f"Credentials file not found: {credentials}")
+                return EX_FAIL
+            try:
+                mode = credentials.stat().st_mode & 0o777
+            except OSError as exc:
+                UI.error(f"Could not stat {credentials}: {exc}")
+                return EX_FAIL
+            if mode & 0o077:
+                UI.error(
+                    f"{credentials} mode is {oct(mode)[2:]}. certbot refuses "
+                    "credentials that are group- or world-readable. Run "
+                    f"`chmod 600 {credentials}` and retry."
+                )
+                return EX_FAIL
 
         argv = certbot.request_argv(
             domains=domains,
             email=resolved_email,
             method=method,
+            propagation_seconds=cfg.cloudflare_propagation_seconds,
             staging=staging,
             dry_run=dry_run,
         )
         outcome = self._run_certbot(
             command=argv,
             webroot=webroot,
+            credentials=credentials,
+            method=method,
             dry_run=False,  # planning lives above; if we got here, run for real
         )
         return self._emit_outcome(
@@ -140,6 +172,7 @@ class TlsManager:
             json_out=json_out,
             extra={
                 "domains": domains,
+                "method": method,
                 "staging": staging,
                 "email": resolved_email,
                 "primary_domain": domains[0],
@@ -336,7 +369,9 @@ class TlsManager:
         self,
         *,
         command: list[str],
-        webroot: Path | None,
+        webroot: Path | None = None,
+        credentials: Path | None = None,
+        method: Literal["webroot", "dns-cloudflare"] = "webroot",
         dry_run: bool,
     ) -> ExecOutcome:
         assert self._env is not None, "call boot() first"
@@ -346,9 +381,15 @@ class TlsManager:
         volumes = certbot.container_volumes(
             data_dir=Path(cfg.data_dir),
             webroot=webroot,
+            credentials=credentials,
+        )
+        image = (
+            cfg.certbot_dns_cloudflare_image
+            if method == "dns-cloudflare"
+            else cfg.certbot_image
         )
         return self._env.run_oneshot(
-            cfg.certbot_image,
+            image,
             command=command,
             labels={"shimkit.tool": SCOPE},
             volumes=volumes,
@@ -398,9 +439,10 @@ def _is_valid_domain(name: str) -> bool:
     """Conservative domain check — letters, digits, dot, hyphen.
 
     Refuses leading/trailing dots, double-dots, leading hyphens.
-    Not RFC-perfect (no internationalised names, no LDH-exception
-    for first/last char); covers the practical Let's Encrypt input
-    space.
+    Accepts a single leading ``*.`` for wildcard certs (required by
+    DNS-01 mode). Not RFC-perfect (no internationalised names, no
+    LDH-exception for first/last char); covers the practical Let's
+    Encrypt input space.
     """
     if not name or len(name) > 253:
         return False
@@ -408,6 +450,10 @@ def _is_valid_domain(name: str) -> bool:
         return False
     parts = name.split(".")
     label_re = re.compile(r"^(?!-)[a-zA-Z0-9-]{1,63}(?<!-)$")
+    # Wildcard: first label is `*`, rest must validate normally.
+    if parts[0] == "*":
+        rest = parts[1:]
+        return len(rest) >= 2 and all(label_re.match(p) for p in rest)
     return len(parts) >= 2 and all(label_re.match(p) for p in parts)
 
 
