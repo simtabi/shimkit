@@ -42,7 +42,7 @@ jobs:
         # Ubuntu 3.12 is the canonical row; macOS / other Pythons
         # produce identical coverage modulo platform-gated tests.
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           files: ./coverage.xml
           flags: unit
