@@ -1,7 +1,8 @@
-# shimkit documentation
+# shimkit documentation — annotated map
 
-The repo root has the short version. This directory has the long
-version.
+The [repo root README](../README.md) has the short version. This page is
+the long, annotated version: every doc in this directory with a one-line
+description of what it covers.
 
 ## Getting started
 

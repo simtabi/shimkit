@@ -252,7 +252,8 @@ ShimkitConfig instance (frozen pydantic v2)
    - `Manager.boot()` smoke test (with mocked PM)
    - CLI `--help` lists subcommands
    - At least one subcommand's exit-code contract
-5. Add `docs/tools/<name>.md` and link it from `docs/README.md`.
+5. Add `docs/tools/<name>.md` and link it from `README.md` (root
+   Documentation table) and `docs/overview.md`.
 6. Add a CHANGELOG entry under `[Unreleased]`.
 
 ### Choosing the right primitives

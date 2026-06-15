@@ -28,7 +28,7 @@ spinner glitch) — all fixed in the port.
 
 Every command accepts the standard flags: `--dry-run`, `--json`,
 `--quiet`, `--verbose`, `--log-file`, `--no-color`. See
-[CLI standards](../../prompt.md#cli-design-standards-per-cligdev).
+[CLI standards](../../prompt.md#cli-design-standards--apply-to-every-new-subcommand).
 
 ## Typical flows
 

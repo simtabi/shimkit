@@ -367,7 +367,8 @@ tool-specific external libraries (`docker.from_env`, `requests`,
   indicates each)
 - Origin note (if it's a port of something)
 
-Cross-link from `docs/README.md` and `README.md`.
+Cross-link from `README.md` (root Documentation table) and
+`docs/overview.md`.
 
 ### 4g. CHANGELOG
 

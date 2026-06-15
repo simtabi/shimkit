@@ -162,15 +162,24 @@ Deep reference under [`.design/`](.design/):
 ## Documentation
 
 The repo root has the short version. The long version lives under
-[`docs/`](docs/):
+[`docs/`](docs/). For a single annotated map of every doc — including
+the full per-version release-notes index — see
+[`docs/overview.md`](docs/overview.md).
 
 | Topic | Doc |
 |-------|-----|
+| Annotated index of all docs + release notes | [`docs/overview.md`](docs/overview.md) |
 | Install methods, the one-liner, updates, uninstall | [`docs/installation.md`](docs/installation.md) |
 | Config layer, schema, examples | [`docs/configuration.md`](docs/configuration.md) |
 | Architecture, the load-bearing rules, how to add a new tool | [`docs/architecture.md`](docs/architecture.md) |
+| Onboarding: setup, the 5 rules, recipe for adding a tool, debugging | [`docs/onboarding.md`](docs/onboarding.md) |
 | Cutting a release, what each CI job does | [`docs/release.md`](docs/release.md) |
 | Shipping checklist (what's done vs what's pending) | [`docs/shipping-checklist.md`](docs/shipping-checklist.md) |
+| Validation scope: what's gated, what's deliberately out of scope | [`docs/validation-scope.md`](docs/validation-scope.md) |
+| Known issues + pending items (un-automatable checks, deferrals) | [`docs/plans/known-issues.md`](docs/plans/known-issues.md) |
+| Future additions (no-demand, naturally-extensible surface) | [`docs/plans/future-additions.md`](docs/plans/future-additions.md) |
+| Shipping audit (2026-05-16): shipped-vs-pending walk | [`docs/plans/shipping-audit.md`](docs/plans/shipping-audit.md) |
+| Per-version release notes (newest first) | [`docs/release-notes/`](docs/release-notes/) |
 | `shimkit java` deep-dive | [`docs/tools/java.md`](docs/tools/java.md) |
 | `shimkit shell` deep-dive | [`docs/tools/shell.md`](docs/tools/shell.md) |
 | `shimkit dns` deep-dive | [`docs/tools/dns.md`](docs/tools/dns.md) |
