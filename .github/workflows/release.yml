@@ -17,7 +17,7 @@ jobs:
     name: tag matches pyproject.toml version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'  # tomllib needs >=3.11
@@ -48,7 +48,7 @@ jobs:
     needs: guard
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
@@ -149,7 +149,7 @@ jobs:
       contents: read
       attestations: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Download release artifacts
         env:
           GH_TOKEN: ${{ github.token }}
