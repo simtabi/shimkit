@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 **Do not file public issues for security reports.** Email security
-findings to `opensource@simtabi.com` (preferred) or use GitHub's
+findings to `security@simtabi.com` or use GitHub's
 private vulnerability reporting:
 
 <https://github.com/simtabi/shimkit/security/advisories/new>
