@@ -36,11 +36,31 @@ jobs:
           pytest -q --cov=shimkit \
             --cov-report=term \
             --cov-report=xml:coverage.xml
+      - name: Coverage summary
+        if: always() && hashFiles('coverage.xml') != ''
+        run: python scripts/coverage_summary.py
+      - name: Keep coverage.xml
+        if: always() && hashFiles('coverage.xml') != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-xml-${{ github.sha }}
+          path: coverage.xml
+          retention-days: 7
       - name: Upload coverage to Codecov
+        id: codecov
+        # Same detection as ci.yml: fail_ci_if_error surfaces an HTTP >= 400
+        # as a step failure, continue-on-error keeps the job green.
+        continue-on-error: true
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           files: ./coverage.xml
           flags: unit
           disable_search: true
           token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
+          fail_ci_if_error: true
+      - name: Report a rejected Codecov upload
+        if: steps.codecov.outcome == 'failure'
+        run: |
+          msg="Codecov rejected the upload (repository not activated or token mismatch) — coverage is still enforced by fail_under and shown in the job summary. See the 'Upload coverage to Codecov' step log for the server response."
+          echo "::warning title=Codecov upload failed::$msg"
+          printf '\n> [!WARNING]\n> %s\n' "$msg" >> "$GITHUB_STEP_SUMMARY"
