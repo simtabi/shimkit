@@ -1,0 +1,46 @@
+name: Coverage baseline
+
+# Refreshes the Codecov baseline for `main` so PR comparisons have a recent
+# base commit to diff against. Runs weekly (Monday 06:00 America/New_York,
+# matching dependabot.yml; 11:00 UTC) and on demand. It replaces the old
+# `push: branches: [main]` trigger on ci.yml, which re-ran the full matrix
+# after every merge. Scheduled runs always use the default branch.
+
+on:
+  schedule:
+    - cron: '0 11 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install dev dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Tests with coverage
+        run: |
+          pytest -q --cov=shimkit \
+            --cov-report=term \
+            --cov-report=xml:coverage.xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          files: ./coverage.xml
+          flags: unit
+          disable_search: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
