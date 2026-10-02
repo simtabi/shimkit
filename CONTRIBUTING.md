@@ -120,6 +120,22 @@ A tool joins shimkit only if it shares ≥2 of `Platform` / `Shell` /
   `SHIMKIT_CONFIG=<path>`, then `reset_cache()`. The autouse fixture
   resets between tests so leakage isn't a concern.
 
+### Coverage
+
+- The enforced floor is `[tool.coverage.report] fail_under` in
+  `pyproject.toml`; plain `pytest --cov=shimkit` fails below it, locally
+  and in CI. It is the measured total rounded down. Raise it when coverage
+  rises; never lower it to get a PR through.
+- Every PR uploads coverage to Codecov from the Ubuntu / Python 3.12 CI
+  cell. The upload is advisory (`fail_ci_if_error: false`), so a Codecov
+  outage never blocks a merge.
+- `main` has no push trigger. `coverage-baseline.yml` refreshes the
+  Codecov baseline every Monday (06:00 America/New_York) and on demand
+  (`gh workflow run coverage-baseline.yml`). `codecov.yml` turns on
+  carryforward flags so a stale baseline never reads as 0%. GitHub
+  pauses schedules after 60 days without repository activity; re-enable
+  it from the Actions tab if that happens.
+
 ## Releasing
 
 See [`docs/release.md`](docs/release.md). Releases are

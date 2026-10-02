@@ -6,6 +6,25 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- CI runs on `pull_request` and `workflow_dispatch` only; the
+  `push: branches: [main]` trigger is gone. A new
+  `coverage-baseline.yml` refreshes the Codecov baseline for `main`
+  weekly (Monday 06:00 America/New_York) and on demand.
+- Coverage floor raised from 80% to 84% (measured 84.81%, rounded
+  down) and moved from the CI command line to
+  `[tool.coverage.report] fail_under`, so local runs enforce it too.
+- `codecov/codecov-action` pinned to the v7.1.1 commit SHA, and it
+  uses `CODECOV_TOKEN` when one is configured.
+- `codecov.yml` added: carryforward flags, a blocking project status
+  with 1% slack, and an advisory patch status.
+
+### Fixed
+
+- The Codecov upload step never ran. Its condition read
+  `matrix.python-version`, but the matrix key is `python`.
+
 ## [0.19.0] — 2026-05-16
 
 ### Added
