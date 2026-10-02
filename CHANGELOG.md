@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- Every CI run writes a coverage summary to its job summary (total,
+  floor, lowest-covered files, full table) from `coverage.xml`, via the
+  stdlib-only `scripts/coverage_summary.py`. `coverage.xml` is kept as a
+  run artifact for seven days. Both `ci.yml` and `coverage-baseline.yml`
+  do this, so coverage is visible without Codecov being configured.
+
 ### Changed
 
 - CI runs on `pull_request` and `workflow_dispatch` only; the
@@ -22,6 +30,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- A rejected Codecov upload was silent: with `fail_ci_if_error: false`
+  the action exits 0 whatever the server answers. The step now runs with
+  `fail_ci_if_error: true` under `continue-on-error`, and a failed
+  outcome raises a `Codecov upload failed` warning annotation.
 - The Codecov upload step never ran. Its condition read
   `matrix.python-version`, but the matrix key is `python`.
 

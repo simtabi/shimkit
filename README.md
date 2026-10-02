@@ -223,6 +223,9 @@ mypy src/shimkit
 ```
 
 CI runs the same four commands on macOS + Ubuntu × Python 3.10/3.11/3.12/3.13.
+Coverage for each run (total, the enforced floor, and the lowest-covered files)
+is in the run's job summary for the Ubuntu / Python 3.12 job, with `coverage.xml`
+kept as a run artifact for seven days. See [`CONTRIBUTING.md`](CONTRIBUTING.md#coverage).
 
 ## License
 

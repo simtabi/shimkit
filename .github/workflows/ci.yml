@@ -39,21 +39,48 @@ jobs:
           pytest -q --cov=shimkit \
             --cov-report=term \
             --cov-report=xml:coverage.xml
+      # Ubuntu / Python 3.12 is the canonical coverage row: it writes the job
+      # summary, keeps coverage.xml, and uploads to Codecov. macOS and the
+      # other Pythons produce identical coverage modulo platform-gated tests.
+      - name: Coverage summary
+        # always(): show the numbers even when the run fails the floor.
+        if: >-
+          always() && matrix.os == 'ubuntu-latest' && matrix.python == '3.12'
+          && hashFiles('coverage.xml') != ''
+        run: python scripts/coverage_summary.py
+      - name: Keep coverage.xml
+        if: >-
+          always() && matrix.os == 'ubuntu-latest' && matrix.python == '3.12'
+          && hashFiles('coverage.xml') != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-xml-${{ github.sha }}
+          path: coverage.xml
+          retention-days: 7
       - name: Upload coverage to Codecov
-        # Only upload from one matrix cell to avoid double-counting.
-        # Ubuntu 3.12 is the canonical row; macOS / other Pythons
-        # produce identical coverage modulo platform-gated tests.
+        id: codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.12'
+        # Advisory: the gate is fail_under, and the job summary shows the
+        # numbers. fail_ci_if_error makes the CLI exit non-zero when Codecov
+        # answers HTTP >= 400 (with it off, the action always exits 0 and a
+        # rejection is silent); continue-on-error keeps that from failing the
+        # job, and the next step turns it into a visible warning.
+        continue-on-error: true
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           files: ./coverage.xml
           flags: unit
           disable_search: true
           # Uses CODECOV_TOKEN when one is configured; otherwise a tokenless
-          # upload. Codecov being down or refusing the upload never blocks a
-          # PR: the local fail_under floor is the gate.
+          # upload.
           token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
+          fail_ci_if_error: true
+      - name: Report a rejected Codecov upload
+        if: steps.codecov.outcome == 'failure'
+        run: |
+          msg="Codecov rejected the upload (repository not activated or token mismatch) — coverage is still enforced by fail_under and shown in the job summary. See the 'Upload coverage to Codecov' step log for the server response."
+          echo "::warning title=Codecov upload failed::$msg"
+          printf '\n> [!WARNING]\n> %s\n' "$msg" >> "$GITHUB_STEP_SUMMARY"
 
   security:
     runs-on: ubuntu-latest

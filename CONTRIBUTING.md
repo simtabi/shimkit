@@ -126,9 +126,22 @@ A tool joins shimkit only if it shares ≥2 of `Platform` / `Shell` /
   `pyproject.toml`; plain `pytest --cov=shimkit` fails below it, locally
   and in CI. It is the measured total rounded down. Raise it when coverage
   rises; never lower it to get a PR through.
-- Every PR uploads coverage to Codecov from the Ubuntu / Python 3.12 CI
-  cell. The upload is advisory (`fail_ci_if_error: false`), so a Codecov
-  outage never blocks a merge.
+- Coverage does not depend on Codecov. The Ubuntu / Python 3.12 CI job
+  writes a summary to its job summary page (Actions → the run → the
+  `test (ubuntu-latest, 3.12)` job → Summary): the total, whether it meets
+  the floor, and the ten lowest-covered files, with the full
+  `coverage report --format=markdown` table folded underneath. It is
+  rendered by `scripts/coverage_summary.py` from `coverage.xml`, which is
+  also kept as the `coverage-xml-<sha>` run artifact for seven days. Run
+  the script locally after `pytest --cov=shimkit --cov-report=xml` to see
+  the same table on stdout.
+- That job also uploads to Codecov. The upload is advisory: the step runs
+  with `continue-on-error`, so a Codecov outage never blocks a merge. It
+  runs with `fail_ci_if_error: true` so a rejected upload (HTTP 4xx, e.g.
+  repository not activated on codecov.io, or a `CODECOV_TOKEN` that does
+  not match the repository) fails the step rather than passing silently,
+  and the next step turns that into a `Codecov upload failed` warning
+  annotation on the run.
 - `main` has no push trigger. `coverage-baseline.yml` refreshes the
   Codecov baseline every Monday (06:00 America/New_York) and on demand
   (`gh workflow run coverage-baseline.yml`). `codecov.yml` turns on
