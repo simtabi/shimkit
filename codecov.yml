@@ -1,0 +1,32 @@
+# Codecov configuration. Validate with:
+#   curl --data-binary @codecov.yml https://codecov.io/validate
+codecov:
+  require_ci_to_pass: true
+
+coverage:
+  precision: 2
+  round: down
+  status:
+    project:
+      default:
+        # Blocking, with 1% slack for platform-gated lines and noise.
+        target: auto
+        threshold: 1%
+        informational: false
+    patch:
+      default:
+        # Reported on every PR, but advisory: the enforced floor is
+        # fail_under in pyproject.toml.
+        target: auto
+        threshold: 5%
+        informational: true
+
+flag_management:
+  default_rules:
+    # A flag missing from an upload inherits its last known value, so a
+    # stale or missing `main` baseline never reads as 0% coverage.
+    carryforward: true
+
+comment:
+  layout: "diff, flags, files"
+  require_changes: true
