@@ -57,7 +57,7 @@ jobs:
           python -m pip install --upgrade pip build
           python -m build
       - name: Generate SBOM for the wheel
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
           path: ./dist
           format: spdx-json
@@ -110,7 +110,7 @@ jobs:
           cp dist/*.tar.gz dist-pypi/
           ls -la dist-pypi/
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
         with:
           packages-dir: dist-pypi/
           # We already attest provenance in the build job above.
@@ -128,7 +128,7 @@ jobs:
           name: dist
           path: dist/
       - name: Create release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           generate_release_notes: true
           files: |
