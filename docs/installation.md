@@ -1,6 +1,6 @@
 # Installation
 
-> **As of v0.2.2:** shimkit ships via the wheel + sdist attached to
+> **As of v0.19.0:** shimkit ships via the wheel + sdist attached to
 > each [GitHub Release](https://github.com/simtabi/shimkit/releases).
 > Publishing to PyPI is deferred — the trusted-publisher setup is in
 > place on the GitHub side (`release.yml` + `pypi` environment) but
@@ -15,12 +15,12 @@
 ```bash
 # 1. Wheel from the GitHub Release page (works with any Python ≥ 3.10).
 pip install --user \
-  https://github.com/simtabi/shimkit/releases/download/v0.2.2/shimkit-0.2.2-py3-none-any.whl
+  https://github.com/simtabi/shimkit/releases/download/v0.19.0/shimkit-0.19.0-py3-none-any.whl
 
 # 2. Direct from a tag (no release-page step).
-pip install --user git+https://github.com/simtabi/shimkit@v0.2.2
-uv tool install   git+https://github.com/simtabi/shimkit@v0.2.2
-pipx install      git+https://github.com/simtabi/shimkit@v0.2.2
+pip install --user git+https://github.com/simtabi/shimkit@v0.19.0
+uv tool install   git+https://github.com/simtabi/shimkit@v0.19.0
+pipx install      git+https://github.com/simtabi/shimkit@v0.19.0
 ```
 
 ## PyPI-style channels (pending)
