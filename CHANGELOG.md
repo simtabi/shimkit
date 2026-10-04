@@ -1201,6 +1201,7 @@ bash.
 - Python ≥ 3.10. macOS and Linux (including WSL, Docker, LXC,
   Kubernetes). Windows requires WSL.
 
+[Unreleased]: https://github.com/simtabi/shimkit/compare/v0.19.0...HEAD
 [0.1.0]: https://github.com/simtabi/shimkit/releases/tag/v0.1.0
 
 Copyright © 2026 [Simtabi LLC](https://simtabi.com). MIT licensed.
