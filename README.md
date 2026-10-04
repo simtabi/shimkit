@@ -33,14 +33,40 @@ shimkit
 ## Install
 
 ```bash
-uv tool install shimkit
-pipx install shimkit
-brew install simtabi/tap/shimkit
-pip install --user shimkit
+uv tool install git+https://github.com/simtabi/shimkit@v0.19.0
+pipx install    git+https://github.com/simtabi/shimkit@v0.19.0
+pip install --user git+https://github.com/simtabi/shimkit@v0.19.0
 ```
+
+PyPI and Homebrew channels (`uv tool install shimkit`, `brew install simtabi/tap/shimkit`) are not
+published yet.
 
 Full install matrix, optional dependency extras, and self-update
 behaviour: [`docs/installation.md`](docs/installation.md).
+
+## Quick start guide and usage
+
+### Getting started
+
+1. Verify the install: `shimkit version`, then `shimkit doctor` (platform, shell, package
+   manager and config validity).
+2. Optional: add the extras for the tools that need them, e.g.
+   `uv tool install 'shimkit[extra-tools]'` for `dns`, `adguard` and `docker-clean`.
+3. Optional: override the bundled defaults with `shimkit config edit`, which opens
+   `~/.config/shimkit/shimkit.json` in `$EDITOR`; `shimkit config show` prints the resolved config.
+
+### Usage
+
+```bash
+shimkit ports show 5000              # who is holding the port
+shimkit ports kill 5000 --dry-run    # show targets without signalling
+```
+
+```bash
+shimkit db postgres up               # container-first Postgres
+```
+
+Every tool is listed under [Tools](#tools), each with its own deep-dive; installation and configuration are in [`docs/installation.md`](docs/installation.md) and [`docs/configuration.md`](docs/configuration.md).
 
 ## Tools
 
