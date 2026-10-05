@@ -84,10 +84,9 @@ Top-level utilities (not tools):
   productive: setup, the 5 rules with grep recipes, the canonical
   recipe for adding a new tool, common dev tasks, debugging guide.
 - **[Release process](release.md)** — cutting a new version, the CI
-  pipeline, what each release job does.
-- **[Shipping checklist](shipping-checklist.md)** — every step from
-  "code ready" to "users can install", in dependency order. Tracks
-  what's done vs what still needs your action.
+  pipeline, what each release job does, and the release-readiness
+  table: every step from "code ready" to "users can install", in
+  dependency order, with what's done vs what still needs your action.
 - **[Validation scope](validation-scope.md)** — what's in scope for
   automated + manual gates, what's deliberately out of scope, and
   how to expand the envelope.

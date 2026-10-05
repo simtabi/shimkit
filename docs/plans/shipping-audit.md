@@ -16,8 +16,9 @@ Cross-references:
   with concrete patterns but no current demand.
 - [`known-issues.md`](known-issues.md) — runtime checks that
   can't be containerised.
-- [`../shipping-checklist.md`](../shipping-checklist.md) — the
-  release-readiness operational checklist (different from this
+- [`../release.md`](../release.md#release-readiness) — the
+  release-readiness operational checklist (formerly
+  `docs/shipping-checklist.md`) (different from this
   audit; that file tracks "ship readiness", this file tracks
   "feature completeness against plans").
 - [`../../.design/plans/feature-gap-analysis.md`](../../.design/plans/feature-gap-analysis.md)
@@ -95,7 +96,8 @@ Source: [`docs/plans/cleanup-2026-05-14.md`](cleanup-2026-05-14.md).
 
 ## E. Shipping-checklist phases
 
-Source: [`../shipping-checklist.md`](../shipping-checklist.md).
+Source: the former `docs/shipping-checklist.md`, now the release-readiness
+table in [`../release.md`](../release.md#release-readiness).
 
 | Phase | Item | Status |
 |-------|------|--------|
@@ -103,7 +105,7 @@ Source: [`../shipping-checklist.md`](../shipping-checklist.md).
 | **1.8** | **Branch protection on `main`** | **⏳ pending — user action; see section G** |
 | 2.1-2.3 | GitHub remote setup | ✅ done |
 | **2.4** | **`pypi` GitHub Environment** | **⏳ pending — user action; see section G** |
-| 3 | Homebrew tap | 🗑 abandoned — see [`../shipping-checklist.md`](../shipping-checklist.md) Phase 3 |
+| 3 | Homebrew tap | 🗑 abandoned — see [`../release.md`](../release.md#homebrew-tap-abandoned) |
 | **4.1** | **PyPI account + 2FA** | **⏳ pending — user action; see section G** |
 | **4.2** | **Configure PyPI trusted publisher** | **⏳ pending — user action; see section G** |
 | 4.3 | TestPyPI (dry-run) | ⏸ optional |

@@ -28,8 +28,25 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `[tool.coverage.report] fail_under`, so local runs enforce it too.
 - `codecov/codecov-action` pinned to the v7.1.1 commit SHA, and it
   uses `CODECOV_TOKEN` when one is configured.
+- The shimkit-specific release facts from `docs/shipping-checklist.md`
+  now live in `docs/release.md`: a release-readiness table (ruleset on
+  `main`, the `pypi` environment, the pending pypi.org trusted
+  publisher, TestPyPI, first upload), the `invalid-publisher` history
+  and the `gh workflow run release.yml --ref <tag>` republish recipe,
+  the CI gates, the `verify-attestation` job, the abandoned Homebrew
+  tap and the optional future items. The branch-protection item,
+  recorded as pending, is corrected to done: an active ruleset on
+  `main` requires a pull request and every CI check (checked
+  2026-10-05). Links in the README index and `docs/` point at
+  `docs/release.md` instead.
 - `codecov.yml` added: carryforward flags, a blocking project status
   with 1% slack, and an advisory patch status.
+
+### Removed
+
+- `docs/shipping-checklist.md`. Its generic steps are covered by the
+  org-wide Simtabi shipping checklist, and everything specific to
+  shimkit moved to `docs/release.md` (see Changed).
 
 ### Fixed
 

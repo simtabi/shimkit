@@ -202,8 +202,7 @@ the full per-version release-notes index — see
 | Config layer, schema, examples | [`docs/configuration.md`](docs/configuration.md) |
 | Architecture, the load-bearing rules, how to add a new tool | [`docs/architecture.md`](docs/architecture.md) |
 | Onboarding: setup, the 5 rules, recipe for adding a tool, debugging | [`docs/onboarding.md`](docs/onboarding.md) |
-| Cutting a release, what each CI job does | [`docs/release.md`](docs/release.md) |
-| Shipping checklist (what's done vs what's pending) | [`docs/shipping-checklist.md`](docs/shipping-checklist.md) |
+| Cutting a release, what each CI job does, release readiness (what's done vs pending) | [`docs/release.md`](docs/release.md) |
 | Validation scope: what's gated, what's deliberately out of scope | [`docs/validation-scope.md`](docs/validation-scope.md) |
 | Known issues + pending items (un-automatable checks, deferrals) | [`docs/plans/known-issues.md`](docs/plans/known-issues.md) |
 | Future additions (no-demand, naturally-extensible surface) | [`docs/plans/future-additions.md`](docs/plans/future-additions.md) |

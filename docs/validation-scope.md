@@ -8,8 +8,8 @@ intentionally does not. Use this page to decide:
 - What to write in the v0.2.0+ release PR description for each
   sign-off check.
 
-The companion document is [`shipping-checklist.md`](shipping-checklist.md),
-which tracks **release-blocking** items in dependency order.
+The companion document is [`release.md`](release.md#release-readiness),
+whose release-readiness table tracks **release-blocking** items in dependency order.
 
 ---
 
@@ -172,14 +172,14 @@ To add a new manual validation:
 
 1. Add a numbered step to [`prompt.md`](../prompt.md) Phase 7.
 2. Add a row to the sign-off criteria table.
-3. Reference the new step in [`shipping-checklist.md`](shipping-checklist.md)
+3. Reference the new step in [`release.md`](release.md#release-readiness)
    if it's release-blocking.
 
 ---
 
 ## Related
 
-- [`shipping-checklist.md`](shipping-checklist.md) — release-blocking
+- [`release.md`](release.md#release-readiness) — release-blocking
   items in dependency order.
 - [`release.md`](release.md) — cutting a new version, the CI
   pipeline, what each release job does.
