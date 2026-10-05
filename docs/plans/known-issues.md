@@ -5,7 +5,7 @@ for a future release. Tracked here so contributors and operators can
 see what's known and decide if it matters for their use case.
 
 For the release-blocking checklist see
-[`shipping-checklist.md`](../shipping-checklist.md). For the broader
+[`release.md`](../release.md#release-readiness). For the broader
 validation envelope see [`validation-scope.md`](../validation-scope.md).
 
 ---

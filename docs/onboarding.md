@@ -479,8 +479,8 @@ adguard-integration ← real AGH on ubuntu-latest. JSON-asserted output.
 adguard-mutating-integration ← real `shimkit adguard fix` inside a privileged systemd container.
 ```
 
-All must pass before merge to `main` (once branch protection is
-configured — see `docs/shipping-checklist.md` row 1.8).
+All must pass before merge to `main`: the ruleset on `main` requires
+them (see [release.md](release.md#release-readiness), item 2).
 
 The release workflow only triggers on `v*` tags. Pushing to `main`
 is a no-op for releases.
@@ -495,4 +495,4 @@ is a no-op for releases.
 - For validation-scope questions ("is this thing tested?"), see
   [validation-scope.md](validation-scope.md).
 - For "what's left to ship?" questions, see
-  [shipping-checklist.md](shipping-checklist.md).
+  [release.md](release.md#release-readiness).
