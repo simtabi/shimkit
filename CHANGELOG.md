@@ -16,6 +16,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- The GitHub release body now comes from the tagged version's CHANGELOG section (generated notes
+  still add the PR list), and the release fails if that section is missing.
+
 - CI runs on `pull_request` and `workflow_dispatch` only; the
   `push: branches: [main]` trigger is gone. A new
   `coverage-baseline.yml` refreshes the Codecov baseline for `main`
