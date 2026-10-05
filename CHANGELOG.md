@@ -36,6 +36,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   outcome raises a `Codecov upload failed` warning annotation.
 - The Codecov upload step never ran. Its condition read
   `matrix.python-version`, but the matrix key is `python`.
+- The extras install commands in the README and `docs/installation.md`
+  (`uv tool install 'shimkit[extra-tools]'` and friends) resolve against
+  PyPI, where `shimkit` is not published yet, so they failed. They now
+  name the release tag as a direct reference. `docs/shipping-checklist.md`
+  records that the `pypi` environment exists, that the missing pypi.org
+  trusted publisher is the one remaining blocker, and that past tags are
+  republished by dispatching `release.yml` rather than re-running jobs
+  whose artifacts have expired.
 
 ## [0.19.0] — 2026-05-16
 
