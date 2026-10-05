@@ -51,7 +51,8 @@ behaviour: [`docs/installation.md`](docs/installation.md).
 1. Verify the install: `shimkit version`, then `shimkit doctor` (platform, shell, package
    manager and config validity).
 2. Optional: add the extras for the tools that need them, e.g.
-   `uv tool install 'shimkit[extra-tools]'` for `dns`, `adguard` and `docker-clean`.
+   `uv tool install 'shimkit[extra-tools] @ git+https://github.com/simtabi/shimkit@v0.19.0'` for `dns`,
+   `adguard` and `docker-clean` (the bare `shimkit[extra-tools]` form needs PyPI, which is not published yet).
 3. Optional: override the bundled defaults with `shimkit config edit`, which opens
    `~/.config/shimkit/shimkit.json` in `$EDITOR`; `shimkit config show` prints the resolved config.
 

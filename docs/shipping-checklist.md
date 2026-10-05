@@ -46,7 +46,7 @@ intentionally don't validate), see
 | 2.1 | ✅ done | user | Repo exists at `simtabi/shimkit`. Default branch `main`. Public. |
 | 2.2 | ✅ done | user | Repo metadata set: description, homepage, topics. Issues + Discussions enabled. |
 | 2.3 | ✅ done | user | Local git identity scoped to noreply (`19682005+imanimanyara@users.noreply.github.com`). |
-| 2.4 | ⏳ **pending** | **user** | **Create the `pypi` GitHub Environment.** ⚠ blocker for the v0.11.0+ `publish-pypi` job. Settings → Environments → New environment named `pypi`. No secrets required (OIDC provides credentials). Optionally add a Required Reviewer rule for a human gate before upload. |
+| 2.4 | ✅ done | user | **Create the `pypi` GitHub Environment.** Exists (checked 2026-10-05 with `gh api repos/simtabi/shimkit/environments`). The OIDC token every `publish-pypi` run presents already carries `sub: repo:simtabi/shimkit:environment:pypi`. Optionally add a Required Reviewer rule for a human gate before upload. |
 
 ## Phase 3 · Homebrew tap — abandoned
 
@@ -80,8 +80,20 @@ user-side trusted-publisher setup.
 | 4.3 | ⏸ optional | user | (Dry-run only) Configure a `testpypi` trusted publisher at <https://test.pypi.org/manage/account/publishing/> + a `testpypi` GitHub environment if you want to rehearse a release on TestPyPI before hitting real PyPI. |
 
 After 2.4 + 4.1 + 4.2 are done, the next tag will publish to PyPI
-automatically. Failed PyPI uploads on past tags (v0.11.0, v0.12.0)
-can be re-run via Actions → failed run → "Re-run failed jobs".
+automatically.
+
+**4.2 is the one blocker left.** Every `publish-pypi` run from v0.11.0
+through v0.19.0 (nine releases) failed the token exchange with
+`invalid-publisher: valid token, but no corresponding publisher`, and
+`https://pypi.org/pypi/shimkit/json` answers 404 (checked 2026-10-05).
+The GitHub side is correct; pypi.org has no publisher registered.
+
+Failed uploads on past tags can **not** be fixed with "Re-run failed
+jobs": `publish-pypi` downloads the `dist` artifact from its run's
+`build` job, and those artifacts expire after 90 days (v0.11.0–v0.19.0
+ran 2026-05-15/16). Dispatch the whole workflow on the tag instead,
+which rebuilds and uploads:
+`gh workflow run release.yml --repo simtabi/shimkit --ref v0.19.0`.
 
 ## Phase 5 · First PyPI upload
 
@@ -91,7 +103,7 @@ Prerequisites: 2.4 + 4.1 + 4.2 all done.
 |---|--------|-------|------|
 | 5.1 | ▶︎ auto | ci | The next tagged release after 4.2 publishes to PyPI automatically. |
 | 5.2 | ⏳ pending | user | Verify the upload: `pip install shimkit` (no `--index-url`) should resolve to the latest PyPI version. |
-| 5.3 | ⏸ optional | user | Re-run failed `publish-pypi` jobs against tags v0.11.0+ to retroactively publish past releases. |
+| 5.3 | ⏸ optional | user | Retroactively publish past releases by dispatching `release.yml` on each tag (`--ref vX.Y.Z`); re-running the old failed jobs no longer works once their artifacts have expired. |
 
 ## Phase 6 · Post-release / ongoing
 
@@ -117,7 +129,7 @@ Prerequisites: 2.4 + 4.1 + 4.2 all done.
 For the next release to publish to PyPI:
 
 ```
-2.4  Create the pypi GitHub Environment
+2.4  Create the pypi GitHub Environment   (done)
   └─► 4.1  PyPI account + 2FA
         └─► 4.2  Configure trusted publisher
               └─► next tag → auto-publishes

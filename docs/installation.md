@@ -97,23 +97,28 @@ land when you actually use them.
 | `[docker-clean]`   | `docker`                                  | `shimkit docker-clean` |
 | `[extra-tools]`    | All of the above                          | Everything new         |
 
-Install with an extra:
+Install with an extra. Until PyPI publishing is live, name the release tag
+as a direct reference; the bare `'shimkit[extra-tools]'` form resolves
+against PyPI and fails there today:
 
 ```bash
-uv tool install 'shimkit[extra-tools]'
+uv tool install 'shimkit[extra-tools] @ git+https://github.com/simtabi/shimkit@v0.19.0'
 # or
-pipx install 'shimkit[extra-tools]'
+pipx install 'shimkit[extra-tools] @ git+https://github.com/simtabi/shimkit@v0.19.0'
 # or
-pip install --user 'shimkit[extra-tools]'
+pip install --user 'shimkit[extra-tools] @ git+https://github.com/simtabi/shimkit@v0.19.0'
 ```
 
 Already installed and want to add an extra later:
 
 ```bash
-uv tool install --upgrade 'shimkit[adguard]'
+uv tool install --reinstall 'shimkit[adguard] @ git+https://github.com/simtabi/shimkit@v0.19.0'
 # or
 pipx inject shimkit ruamel.yaml requests psutil
 ```
+
+Once `shimkit` is on PyPI, the short forms (`uv tool install 'shimkit[extra-tools]'`,
+`pipx install 'shimkit[extra-tools]'`) work as well.
 
 If you run a tool whose extra isn't installed, `shimkit` exits 69
 with a message naming the exact install command for your platform.
