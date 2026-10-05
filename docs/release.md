@@ -115,10 +115,17 @@ What each gate validates, and what is deliberately left out, is in
 
 # 2. Update CHANGELOG.md with the new entry (move [Unreleased] to [X.Y.Z]).
 
-# 3. Commit and tag:
+# 3. Commit on a branch and open a pull request; main only changes through a PR
+#    (its ruleset requires one, with passing checks):
+git switch -c release/vX.Y.Z
 git commit -am "release: vX.Y.Z"
-git tag vX.Y.Z
-git push origin main vX.Y.Z
+git push -u origin release/vX.Y.Z
+gh pr create --title "Release vX.Y.Z" --body "..."
+
+# 4. After the PR merges, tag the merge commit and push only the tag:
+git switch main && git pull --ff-only
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
+git push origin vX.Y.Z
 ```
 
 ## What `release.yml` does
@@ -220,8 +227,9 @@ jq .name /tmp/sbom.json   # should print "shimkit"
 Once the first release has gone through, every subsequent one is just:
 
 ```bash
-# Bump versions, commit, tag, push:
-git commit -am "release: vX.Y.Z" && git tag vX.Y.Z && git push origin main vX.Y.Z
+# Bump versions and the CHANGELOG on a release branch, merge it through a PR,
+# then tag the merge commit and push only the tag:
+git switch main && git pull --ff-only && git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push origin vX.Y.Z
 ```
 
 CI does everything else. If the `pypi` environment has Required
