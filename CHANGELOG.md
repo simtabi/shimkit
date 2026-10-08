@@ -292,8 +292,10 @@ optional dependency extras.
 `shimkit db redis up` gives Laravel / Symfony / Django users a
 local Redis cache and queue backend without touching the host
 package manager. Pairs with the framework recipes — set
-`REDIS_URL=redis://default:shimkit-dev@127.0.0.1:16379/0` in
-your `.env` / `.env.local` / `settings.py`.
+`REDIS_URL=redis://default:<password>@127.0.0.1:16379/0` in
+your `.env` / `.env.local` / `settings.py`. `<password>` is the
+database default password (`db.default_password`, `shimkit-dev`
+unless changed).
 
 Gates: pytest 1086 passed, ruff clean, mypy strict clean. No new
 optional dependency extras.

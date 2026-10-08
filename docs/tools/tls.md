@@ -69,8 +69,8 @@ from Cloudflare's `--dns-cloudflare-credentials` flag).
 
 ```ini
 [default]
-aws_access_key_id = AKIAIOSFODNN7EXAMPLE
-aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+aws_access_key_id = <your-access-key-id>
+aws_secret_access_key = <your-secret-access-key>
 ```
 
 The IAM key needs `route53:ChangeResourceRecordSets` and
