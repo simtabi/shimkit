@@ -538,14 +538,14 @@ def test_env_show_redacts_secrets(
 ) -> None:
     env_file = tmp_path / ".env"
     env_file.write_text(
-        "APP_NAME=myapp\nDB_PASSWORD=supersecret\nAPI_KEY=topsecret\n",
+        "APP_NAME=myapp\nDB_PASSWORD=test-secret-not-real\nAPI_KEY=topsecret\n",
         encoding="utf-8",
     )
     result = runner.invoke(app, ["env", "show", str(env_file)])
     assert result.exit_code == 0
     assert "myapp" in result.output
     # Secret keys should be redacted.
-    assert "supersecret" not in result.output
+    assert "test-secret-not-real" not in result.output
     assert "topsecret" not in result.output
 
 
@@ -565,12 +565,12 @@ def test_env_show_reveal_unredacts(
     runner: CliRunner, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     env_file = tmp_path / ".env"
-    env_file.write_text("DB_PASSWORD=supersecret\n", encoding="utf-8")
+    env_file.write_text("DB_PASSWORD=test-secret-not-real\n", encoding="utf-8")
     result = runner.invoke(app, ["env", "show", str(env_file), "--reveal", "--json"])
     assert result.exit_code == 0
     doc = json.loads(result.output)
     entry = doc["data"]["entries"][0]
-    assert entry["value"] == "supersecret"
+    assert entry["value"] == "test-secret-not-real"
     assert entry["redacted"] is False
 
 

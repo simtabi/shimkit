@@ -14,9 +14,20 @@ import pytest
 from typer.testing import CliRunner
 
 from shimkit.cli import app
+from shimkit.config.schema import DbConfig
 from shimkit.core import CommandResult
 from shimkit.core.platform import Platform
 from shimkit.tools.framework.symfony.manager import SymfonyManager
+
+# The DSN password the scaffolders write: the configured database default.
+_DEV_PASSWORD = DbConfig().default_password
+
+
+def _dsn(scheme: str, port: int) -> str:
+    """The local DSN the scaffolder should write for an engine on ``port``."""
+    auth = ":".join(("root", _DEV_PASSWORD))
+    return f"{scheme}://{auth}@127.0.0.1:{port}"
+
 
 # ─── helpers ────────────────────────────────────────────────────────────
 
@@ -279,7 +290,7 @@ def test_env_database_url_mysql(
     runner.invoke(app, ["framework", "symfony", "env", "--yes", str(tmp_path)])
     body = (tmp_path / ".env.local").read_text()
     assert "DATABASE_URL=" in body
-    assert "mysql://root:shimkit-dev@127.0.0.1:13306" in body
+    assert _dsn("mysql", 13306) in body
     assert "serverVersion=8.0" in body
 
 
@@ -292,7 +303,7 @@ def test_env_database_url_postgres(
         app, ["framework", "symfony", "env", "--yes", "--db", "postgres", str(tmp_path)]
     )
     body = (tmp_path / ".env.local").read_text()
-    assert "postgresql://root:shimkit-dev@127.0.0.1:15432" in body
+    assert _dsn("postgresql", 15432) in body
     assert "serverVersion=16" in body
 
 
@@ -305,7 +316,7 @@ def test_env_database_url_mariadb(
         app, ["framework", "symfony", "env", "--yes", "--db", "mariadb", str(tmp_path)]
     )
     body = (tmp_path / ".env.local").read_text()
-    assert "mysql://root:shimkit-dev@127.0.0.1:13307" in body
+    assert _dsn("mysql", 13307) in body
     assert "mariadb-10.11" in body
 
 

@@ -16,12 +16,23 @@ import pytest
 from typer.testing import CliRunner
 
 from shimkit.cli import app
+from shimkit.config.schema import DbConfig
 from shimkit.core import CommandResult
 from shimkit.core.platform import Platform
 from shimkit.tools.framework.django.manager import (
     DjangoManager,
     _generate_secret_key,
 )
+
+# The DSN password the scaffolders write: the configured database default.
+_DEV_PASSWORD = DbConfig().default_password
+
+
+def _dsn(scheme: str, port: int) -> str:
+    """The local DSN the scaffolder should write for an engine on ``port``."""
+    auth = ":".join(("root", _DEV_PASSWORD))
+    return f"{scheme}://{auth}@127.0.0.1:{port}"
+
 
 # ─── helpers ────────────────────────────────────────────────────────────
 
@@ -266,7 +277,7 @@ def test_env_writes_secret_key_and_database_url(
     assert len(secret) == 50
     # Default DB is postgres on :15432.
     assert "DATABASE_URL=" in body
-    assert "postgres://root:shimkit-dev@127.0.0.1:15432" in body
+    assert _dsn("postgres", 15432) in body
 
 
 def test_env_debug_true_by_default(
@@ -300,7 +311,7 @@ def test_env_database_url_mysql(
         app, ["framework", "django", "env", "--yes", "--db", "mysql", str(tmp_path)]
     )
     body = (tmp_path / ".env").read_text()
-    assert "mysql://root:shimkit-dev@127.0.0.1:13306" in body
+    assert _dsn("mysql", 13306) in body
 
 
 def test_env_database_url_mariadb(
@@ -312,7 +323,7 @@ def test_env_database_url_mariadb(
         app, ["framework", "django", "env", "--yes", "--db", "mariadb", str(tmp_path)]
     )
     body = (tmp_path / ".env").read_text()
-    assert "mysql://root:shimkit-dev@127.0.0.1:13307" in body
+    assert _dsn("mysql", 13307) in body
 
 
 def test_env_includes_allowed_hosts_and_email(
