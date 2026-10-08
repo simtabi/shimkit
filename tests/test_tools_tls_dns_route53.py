@@ -169,8 +169,8 @@ def _make_aws_creds(tmp_path: Path, *, mode: int = 0o600) -> Path:
     creds = tmp_path / "aws-credentials"
     creds.write_text(
         "[default]\n"
-        "aws_access_key_id = AKIAIOSFODNN7EXAMPLE\n"
-        "aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY\n"
+        "aws_access_key_id = example-key\n"
+        "aws_secret_access_key = test-secret-not-real\n"
     )
     creds.chmod(mode)
     return creds
