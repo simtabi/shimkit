@@ -667,7 +667,7 @@ or a comment justifying the residual risk.
     `urllib3.disable_warnings()`.
   - Every call has an explicit `timeout` (default `--timeout`
     value).
-  - No basic-auth in URL (`https://user:pass@host`). Use the
+  - No basic-auth in URL (`https://<user>:<token>@host`). Use the
     `auth=` kwarg.
 
 6. **YAML parsing.**
