@@ -14,6 +14,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   run artifact for seven days. Both `ci.yml` and `coverage-baseline.yml`
   do this, so coverage is visible without Codecov being configured.
 
+### Removed
+
+- The Codecov upload, its rejection-warning handler, `codecov.yml`, and
+  the coverage badge in the README. The Codecov GitHub App is uninstalled
+  from every Simtabi-owned org, and this repository was never activated on
+  codecov.io, so the badge pointed at a project that does not exist and the
+  upload could never deliver. Coverage enforcement is unchanged: the floor
+  is `fail_under` in `pyproject.toml`, applied on every matrix row, and the
+  job summary reports the numbers.
+
 ### Changed
 
 - The GitHub release body now comes from the tagged version's CHANGELOG section (generated notes

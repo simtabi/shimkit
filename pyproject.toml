@@ -107,7 +107,7 @@ filterwarnings = [
 source = ["shimkit"]
 
 [tool.coverage.report]
-# Local, enforced floor, independent of Codecov. Set to the measured total
+# The enforced coverage floor, and the only one. Set to the measured total
 # rounded down (CI 2026-10-02: 84.81% ubuntu, 84.87% macos) so it ratchets:
 # raise it when coverage rises, never lower it to make a PR pass.
 fail_under = 84
