@@ -1,7 +1,5 @@
 # shimkit
 
-[![codecov](https://codecov.io/gh/simtabi/shimkit/graph/badge.svg)](https://codecov.io/gh/simtabi/shimkit)
-
 A toolkit of developer utilities. Python tools, shimmed by bash.
 
 ```

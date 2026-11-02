@@ -2,9 +2,9 @@
 """Render a Markdown coverage summary from ``coverage.xml``.
 
 CI appends the output to ``$GITHUB_STEP_SUMMARY`` so every run shows its
-coverage on the run page, whether or not Codecov accepted the upload. It
-uses only the standard library and the ``coverage`` package that
-``pytest-cov`` already installs, so no third-party action is involved.
+coverage on the run page. It uses only the standard library and the
+``coverage`` package that ``pytest-cov`` already installs, so no
+third-party action is involved.
 
 Usage::
 

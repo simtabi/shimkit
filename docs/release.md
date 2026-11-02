@@ -84,8 +84,9 @@ the jobs `test`, `security`, `build`, `smoke`, `adguard-integration`
 and `adguard-mutating-integration`. The `test` job carries ruff
 (strict), mypy (strict, pydantic plugin), shellcheck, bandit (`-ll`,
 fail on medium and above) and pip-audit (`--skip-editable`); at v0.12.0
-the suite was 1027 pytest cases at 85% coverage. Coverage uploads to
-codecov.io (wired in v0.12.0, with the coverage badge in the README).
+the suite was 1027 pytest cases at 85% coverage. Coverage is enforced by
+`fail_under` in `pyproject.toml` and reported in the job summary; it is
+not uploaded anywhere.
 Dependabot opens weekly PRs for pip and GitHub Actions updates.
 
 Repository setup that the release path assumes is in place: the
