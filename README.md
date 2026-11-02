@@ -1,5 +1,10 @@
 # shimkit
 
+[![Tests](https://github.com/simtabi/shimkit/actions/workflows/ci.yml/badge.svg)](https://github.com/simtabi/shimkit/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+`shimkit` is not published to PyPI, so there is no registry-version badge to show: see [Install](#install). Static analysis (ruff, mypy, shellcheck, bandit) runs inside the `test` job of the same workflow the Tests badge points at, so it has no badge of its own.
+
 A toolkit of developer utilities. Python tools, shimmed by bash.
 
 ```
