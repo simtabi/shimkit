@@ -9,7 +9,7 @@ description = "A toolkit of developer utilities — Java version manager, shell 
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Simtabi LLC", email = "opensource@simtabi.com" }]
-maintainers = [{ name = "Imani Manyara", email = "imani@simtabi.com" }]
+maintainers = [{ name = "Imani Manyara", email = "opensource@simtabi.com" }]
 keywords = ["cli", "java", "jdk", "openjdk", "shell", "developer-tools", "homebrew", "version-manager"]
 classifiers = [
   "Development Status :: 4 - Beta",
